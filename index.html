@@ -68,7 +68,63 @@
       <nav class="nav-menu" id="navMenu">
         <a href="#home" class="nav-link active">Home</a>
         <a href="#about" class="nav-link">About Us</a>
-        <a href="#activities" class="nav-link">Core Divisions</a>
+        
+        <!-- Core Divisions with Interactive Dropdown -->
+        <div class="nav-item-dropdown" id="divisionsDropdown">
+          <a href="#activities" class="nav-link nav-dropdown-trigger" id="dropdownTrigger" aria-expanded="false">
+            <span>Core Divisions</span>
+            <svg class="dropdown-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </a>
+          <div class="nav-dropdown-menu" id="dropdownMenu">
+            <a href="#div-welding" class="dropdown-item">
+              <span class="dropdown-num">01</span>
+              <div class="dropdown-info">
+                <strong>Welding & Fabrication</strong>
+                <small>Structural Works, Lathe CNC & Training</small>
+              </div>
+            </a>
+            <a href="#div-pipeline" class="dropdown-item">
+              <span class="dropdown-num">02</span>
+              <div class="dropdown-info">
+                <strong>Oil & Gas Pipeline Services</strong>
+                <small>Surface Pipelines & Offshore Platforms</small>
+              </div>
+            </a>
+            <a href="#div-dredging" class="dropdown-item">
+              <span class="dropdown-num">03</span>
+              <div class="dropdown-info">
+                <strong>Dredging & Technical Parts</strong>
+                <small>Slurry Pumps, Impellers & METRUS Testing</small>
+              </div>
+            </a>
+            <a href="#div-logistics" class="dropdown-item">
+              <span class="dropdown-num">04</span>
+              <div class="dropdown-info">
+                <strong>Logistics & Heavy Equipment</strong>
+                <small>Caterpillar Pipelayers, Cranes & Spares</small>
+              </div>
+            </a>
+            <a href="#div-manpower" class="dropdown-item">
+              <span class="dropdown-num">05</span>
+              <div class="dropdown-info">
+                <strong>Manpower & Instrumentation</strong>
+                <small>Certified Staffing, SCADA & Calibration</small>
+              </div>
+            </a>
+            <a href="#div-procurement" class="dropdown-item">
+              <span class="dropdown-num">06</span>
+              <div class="dropdown-info">
+                <strong>Procurement & Safety PPE</strong>
+                <small>Industrial Equipment, Gear & Contracts</small>
+              </div>
+            </a>
+            <a href="#activities" class="dropdown-all">
+              <span>View All 6 Operational Divisions</span>
+              <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42 5.43 5.43H5v2z"/></svg>
+            </a>
+          </div>
+        </div>
+
         <a href="#gallery" class="nav-link">Facilities & Gallery</a>
         <a href="#quality" class="nav-link">Quality & Safety</a>
         <a href="#contact" class="nav-link">Contact</a>
@@ -78,9 +134,14 @@
       </nav>
 
       <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation menu" aria-expanded="false">
-        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        <span class="toggle-bar"></span>
+        <span class="toggle-bar"></span>
+        <span class="toggle-bar"></span>
       </button>
     </div>
+
+    <!-- Mobile Backdrop Overlay -->
+    <div class="nav-backdrop" id="navBackdrop"></div>
   </header>
 
   <main>
@@ -185,7 +246,7 @@
         </div>
 
         <!-- Activity 1 -->
-        <article class="division-card">
+        <article class="division-card" id="div-welding">
           <div class="division-image">
             <span class="division-badge">Division 01</span>
             <img src="assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg" alt="Welding, Fabrication and Industrial Services">
@@ -208,7 +269,7 @@
         </article>
 
         <!-- Activity 2 -->
-        <article class="division-card reverse">
+        <article class="division-card reverse" id="div-pipeline">
           <div class="division-image">
             <span class="division-badge">Division 02</span>
             <img src="assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg" alt="Surface Pipeline Construction and Offshore Services">
@@ -231,7 +292,7 @@
         </article>
 
         <!-- Activity 3 -->
-        <article class="division-card">
+        <article class="division-card" id="div-dredging">
           <div class="division-image">
             <span class="division-badge">Division 03</span>
             <img src="assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg" alt="Dredging Services and Slurry Pumps">
@@ -254,7 +315,7 @@
         </article>
 
         <!-- Activity 4 -->
-        <article class="division-card reverse">
+        <article class="division-card reverse" id="div-logistics">
           <div class="division-image">
             <span class="division-badge">Division 04</span>
             <img src="assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg" alt="Caterpillar Pipelayer Heavy Equipment">
@@ -277,7 +338,7 @@
         </article>
 
         <!-- Activity 5 -->
-        <article class="division-card">
+        <article class="division-card" id="div-manpower">
           <div class="division-image">
             <span class="division-badge">Division 05</span>
             <img src="assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg" alt="Instrumentation and Calibration Test Bench">
@@ -300,7 +361,7 @@
         </article>
 
         <!-- Activity 6 -->
-        <article class="division-card reverse">
+        <article class="division-card reverse" id="div-procurement">
           <div class="division-image">
             <span class="division-badge">Division 06</span>
             <img src="assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_equipment_and_workshop_ppe.jpeg" alt="Safety Gadgets PPE and Industrial Procurement">
@@ -669,12 +730,12 @@
         <div class="footer-col">
           <h4>Core Divisions</h4>
           <ul class="footer-links">
-            <li><a href="#activities"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Welding & Fabrication</a></li>
-            <li><a href="#activities"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Surface Pipeline Laying</a></li>
-            <li><a href="#activities"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Dredging Parts & Pumps</a></li>
-            <li><a href="#activities"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Heavy Equipment Leasing</a></li>
-            <li><a href="#activities"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Manpower & Control</a></li>
-            <li><a href="#activities"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Safety PPE Procurement</a></li>
+            <li><a href="#div-welding"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Welding & Fabrication</a></li>
+            <li><a href="#div-pipeline"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Surface Pipeline Laying</a></li>
+            <li><a href="#div-dredging"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Dredging Parts & Pumps</a></li>
+            <li><a href="#div-logistics"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Heavy Equipment Leasing</a></li>
+            <li><a href="#div-manpower"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Manpower & Control</a></li>
+            <li><a href="#div-procurement"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>Safety PPE Procurement</a></li>
           </ul>
         </div>
 

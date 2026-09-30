@@ -645,16 +645,23 @@
               </div>
 
               <div class="form-group">
-                <label for="serviceDivision" class="form-label">Service Division of Interest</label>
-                <select id="serviceDivision" class="form-control" required>
-                  <option value="" disabled selected>Select an operational division</option>
-                  <option value="welding_fabrication">Welding & Fabrication, Industrial Services & Training</option>
-                  <option value="pipeline_offshore">Oil & Gas Services, Surface Pipeline & Offshore Support</option>
-                  <option value="dredging_valves">Dredging Services & Technical Parts (Valves, Impellers, Pumps)</option>
-                  <option value="logistics_heavy_equipment">Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts</option>
-                  <option value="manpower_instrumentation">Manpower Supply, Instrumentation & Control Engineering</option>
-                  <option value="general_contracts_procurement">General Contracts, Procurement & Industrial Safety Gadgets</option>
-                </select>
+                <label class="form-label" id="divisionPickerLabel">Service Division of Interest</label>
+                <div class="division-picker-trigger" id="divisionModalTrigger" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="divisionPickerLabel selectedDivisionText">
+                  <div class="picker-content">
+                    <div class="picker-icon">
+                      <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                    </div>
+                    <div class="picker-text">
+                      <span class="picker-label placeholder" id="selectedDivisionText">Select an operational division...</span>
+                      <small class="picker-sub" id="selectedDivisionSub">Click to open division selection modal</small>
+                    </div>
+                  </div>
+                  <div class="picker-action">
+                    <span class="picker-badge" id="pickerBadge">Choose Division</span>
+                    <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                  </div>
+                </div>
+                <input type="hidden" id="serviceDivision" name="serviceDivision" required>
               </div>
 
               <div class="form-group">
@@ -682,6 +689,106 @@
       </div>
       <img src="" alt="" class="modal-image" id="modalImage">
       <div class="modal-caption" id="modalCaption"></div>
+    </div>
+  </div>
+
+  <!-- Service Division Selection Modular Modal -->
+  <div class="division-modal-overlay" id="divisionModal" role="dialog" aria-modal="true" aria-labelledby="divModalTitle">
+    <div class="division-modal-container">
+      <div class="division-modal-header">
+        <div>
+          <div class="section-tag" style="margin-bottom: 0.25rem;">
+            <svg viewBox="0 0 24 24"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/></svg>
+            Operational Scope
+          </div>
+          <h3 id="divModalTitle">Select Service Division of Interest</h3>
+          <p>Choose the operational division that matches your engineering or procurement requirements:</p>
+        </div>
+        <button type="button" class="division-modal-close" id="closeDivisionModal" aria-label="Close modal">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <div class="division-modal-grid">
+        
+        <!-- Division Option 1 -->
+        <div class="division-option-card" data-division-id="welding_fabrication" data-division-name="Division 01: Welding & Fabrication, Industrial Services & Training" data-division-short="Welding & Fabrication, Industrial Services & Training" tabindex="0" role="button">
+          <div class="option-header">
+            <span class="option-badge">Division 01</span>
+            <span class="option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
+          </div>
+          <h4>Welding & Fabrication, Industrial Services & Training</h4>
+          <p>Structural steel, pipe spools, CNC lathe machining, hydrostatic test rigs & coded welder training.</p>
+        </div>
+
+        <!-- Division Option 2 -->
+        <div class="division-option-card" data-division-id="pipeline_offshore" data-division-name="Division 02: Oil & Gas Services, Surface Pipeline & Offshore Support" data-division-short="Oil & Gas Services, Surface Pipeline & Offshore Support" tabindex="0" role="button">
+          <div class="option-header">
+            <span class="option-badge">Division 02</span>
+            <span class="option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
+          </div>
+          <h4>Oil & Gas Services, Surface Pipeline Activities & Offshore Support</h4>
+          <p>Surface pipeline trenching & laying, field orbital welding, saddle profiling & offshore platform maintenance.</p>
+        </div>
+
+        <!-- Division Option 3 -->
+        <div class="division-option-card" data-division-id="dredging_valves" data-division-name="Division 03: Dredging Services & Technical Parts (Valves, Impellers, Pumps)" data-division-short="Dredging Services & Technical Parts (Valves, Impellers, Pumps)" tabindex="0" role="button">
+          <div class="option-header">
+            <span class="option-badge">Division 03</span>
+            <span class="option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
+          </div>
+          <h4>Dredging Services & Technical Parts (Valves, Impellers, Dredging Pumps)</h4>
+          <p>Slurry pump assemblies (DN200), machined volute casings, cast impellers & METRUS valve overhaul.</p>
+        </div>
+
+        <!-- Division Option 4 -->
+        <div class="division-option-card" data-division-id="logistics_heavy_equipment" data-division-name="Division 04: Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts" data-division-short="Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts" tabindex="0" role="button">
+          <div class="option-header">
+            <span class="option-badge">Division 04</span>
+            <span class="option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
+          </div>
+          <h4>Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts</h4>
+          <p>Caterpillar sideboom pipelayers, excavators, heavy-haul trailers & authentic Caterpillar spare parts.</p>
+        </div>
+
+        <!-- Division Option 5 -->
+        <div class="division-option-card" data-division-id="manpower_instrumentation" data-division-name="Division 05: Manpower Supply, Instrumentation & Control Engineering" data-division-short="Manpower Supply, Instrumentation & Control Engineering" tabindex="0" role="button">
+          <div class="option-header">
+            <span class="option-badge">Division 05</span>
+            <span class="option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
+          </div>
+          <h4>Manpower Supply, Instrumentation & Control Engineering</h4>
+          <p>Certified engineers & coded welders staffing, SCADA calibration benches & pneumatic actuator servicing.</p>
+        </div>
+
+        <!-- Division Option 6 -->
+        <div class="division-option-card" data-division-id="general_contracts_procurement" data-division-name="Division 06: General Contracts, Procurement & Industrial Safety Gadgets (PPE)" data-division-short="General Contracts, Procurement & Industrial Safety Gadgets (PPE)" tabindex="0" role="button">
+          <div class="option-header">
+            <span class="option-badge">Division 06</span>
+            <span class="option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
+          </div>
+          <h4>General Contracts, Procurement & Industrial Safety Gadgets (PPE)</h4>
+          <p>Industrial supply chain, safety helmets, harnesses, PPE equipment & engineering consumables.</p>
+        </div>
+
+      </div>
+
+      <div class="division-modal-footer">
+        <button type="button" class="btn btn-outline btn-sm" id="cancelDivisionModal">Cancel</button>
+        <button type="button" class="btn btn-accent btn-sm" id="confirmDivisionModal">Select Division</button>
+      </div>
     </div>
   </div>
 

@@ -162,6 +162,107 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Service Division Modular Modal Controller
+  const divisionModal = document.getElementById('divisionModal');
+  const divisionTrigger = document.getElementById('divisionModalTrigger');
+  const closeDivisionBtn = document.getElementById('closeDivisionModal');
+  const cancelDivisionBtn = document.getElementById('cancelDivisionModal');
+  const confirmDivisionBtn = document.getElementById('confirmDivisionModal');
+  const divisionCards = document.querySelectorAll('.division-option-card');
+  const hiddenDivisionInput = document.getElementById('serviceDivision');
+  const selectedDivisionText = document.getElementById('selectedDivisionText');
+  const selectedDivisionSub = document.getElementById('selectedDivisionSub');
+  const pickerBadge = document.getElementById('pickerBadge');
+  
+  let tempSelectedCard = null;
+
+  const openDivisionModal = () => {
+    if (!divisionModal) return;
+    divisionModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (divisionTrigger) divisionTrigger.setAttribute('aria-expanded', 'true');
+  };
+
+  const closeDivisionModal = () => {
+    if (!divisionModal) return;
+    divisionModal.classList.remove('active');
+    document.body.style.overflow = '';
+    if (divisionTrigger) divisionTrigger.setAttribute('aria-expanded', 'false');
+  };
+
+  const applyDivisionSelection = (card) => {
+    if (!card) return;
+    divisionCards.forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    tempSelectedCard = card;
+
+    const divisionId = card.getAttribute('data-division-id');
+    const divisionShort = card.getAttribute('data-division-short');
+
+    if (hiddenDivisionInput) hiddenDivisionInput.value = divisionId;
+    if (selectedDivisionText) {
+      selectedDivisionText.textContent = divisionShort;
+      selectedDivisionText.classList.remove('placeholder');
+    }
+    if (selectedDivisionSub) {
+      selectedDivisionSub.textContent = 'Selected division for technical quote';
+    }
+    if (pickerBadge) {
+      pickerBadge.textContent = 'Change';
+      pickerBadge.style.backgroundColor = 'var(--accent)';
+    }
+    if (divisionTrigger) {
+      divisionTrigger.classList.remove('is-invalid');
+    }
+  };
+
+  if (divisionTrigger && divisionModal) {
+    divisionTrigger.addEventListener('click', openDivisionModal);
+    divisionTrigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openDivisionModal();
+      }
+    });
+
+    if (closeDivisionBtn) closeDivisionBtn.addEventListener('click', closeDivisionModal);
+    if (cancelDivisionBtn) cancelDivisionBtn.addEventListener('click', closeDivisionModal);
+
+    divisionModal.addEventListener('click', (e) => {
+      if (e.target === divisionModal) closeDivisionModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && divisionModal.classList.contains('active')) {
+        closeDivisionModal();
+      }
+    });
+
+    divisionCards.forEach(card => {
+      card.addEventListener('click', () => {
+        applyDivisionSelection(card);
+        setTimeout(closeDivisionModal, 220);
+      });
+
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          applyDivisionSelection(card);
+          closeDivisionModal();
+        }
+      });
+    });
+
+    if (confirmDivisionBtn) {
+      confirmDivisionBtn.addEventListener('click', () => {
+        if (!tempSelectedCard && divisionCards.length > 0) {
+          applyDivisionSelection(divisionCards[0]);
+        }
+        closeDivisionModal();
+      });
+    }
+  }
+
   // Quote / Inquiry Form Submission Handling
   const quoteForm = document.getElementById('quoteForm');
   const formToast = document.getElementById('formToast');
@@ -169,6 +270,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (quoteForm && formToast) {
     quoteForm.addEventListener('submit', (e) => {
       e.preventDefault();
+
+      // Check if division is selected
+      if (!hiddenDivisionInput || !hiddenDivisionInput.value) {
+        if (divisionTrigger) {
+          divisionTrigger.classList.add('is-invalid');
+          divisionTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        openDivisionModal();
+        return;
+      }
       
       const submitBtn = quoteForm.querySelector('button[type="submit"]');
       const originalText = submitBtn.innerHTML;
@@ -184,6 +295,21 @@ document.addEventListener('DOMContentLoaded', () => {
       // Simulate quick processing
       setTimeout(() => {
         quoteForm.reset();
+        if (hiddenDivisionInput) hiddenDivisionInput.value = '';
+        if (selectedDivisionText) {
+          selectedDivisionText.textContent = 'Select an operational division...';
+          selectedDivisionText.classList.add('placeholder');
+        }
+        if (selectedDivisionSub) {
+          selectedDivisionSub.textContent = 'Click to open division selection modal';
+        }
+        if (pickerBadge) {
+          pickerBadge.textContent = 'Choose Division';
+          pickerBadge.style.backgroundColor = 'var(--primary)';
+        }
+        divisionCards.forEach(c => c.classList.remove('selected'));
+        tempSelectedCard = null;
+
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         formToast.style.display = 'flex';

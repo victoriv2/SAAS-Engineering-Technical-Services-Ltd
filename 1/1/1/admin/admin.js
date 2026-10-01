@@ -736,6 +736,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!galleryGrid) return;
 
+    if (gallery.length === 0) {
+      galleryGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--gray-500);">
+          No project gallery items found. Click &quot;Add Project Photo&quot; to upload one.
+        </div>
+      `;
+      return;
+    }
+
     galleryGrid.innerHTML = gallery.map((item, idx) => `
       <div class="gallery-admin-card">
         <img src="${item.img}" alt="${escapeHtml(item.title)}" class="gallery-admin-img" onerror="this.src='../../../../logo/logo.png'; this.style.padding='2rem';">
@@ -743,6 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <h4>${escapeHtml(item.title)}</h4>
           <span>${escapeHtml(item.subtitle)}</span>
           <div class="gallery-admin-actions">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.editGalleryItem(${idx})">Edit</button>
             <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteGalleryItem(${idx})">Remove</button>
           </div>
         </div>
@@ -881,6 +891,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const openGalleryModal = () => {
     if (galleryForm) galleryForm.reset();
     resetGalleryUploadState();
+    const indexInput = document.getElementById('editGalleryIndex');
+    if (indexInput) indexInput.value = '-1';
+    const modalTitle = document.getElementById('galleryModalTitle');
+    if (modalTitle) modalTitle.textContent = 'Add Project Photo to Gallery';
+    const submitBtn = document.getElementById('galleryModalSubmitBtn');
+    if (submitBtn) submitBtn.textContent = 'Add to Gallery';
     if (galleryModal) galleryModal.classList.add('active');
   };
 
@@ -893,12 +909,57 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeGalleryModalBtn) closeGalleryModalBtn.addEventListener('click', closeGalleryModal);
   if (cancelGalleryModalBtn) cancelGalleryModalBtn.addEventListener('click', closeGalleryModal);
 
+  window.editGalleryItem = (idx) => {
+    const cms = getCmsData();
+    const gallery = Array.isArray(cms.gallery) ? cms.gallery : defaultCmsData.gallery;
+    const item = gallery[idx];
+    if (!item) return;
+
+    resetGalleryUploadState();
+
+    const titleInput = document.getElementById('galleryAddTitle');
+    const categoryInput = document.getElementById('galleryAddCategory');
+    const subtitleInput = document.getElementById('galleryAddSubtitle');
+    const indexInput = document.getElementById('editGalleryIndex');
+    const hiddenImg = document.getElementById('galleryAddImgUrl');
+    const previewImg = document.getElementById('galleryPreviewImg');
+    const previewFilename = document.getElementById('galleryPreviewFilename');
+    const previewCard = document.getElementById('galleryPreviewCard');
+    const dropzone = document.getElementById('galleryDropzone');
+    const modalTitle = document.getElementById('galleryModalTitle');
+    const submitBtn = document.getElementById('galleryModalSubmitBtn');
+
+    if (titleInput) titleInput.value = item.title || '';
+    if (categoryInput) categoryInput.value = item.category || 'fabrication';
+    if (subtitleInput) subtitleInput.value = item.subtitle || '';
+    if (indexInput) indexInput.value = idx;
+
+    if (item.img) {
+      if (hiddenImg) hiddenImg.value = item.img;
+      if (previewImg) previewImg.src = item.img;
+      if (previewFilename) {
+        previewFilename.textContent = item.img.startsWith('data:') ? 'Current Image' : item.img.split('/').pop();
+      }
+      if (dropzone) dropzone.style.display = 'none';
+      if (previewCard) previewCard.classList.add('show');
+    }
+
+    if (modalTitle) modalTitle.textContent = 'Edit Project Photo';
+    if (submitBtn) submitBtn.textContent = 'Save Changes';
+
+    if (galleryModal) galleryModal.classList.add('active');
+  };
+
   window.deleteGalleryItem = (idx) => {
     const cms = getCmsData();
-    if (confirm(`Remove "${cms.gallery[idx].title}" from project gallery?`)) {
+    if (!Array.isArray(cms.gallery)) cms.gallery = [...defaultCmsData.gallery];
+    const item = cms.gallery[idx];
+    const itemTitle = item ? item.title : 'this photo';
+    if (confirm(`Remove "${itemTitle}" from project gallery?`)) {
       cms.gallery.splice(idx, 1);
       saveCmsData(cms);
       renderGallery();
+      showToast("Photo removed from gallery.");
     }
   };
 
@@ -911,18 +972,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const cms = getCmsData();
-      if (!Array.isArray(cms.gallery)) cms.gallery = [];
-      const newItem = {
+      if (!Array.isArray(cms.gallery)) cms.gallery = [...defaultCmsData.gallery];
+
+      const editIdx = parseInt(document.getElementById('editGalleryIndex')?.value, 10);
+      const galleryItem = {
         title: document.getElementById('galleryAddTitle').value.trim(),
         category: document.getElementById('galleryAddCategory').value,
         subtitle: document.getElementById('galleryAddSubtitle').value.trim(),
         img: imgVal
       };
-      cms.gallery.unshift(newItem);
+
+      if (!isNaN(editIdx) && editIdx >= 0 && editIdx < cms.gallery.length) {
+        cms.gallery[editIdx] = galleryItem;
+        showToast("Photo updated successfully.");
+      } else {
+        cms.gallery.unshift(galleryItem);
+        showToast("Photo added to project gallery successfully.");
+      }
+
       saveCmsData(cms);
       renderGallery();
       closeGalleryModal();
-      showToast("Photo added to project gallery successfully.");
     });
   }
 

@@ -189,14 +189,54 @@
     }
 
     // =========================================================================
-    // 3. Core Technical Divisions
+    // 3. Core Technical Divisions (Real-time Add, Edit, and Removal Sync)
     // =========================================================================
-    if (Array.isArray(cmsData.divisions) && cmsData.divisions.length > 0) {
-      cmsData.divisions.forEach(div => {
+    if (Array.isArray(cmsData.divisions)) {
+      const activeAdminIds = new Set(cmsData.divisions.map(d => d.id));
+      const activeDomIds = new Set(cmsData.divisions.map(d => divisionIdMap[d.id] || (d.id.startsWith('div-') ? d.id : 'div-' + d.id)));
+
+      // 3a. Hide division cards that were deleted in admin
+      const existingCards = document.querySelectorAll('#activities article.division-card');
+      existingCards.forEach(card => {
+        if (activeDomIds.has(card.id)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // 3b. Update or dynamically create division cards
+      const activitiesContainer = document.querySelector('#activities .container');
+      cmsData.divisions.forEach((div, index) => {
         const targetId = divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id);
-        const card = document.getElementById(targetId) || document.querySelector(`[id*="${div.id}"]`);
-        
+        let card = document.getElementById(targetId) || document.querySelector(`[id*="${div.id}"]`);
+
+        if (!card && activitiesContainer) {
+          card = document.createElement('article');
+          card.className = `division-card ${index % 2 === 1 ? 'reverse' : ''}`;
+          card.id = targetId;
+          card.innerHTML = `
+            <div class="division-image">
+              <span class="division-badge">${div.badge || `Division 0${index + 1}`}</span>
+              <img src="assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg" alt="${div.title || 'Technical Division'}">
+            </div>
+            <div class="division-body">
+              <h3>${div.title || ''}</h3>
+              <p>${div.desc || ''}</p>
+              <ul class="division-list"></ul>
+              <div>
+                <a href="#contact" class="btn btn-primary btn-sm">Inquire About This Service</a>
+              </div>
+            </div>
+          `;
+          activitiesContainer.appendChild(card);
+        }
+
         if (card) {
+          card.style.display = '';
+          const badgeEl = card.querySelector('.division-badge');
+          if (badgeEl && div.badge) badgeEl.textContent = div.badge;
+
           const h3 = card.querySelector('.division-body h3');
           if (h3 && div.title) h3.textContent = div.title;
 
@@ -204,7 +244,7 @@
           if (p && div.desc) p.textContent = div.desc;
 
           const list = card.querySelector('.division-list');
-          if (list && Array.isArray(div.bullets) && div.bullets.length > 0) {
+          if (list && Array.isArray(div.bullets)) {
             list.innerHTML = div.bullets.map(bullet => `
               <li>
                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -214,18 +254,92 @@
           }
         }
 
-        // Update Navbar Dropdown Link if matching
-        const navItem = document.querySelector(`.nav-dropdown-menu a[href="#${targetId}"]`);
+        // 3c. Update Navbar Dropdown Link if matching
+        let navItem = document.querySelector(`.nav-dropdown-menu a[href="#${targetId}"]`);
+        const navMenu = document.querySelector('.nav-dropdown-menu');
+        if (!navItem && navMenu) {
+          navItem = document.createElement('a');
+          navItem.className = 'dropdown-item';
+          navItem.href = `#${targetId}`;
+          navItem.innerHTML = `
+            <span class="dropdown-num">${String(index + 1).padStart(2, '0')}</span>
+            <div class="dropdown-info">
+              <strong>${div.title ? div.title.split(',')[0].trim() : ''}</strong>
+              <small>${div.badge || ''}</small>
+            </div>
+          `;
+          navMenu.appendChild(navItem);
+        }
+
         if (navItem) {
+          navItem.style.display = '';
           const strong = navItem.querySelector('.dropdown-info strong');
           if (strong && div.title) {
             strong.textContent = div.title.split(',')[0].trim();
           }
         }
 
-        // Update Division Selection Modal Cards
-        const modalOption = document.querySelector(`.division-option-card[data-division-id="${div.id}"]`);
+        // 3d. Update Division Selection Modal Cards
+        let modalOption = document.querySelector(`.division-option-card[data-division-id="${div.id}"]`);
+        const modalGrid = document.querySelector('#divisionModal .division-grid');
+        if (!modalOption && modalGrid) {
+          modalOption = document.createElement('div');
+          modalOption.className = 'division-option-card';
+          modalOption.setAttribute('data-division-id', div.id);
+          modalOption.setAttribute('data-division-name', `${div.badge || ''}: ${div.title || ''}`);
+          modalOption.setAttribute('data-division-short', div.title || '');
+          modalOption.setAttribute('tabindex', '0');
+          modalOption.setAttribute('role', 'button');
+          modalOption.innerHTML = `
+            <div class="option-header">
+              <span class="option-badge">${div.badge || `Division 0${index + 1}`}</span>
+              <span class="option-check">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </span>
+            </div>
+            <h4>${div.title || ''}</h4>
+            <p>${div.desc || ''}</p>
+          `;
+          modalGrid.appendChild(modalOption);
+
+          modalOption.addEventListener('click', () => {
+            const hiddenDivisionInput = document.getElementById('serviceDivision');
+            const selectedDivisionText = document.getElementById('selectedDivisionText');
+            const selectedDivisionSub = document.getElementById('selectedDivisionSub');
+            const pickerBadge = document.getElementById('pickerBadge');
+            const divisionTrigger = document.getElementById('divisionModalTrigger');
+            const divisionModal = document.getElementById('divisionModal');
+
+            document.querySelectorAll('.division-option-card').forEach(c => c.classList.remove('selected'));
+            modalOption.classList.add('selected');
+
+            if (hiddenDivisionInput) hiddenDivisionInput.value = div.id;
+            if (selectedDivisionText) {
+              selectedDivisionText.textContent = div.title || '';
+              selectedDivisionText.classList.remove('placeholder');
+            }
+            if (selectedDivisionSub) {
+              selectedDivisionSub.textContent = 'Selected division for technical quote';
+            }
+            if (pickerBadge) {
+              pickerBadge.textContent = 'Change';
+              pickerBadge.style.backgroundColor = 'var(--accent)';
+            }
+            if (divisionTrigger) divisionTrigger.classList.remove('is-invalid');
+            if (divisionModal) {
+              setTimeout(() => {
+                divisionModal.classList.remove('active');
+                document.body.style.overflow = '';
+              }, 220);
+            }
+          });
+        }
+
         if (modalOption) {
+          modalOption.style.display = '';
+          const optBadge = modalOption.querySelector('.option-badge');
+          if (optBadge && div.badge) optBadge.textContent = div.badge;
+
           const optH4 = modalOption.querySelector('h4');
           if (optH4 && div.title) optH4.textContent = div.title;
 
@@ -233,32 +347,78 @@
           if (optP && div.desc) optP.textContent = div.desc;
 
           if (div.title) {
-            modalOption.setAttribute('data-division-name', div.title);
+            modalOption.setAttribute('data-division-name', `${div.badge || ''}: ${div.title}`);
             modalOption.setAttribute('data-division-short', div.title);
           }
         }
       });
+
+      // 3e. Hide dropdown items not matching active divisions
+      document.querySelectorAll('.nav-dropdown-menu .dropdown-item').forEach(item => {
+        const href = item.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          const cardId = href.substring(1);
+          if (!activeDomIds.has(cardId)) {
+            item.style.display = 'none';
+          }
+        }
+      });
+
+      // 3f. Hide modal options not matching active divisions
+      document.querySelectorAll('.division-option-card').forEach(option => {
+        const divId = option.getAttribute('data-division-id');
+        if (divId && !activeAdminIds.has(divId)) {
+          option.style.display = 'none';
+        }
+      });
+
+      // 3g. Update section description count
+      const sectionDesc = document.querySelector('#activities .section-header p');
+      if (sectionDesc) {
+        sectionDesc.textContent = `Delivering comprehensive engineering solutions structured across ${cmsData.divisions.length} distinct operational divisions to meet rigorous industrial specifications.`;
+      }
     }
 
     // =========================================================================
-    // 4. Project Gallery Synchronization
+    // 4. Project Gallery Synchronization (Real-time Add, Edit, and Removal Sync)
     // =========================================================================
-    if (Array.isArray(cmsData.gallery) && cmsData.gallery.length > 0) {
+    if (Array.isArray(cmsData.gallery)) {
       const publicGalleryGrid = document.getElementById('galleryGrid');
       if (publicGalleryGrid) {
-        publicGalleryGrid.innerHTML = cmsData.gallery.map(item => {
-          const imgSrc = item.img ? item.img.replace(/^(\.\.\/)+/, '') : '';
-          return `
-          <div class="gallery-item" data-category="${item.category || 'all'}">
-            <img src="${imgSrc}" alt="${item.title || 'Project photo'}">
-            <div class="gallery-overlay">
-              <div class="gallery-zoom-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div>
-              <h4>${item.title || ''}</h4>
-              <span>${item.subtitle || ''}</span>
+        if (cmsData.gallery.length === 0) {
+          publicGalleryGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #8892b0;">
+              No gallery items currently published.
             </div>
-          </div>
-        `;
-        }).join('');
+          `;
+        } else {
+          publicGalleryGrid.innerHTML = cmsData.gallery.map(item => {
+            const rawImg = item.img || '';
+            const imgSrc = (rawImg.startsWith('data:') || rawImg.startsWith('http')) 
+              ? rawImg 
+              : rawImg.replace(/^(\.\.\/)+/, '');
+
+            return `
+            <div class="gallery-item" data-category="${item.category || 'all'}">
+              <img src="${imgSrc}" alt="${item.title || 'Project photo'}" onerror="this.src='logo/logo.png'; this.style.padding='2rem';">
+              <div class="gallery-overlay">
+                <div class="gallery-zoom-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div>
+                <h4>${item.title || ''}</h4>
+                <span>${item.subtitle || ''}</span>
+              </div>
+            </div>
+          `;
+          }).join('');
+
+          // Re-apply active category filter if one is selected
+          const activeFilterBtn = document.querySelector('.filter-btn.active');
+          const currentFilter = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
+          if (currentFilter && currentFilter !== 'all') {
+            publicGalleryGrid.querySelectorAll('.gallery-item').forEach(el => {
+              el.style.display = el.getAttribute('data-category') === currentFilter ? 'block' : 'none';
+            });
+          }
+        }
       }
     }
   }

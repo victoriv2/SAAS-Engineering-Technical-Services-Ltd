@@ -2397,42 +2397,23 @@ textarea.form-control {
 .nav-division-card-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--gray-100);
 }
 
-.nav-division-actions-left {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
 .btn-xs {
-  padding: 0.32rem 0.65rem;
+  padding: 0.35rem 0.75rem;
   font-size: 0.76rem;
   font-weight: 600;
   border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.btn-outline-danger {
-  border: 1px solid #fee2e2;
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.btn-outline-danger:hover {
-  background: #dc2626;
-  color: var(--white);
-  border-color: #dc2626;
 }
 
 

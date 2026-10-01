@@ -224,6 +224,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // Purge any "test 7" / "Division 07" division
+      if (Array.isArray(parsed.divisions)) {
+        const cleanedDivs = parsed.divisions.filter(d => {
+          const t = (d.title || '').trim().toLowerCase();
+          const b = (d.badge || '').trim().toLowerCase();
+          const id = (d.id || '').trim().toLowerCase();
+          return !(t.includes('test 7') || b === 'division 07' || b === 'division 7' || id.includes('test_7'));
+        });
+        if (cleanedDivs.length !== parsed.divisions.length) {
+          parsed.divisions = cleanedDivs;
+          needsSave = true;
+        }
+      }
+
+      // Purge any "test 7" gallery items
+      if (Array.isArray(parsed.gallery)) {
+        const cleanedGal = parsed.gallery.filter(item => {
+          const t = (item.title || '').toLowerCase();
+          const c = (item.category || '').toLowerCase();
+          return !t.includes('test 7') && !c.includes('test 7');
+        });
+        if (cleanedGal.length !== parsed.gallery.length) {
+          parsed.gallery = cleanedGal;
+          needsSave = true;
+        }
+      }
+
       // Automatically replace outdated mock hero stats with exact user side values
       if (parsed.hero && (parsed.hero.stat1 === '15+ Years' || parsed.hero.stat3 === '100% Safety')) {
         parsed.hero.stat1 = defaultCmsData.hero.stat1;

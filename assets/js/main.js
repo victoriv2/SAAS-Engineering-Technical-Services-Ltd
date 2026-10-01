@@ -64,11 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
           navDivModal.classList.remove('active');
           document.body.style.overflow = '';
         }
-        const quickAddDivModal = document.getElementById('quickAddDivisionModal');
-        if (quickAddDivModal && quickAddDivModal.classList.contains('active')) {
-          quickAddDivModal.classList.remove('active');
-          document.body.style.overflow = '';
-        }
       }
     });
 
@@ -108,37 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (navDivModal) {
     navDivModal.addEventListener('click', (e) => {
       if (e.target === navDivModal) closeNavModal();
-    });
-  }
-
-  // Quick Add Division Modular Modal Open/Close Controls
-  const navAddDivisionBtn = document.getElementById('navAddDivisionBtn');
-  const quickAddDivModal = document.getElementById('quickAddDivisionModal');
-  const closeQuickAddDivModal = document.getElementById('closeQuickAddDivModal');
-  const cancelQuickAddDivModal = document.getElementById('cancelQuickAddDivModal');
-
-  const closeQuickModal = () => {
-    if (quickAddDivModal) quickAddDivModal.classList.remove('active');
-    document.body.style.overflow = '';
-  };
-
-  if (navAddDivisionBtn) {
-    navAddDivisionBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (quickAddDivModal) {
-        quickAddDivModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        const titleInput = document.getElementById('quickDivTitle');
-        if (titleInput) setTimeout(() => titleInput.focus(), 60);
-      }
-    });
-  }
-
-  if (closeQuickAddDivModal) closeQuickAddDivModal.addEventListener('click', closeQuickModal);
-  if (cancelQuickAddDivModal) cancelQuickAddDivModal.addEventListener('click', closeQuickModal);
-  if (quickAddDivModal) {
-    quickAddDivModal.addEventListener('click', (e) => {
-      if (e.target === quickAddDivModal) closeQuickModal();
     });
   }
 

@@ -799,8 +799,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (countLabel) countLabel.textContent = divisions.length;
     if (statDivisions) statDivisions.textContent = divisions.length;
 
-    if (typeof renderGalleryDivisionPicker === 'function') {
-      renderGalleryDivisionPicker();
+    if (typeof populateGalleryCategorySelect === 'function') {
+      populateGalleryCategorySelect();
     }
 
     if (!divisionsContainer) return;
@@ -1015,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cms.hero.stat1 = String(cms.divisions.length);
       saveCmsData(cms);
       renderDivisions();
-      if (typeof renderGalleryDivisionPicker === 'function') renderGalleryDivisionPicker();
+      if (typeof populateGalleryCategorySelect === 'function') populateGalleryCategorySelect();
       showToast("Division deleted successfully.");
     }
   };
@@ -1052,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       saveCmsData(cms);
       renderDivisions();
-      if (typeof renderGalleryDivisionPicker === 'function') renderGalleryDivisionPicker();
+      if (typeof populateGalleryCategorySelect === 'function') populateGalleryCategorySelect();
       closeDivisionModal();
       showToast("Division saved and synchronized successfully.");
     });
@@ -1242,95 +1242,26 @@ document.addEventListener('DOMContentLoaded', () => {
     'procurement': 'general_contracts_procurement'
   };
 
-  const galleryDivTrigger = document.getElementById('galleryDivisionTrigger');
-  const galleryDivModal = document.getElementById('galleryDivisionSelectModal');
-  const closeGalleryDivModalBtn = document.getElementById('closeGalleryDivisionSelectModalBtn');
-  const cancelGalleryDivModalBtn = document.getElementById('cancelGalleryDivisionSelectModalBtn');
-  const adminGalleryDivisionGrid = document.getElementById('adminGalleryDivisionGrid');
-
-  const setGallerySelectedDivision = (div) => {
-    if (!div) return;
-    const hiddenCategory = document.getElementById('galleryAddCategory');
-    const thumbEl = document.getElementById('gallerySelectedDivisionImg');
-    const titleEl = document.getElementById('gallerySelectedDivisionTitle');
-    const subEl = document.getElementById('gallerySelectedDivisionSub');
-
-    if (hiddenCategory) hiddenCategory.value = div.id;
-    if (titleEl) titleEl.textContent = div.title || 'Technical Division';
-    if (subEl) subEl.textContent = `${div.badge || 'Division'} \u2022 Click to open division selection modal`;
-    if (thumbEl) thumbEl.src = getDivisionImgSrc(div);
-  };
-
-  const renderGalleryDivisionPicker = (selectedId = '') => {
+  const populateGalleryCategorySelect = (selectedId = '') => {
+    const selectEl = document.getElementById('galleryAddCategory');
+    if (!selectEl) return;
     const cms = getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
-    if (!adminGalleryDivisionGrid) return;
 
-    const currentVal = selectedId || document.getElementById('galleryAddCategory')?.value || (divisions[0] ? divisions[0].id : 'welding_fabrication');
-
-    adminGalleryDivisionGrid.innerHTML = divisions.map(div => {
-      const displayImg = getDivisionImgSrc(div);
-      const isSelected = div.id === currentVal || divisionCategoryMap[currentVal] === div.id;
-
-      return `
-        <div class="admin-division-select-card ${isSelected ? 'selected' : ''}" data-division-id="${escapeHtml(div.id)}" tabindex="0" role="button">
-          <div class="admin-div-card-img-wrap">
-            <img src="${displayImg}" alt="${escapeHtml(div.title)}" class="admin-div-card-img" onerror="this.src='../../../../logo/logo.png'">
-            <span class="admin-div-card-badge">${escapeHtml(div.badge || 'Division')}</span>
-            <div class="admin-div-card-check">
-              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            </div>
-          </div>
-          <div class="admin-div-card-body">
-            <h4>${escapeHtml(div.title)}</h4>
-            <p>${escapeHtml(div.desc || '')}</p>
-          </div>
-        </div>
-      `;
+    selectEl.innerHTML = divisions.map(div => {
+      return `<option value="${escapeHtml(div.id)}">${escapeHtml(div.badge || 'Division')} - ${escapeHtml(div.title)}</option>`;
     }).join('');
 
-    adminGalleryDivisionGrid.querySelectorAll('.admin-division-select-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const divId = card.getAttribute('data-division-id');
-        const chosen = divisions.find(d => d.id === divId) || divisions[0];
-        setGallerySelectedDivision(chosen);
-        closeGalleryDivisionSelectModal();
-      });
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          card.click();
-        }
-      });
-    });
-  };
-
-  const openGalleryDivisionSelectModal = () => {
-    const curVal = document.getElementById('galleryAddCategory')?.value;
-    renderGalleryDivisionPicker(curVal);
-    if (galleryDivModal) galleryDivModal.classList.add('active');
-  };
-
-  const closeGalleryDivisionSelectModal = () => {
-    if (galleryDivModal) galleryDivModal.classList.remove('active');
-  };
-
-  if (galleryDivTrigger) {
-    galleryDivTrigger.addEventListener('click', openGalleryDivisionSelectModal);
-    galleryDivTrigger.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openGalleryDivisionSelectModal();
+    if (selectedId) {
+      const targetVal = divisionCategoryMap[selectedId] || selectedId;
+      const found = divisions.find(d => d.id === targetVal || d.id === selectedId || (selectedId && d.id.includes(selectedId)));
+      if (found) {
+        selectEl.value = found.id;
+      } else {
+        selectEl.value = selectedId;
       }
-    });
-  }
-  if (closeGalleryDivModalBtn) closeGalleryDivModalBtn.addEventListener('click', closeGalleryDivisionSelectModal);
-  if (cancelGalleryDivModalBtn) cancelGalleryDivModalBtn.addEventListener('click', closeGalleryDivisionSelectModal);
-  if (galleryDivModal) {
-    galleryDivModal.addEventListener('click', (e) => {
-      if (e.target === galleryDivModal) closeGalleryDivisionSelectModal();
-    });
-  }
+    }
+  };
 
   const openGalleryModal = () => {
     if (galleryForm) galleryForm.reset();
@@ -1342,12 +1273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('galleryModalSubmitBtn');
     if (submitBtn) submitBtn.textContent = 'Add to Gallery';
 
-    // Set default division category to the first published division
-    const cms = getCmsData();
-    const divisions = cms.divisions || defaultCmsData.divisions;
-    if (divisions.length > 0) {
-      setGallerySelectedDivision(divisions[0]);
-    }
+    populateGalleryCategorySelect();
 
     if (galleryModal) galleryModal.classList.add('active');
   };
@@ -1385,10 +1311,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (indexInput) indexInput.value = idx;
 
     // Match division category
-    const divisions = cms.divisions || defaultCmsData.divisions;
-    const catVal = item.category || (divisions[0] ? divisions[0].id : 'welding_fabrication');
-    const matchedDiv = divisions.find(d => d.id === catVal || d.id === divisionCategoryMap[catVal] || (catVal && d.id.includes(catVal))) || divisions[0];
-    setGallerySelectedDivision(matchedDiv);
+    const catVal = item.category || 'welding_fabrication';
+    populateGalleryCategorySelect(catVal);
 
     if (item.img) {
       if (hiddenImg) hiddenImg.value = item.img;

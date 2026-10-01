@@ -47,14 +47,13 @@
 
     if (!cmsData) return;
 
-    // Auto-purge any "test 7" / "Division 07" test entries
+    // Auto-purge only legacy test 7 entries (preserve legitimate Division 07+)
     if (Array.isArray(cmsData.divisions)) {
       const origCount = cmsData.divisions.length;
       cmsData.divisions = cmsData.divisions.filter(d => {
         const t = (d.title || '').trim().toLowerCase();
-        const b = (d.badge || '').trim().toLowerCase();
         const id = (d.id || '').trim().toLowerCase();
-        return !(t.includes('test 7') || b === 'division 07' || b === 'division 7' || id.includes('test_7'));
+        return !(t === 'test 7' || id === 'test_7' || id === 'div_test_7');
       });
       if (cmsData.divisions.length !== origCount) {
         if (!cmsData.hero) cmsData.hero = {};

@@ -224,13 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Purge any "test 7" / "Division 07" division
+      // Purge only legacy test 7 entries (preserve legitimate Division 07+)
       if (Array.isArray(parsed.divisions)) {
         const cleanedDivs = parsed.divisions.filter(d => {
           const t = (d.title || '').trim().toLowerCase();
-          const b = (d.badge || '').trim().toLowerCase();
           const id = (d.id || '').trim().toLowerCase();
-          return !(t.includes('test 7') || b === 'division 07' || b === 'division 7' || id.includes('test_7'));
+          return !(t === 'test 7' || id === 'test_7' || id === 'div_test_7');
         });
         if (cleanedDivs.length !== parsed.divisions.length) {
           parsed.divisions = cleanedDivs;
@@ -543,6 +542,11 @@ document.addEventListener('DOMContentLoaded', () => {
         pane.classList.remove('active');
       }
     });
+
+    if (tabId === 'tab-gallery') {
+      renderAdminGalleryFilters();
+      renderGallery();
+    }
   };
 
   tabButtons.forEach(btn => {
@@ -1190,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'instrumentation', name: 'Control & Safety', sub: 'SCADA, Calibration & PPE' }
   ];
 
-  const populateGalleryCategoryModularGrid = (selectedId = 'fabrication') => {
+  function populateGalleryCategoryModularGrid(selectedId = 'fabrication') {
     const gridEl = document.getElementById('galleryCategoryModularGrid');
     const hiddenInput = document.getElementById('galleryAddCategory');
     if (!gridEl || !hiddenInput) return;
@@ -1477,7 +1481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const renderAdminGalleryFilters = () => {
+  function renderAdminGalleryFilters() {
     const filtersContainer = document.getElementById('adminGalleryFilters');
     if (!filtersContainer) return;
 

@@ -158,31 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
-  // Default Inquiries sample
-  const defaultInquiries = [
-    {
-      id: "inq-174001",
-      name: "Engr. Nnamdi Okonjo",
-      organization: "Shell Petroleum Development Company (SPDC)",
-      email: "n.okonjo@spdc-contractors.com",
-      phone: "08035552310",
-      division: "Division 02: Oil & Gas Services, Surface Pipeline & Offshore Support",
-      scope: "Requesting technical proposal and mobilization quote for 8-inch flowline replacement and field radiographic weld inspection at Ogale flowstation.",
-      date: "2026-09-28 14:22",
-      status: "review"
-    },
-    {
-      id: "inq-174002",
-      name: "Tunde Balogun",
-      organization: "B&B Dredging Consortium",
-      email: "tbalogun@bbdredging.ng",
-      phone: "08129994012",
-      division: "Division 03: Dredging Services & Technical Parts (Valves, Impellers, Pumps)",
-      scope: "Urgent quote needed for 2 units of heavy-duty DN200 slurry pumps and 4 cast high-chrome impellers with delivery to Bonny Island.",
-      date: "2026-10-01 09:45",
-      status: "new"
-    }
-  ];
+  // Inquiries collection (starts 100% empty until real clients submit consultation forms)
+  const defaultInquiries = [];
 
   // Helper Functions for Data
   const getCmsData = () => {
@@ -202,13 +179,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const getInquiries = () => {
     try {
       const data = localStorage.getItem(INQUIRIES_KEY);
-      if (!data) {
-        localStorage.setItem(INQUIRIES_KEY, JSON.stringify(defaultInquiries));
-        return defaultInquiries;
+      if (!data) return [];
+      const list = JSON.parse(data);
+      // Remove any previously injected ready-made sample inquiries
+      const cleanList = list.filter(i => i.id !== 'inq-174001' && i.id !== 'inq-174002');
+      if (cleanList.length !== list.length) {
+        localStorage.setItem(INQUIRIES_KEY, JSON.stringify(cleanList));
       }
-      return JSON.parse(data);
+      return cleanList;
     } catch (e) {
-      return defaultInquiries;
+      return [];
     }
   };
 

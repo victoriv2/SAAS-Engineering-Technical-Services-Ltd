@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     allNavClickables.forEach(item => {
       item.addEventListener('click', (e) => {
         // In mobile view, clicking the Core Divisions trigger toggles the sub-menu accordion
-        if (item === dropdownTrigger && window.innerWidth <= 1024) {
+        if (item === dropdownTrigger && window.innerWidth <= 1140) {
           e.preventDefault();
           if (divisionsDropdown) {
             const isSubOpen = divisionsDropdown.classList.toggle('mobile-open');
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', () => {
-      if (window.innerWidth > 1024 && navMenu.classList.contains('open')) {
+      if (window.innerWidth > 1140 && navMenu.classList.contains('open')) {
         closeMobileMenu();
       }
     });

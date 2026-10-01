@@ -616,33 +616,33 @@
     }
 
     // =========================================================================
-    // 4b. Gallery Filters Synchronization (Dynamic Custom Division Filter Pills)
+    // 4b. Gallery Filters Synchronization (Dynamic Division Filter Pills)
     // =========================================================================
     const publicGalleryFilters = document.querySelector('.gallery-filters');
     if (publicGalleryFilters && Array.isArray(cmsData.divisions)) {
-      const coreDivisionIds = new Set([
-        'welding_fabrication', 'pipeline_offshore', 'dredging_valves',
-        'logistics_heavy_equipment', 'manpower_instrumentation',
-        'general_contracts_procurement', 'fabrication', 'pipeline',
-        'dredging', 'equipment', 'instrumentation'
-      ]);
-      const customDivs = cmsData.divisions.filter(d => d && !coreDivisionIds.has(d.id));
-
-      const standardFilters = [
-        { id: 'all', name: 'All Assets' },
-        { id: 'fabrication', name: 'Fabrication & Testing' },
-        { id: 'pipeline', name: 'Pipeline & Offshore' },
-        { id: 'dredging', name: 'Dredging & Valves' },
-        { id: 'equipment', name: 'Heavy Machinery' },
-        { id: 'instrumentation', name: 'Control & Safety' }
-      ];
+      const coreDivisionInfo = {
+        'welding_fabrication': { id: 'fabrication', name: 'Fabrication & Testing' },
+        'pipeline_offshore': { id: 'pipeline', name: 'Pipeline & Offshore' },
+        'dredging_valves': { id: 'dredging', name: 'Dredging & Valves' },
+        'logistics_heavy_equipment': { id: 'equipment', name: 'Heavy Machinery' },
+        'manpower_instrumentation': { id: 'instrumentation', name: 'Control & Safety' },
+        'general_contracts_procurement': { id: 'procurement', name: 'General Contracts & Procurement' }
+      };
 
       const allFilters = [
-        ...standardFilters,
-        ...customDivs.map(d => ({
-          id: d.id,
-          name: d.title || 'Custom Division'
-        }))
+        { id: 'all', name: 'All Assets' },
+        ...cmsData.divisions.map(d => {
+          if (coreDivisionInfo[d.id]) {
+            return {
+              id: coreDivisionInfo[d.id].id,
+              name: coreDivisionInfo[d.id].name
+            };
+          }
+          return {
+            id: d.id,
+            name: d.title || 'Custom Division'
+          };
+        })
       ];
 
       const activeBtn = publicGalleryFilters.querySelector('.filter-btn.active');

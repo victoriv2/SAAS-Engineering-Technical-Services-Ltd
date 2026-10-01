@@ -1284,6 +1284,54 @@ svg {
   fill: currentColor;
 }
 
+.modular-cat-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
 
+.modular-cat-remove-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
 
+.modular-cat-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
 
+.filter-btn-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-left: 0.35rem;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+  opacity: 0.65;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.filter-btn.active .filter-btn-remove {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--white);
+}
+
+.filter-btn-remove:hover {
+  opacity: 1;
+  background: var(--danger) !important;
+  color: var(--white) !important;
+}

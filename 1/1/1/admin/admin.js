@@ -611,7 +611,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>
             <div style="display: flex; gap: 0.35rem;">
               <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewInquiryDetail('${inq.id}')" title="View inquiry full technical scope">View</button>
-              <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteInquiry('${inq.id}')" title="Delete">Delete</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteInquiry('${inq.id}')" title="Remove inquiry" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                <span>Remove</span>
+              </button>
             </div>
           </td>
         </tr>
@@ -716,6 +719,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (emailBtn) {
       emailBtn.onclick = () => window.location.href = `mailto:${inq.email}?subject=Regarding Your Technical Inquiry with SAAS Engineering`;
+    }
+
+    const modalDelBtn = document.getElementById('modalDeleteInquiryBtn');
+    if (modalDelBtn) {
+      modalDelBtn.onclick = async () => {
+        closeInquiryModal();
+        await window.deleteInquiry(inq.id);
+      };
     }
 
     if (modal) modal.classList.add('active');
@@ -850,7 +861,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div style="display: flex; gap: 0.5rem;">
               <button type="button" class="btn btn-secondary btn-sm" onclick="window.editDivision(${idx})">Edit</button>
-              <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteDivision(${idx})">Delete</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteDivision(${idx})" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                <span>Remove</span>
+              </button>
             </div>
           </div>
           <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 0.5rem;">${escapeHtml(div.desc)}</p>
@@ -1047,7 +1061,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <span>${escapeHtml(item.subtitle)}</span>
           <div class="gallery-admin-actions">
             <button type="button" class="btn btn-secondary btn-sm" onclick="window.editGalleryItem(${originalIdx})">Edit</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteGalleryItem(${originalIdx})">Remove</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteGalleryItem(${originalIdx})" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <span>Remove</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1164,6 +1181,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const removeGalleryPhotoBtn = document.getElementById('removeGalleryPhotoBtn');
+  if (removeGalleryPhotoBtn) {
+    removeGalleryPhotoBtn.addEventListener('click', () => {
+      resetGalleryUploadState();
+    });
+  }
+
   if (toggleUrlInputBtn && urlInputContainer && galleryManualUrlInput) {
     toggleUrlInputBtn.addEventListener('click', () => {
       const isVisible = urlInputContainer.style.display === 'block';
@@ -1186,13 +1210,50 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   // Gallery Division Category Modular Picker Controller
   // =========================================================================
-  const standardGalleryCategories = [
-    { id: 'fabrication', name: 'Fabrication & Testing', sub: 'Welding, CNC & Test Benches' },
-    { id: 'pipeline', name: 'Pipeline & Offshore', sub: 'Surfacing & Platforms' },
-    { id: 'dredging', name: 'Dredging & Valves', sub: 'Slurry Pumps & METRUS Testing' },
-    { id: 'equipment', name: 'Heavy Machinery', sub: 'Caterpillar Fleet & Cranes' },
-    { id: 'instrumentation', name: 'Control & Safety', sub: 'SCADA, Calibration & PPE' }
-  ];
+  const coreDivisionInfo = {
+    'welding_fabrication': { id: 'fabrication', name: 'Fabrication & Testing', sub: 'Welding, CNC & Test Benches' },
+    'pipeline_offshore': { id: 'pipeline', name: 'Pipeline & Offshore', sub: 'Surfacing & Platforms' },
+    'dredging_valves': { id: 'dredging', name: 'Dredging & Valves', sub: 'Slurry Pumps & METRUS Testing' },
+    'logistics_heavy_equipment': { id: 'equipment', name: 'Heavy Machinery', sub: 'Caterpillar Fleet & Cranes' },
+    'manpower_instrumentation': { id: 'instrumentation', name: 'Control & Safety', sub: 'SCADA, Calibration & PPE' },
+    'general_contracts_procurement': { id: 'procurement', name: 'General Contracts & Procurement', sub: 'Supply Chain & PPE' }
+  };
+
+  window.removeDivisionById = async (divId, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const cms = getCmsData();
+    if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
+
+    const idx = cms.divisions.findIndex(d => d.id === divId || (coreDivisionInfo[d.id] && coreDivisionInfo[d.id].id === divId));
+    if (idx === -1) {
+      showToast("Division not found.");
+      return;
+    }
+
+    const div = cms.divisions[idx];
+    const divTitle = div ? div.title : 'this division';
+
+    const confirmed = await window.customConfirm(`Remove division "${divTitle}"? It will be removed immediately from all menus, category selectors, filter tabs, and the public website.`, {
+      title: "Remove Technical Division",
+      confirmText: "Remove Division",
+      isDanger: true
+    });
+
+    if (confirmed) {
+      cms.divisions.splice(idx, 1);
+      if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
+      cms.hero.stat1 = String(cms.divisions.length);
+      saveCmsData(cms);
+      renderDivisions();
+      populateGalleryCategoryModularGrid();
+      renderAdminGalleryFilters();
+      renderGallery();
+      showToast("Division removed successfully.");
+    }
+  };
 
   function populateGalleryCategoryModularGrid(selectedId = 'fabrication') {
     const gridEl = document.getElementById('galleryCategoryModularGrid');
@@ -1202,27 +1263,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const cms = getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
 
-    let activeId = selectedId || 'fabrication';
+    const allCategories = divisions.map(d => {
+      if (coreDivisionInfo[d.id]) {
+        return {
+          id: coreDivisionInfo[d.id].id,
+          rawId: d.id,
+          name: d.title || coreDivisionInfo[d.id].name,
+          sub: d.sub || d.desc || coreDivisionInfo[d.id].sub
+        };
+      }
+      return {
+        id: d.id,
+        rawId: d.id,
+        name: d.title || 'Custom Division',
+        sub: d.sub || d.desc || 'Operational Sector'
+      };
+    });
+
+    let activeId = selectedId || (allCategories[0] ? allCategories[0].id : 'fabrication');
     if (activeId === 'welding_fabrication') activeId = 'fabrication';
     if (activeId === 'pipeline_offshore') activeId = 'pipeline';
     if (activeId === 'dredging_valves') activeId = 'dredging';
     if (activeId === 'logistics_heavy_equipment') activeId = 'equipment';
     if (activeId === 'manpower_instrumentation') activeId = 'instrumentation';
-    if (activeId === 'general_contracts_procurement') activeId = 'equipment';
+    if (activeId === 'general_contracts_procurement') activeId = 'procurement';
 
-    const coreDivisionIds = new Set(['welding_fabrication', 'pipeline_offshore', 'dredging_valves', 'logistics_heavy_equipment', 'manpower_instrumentation', 'general_contracts_procurement']);
-    const customDivs = divisions.filter(d => !coreDivisionIds.has(d.id));
-
-    const allCategories = [
-      ...standardGalleryCategories,
-      ...customDivs.map(d => ({
-        id: d.id,
-        name: d.title || 'Custom Division',
-        sub: d.sub || d.desc || 'Operational Sector'
-      }))
-    ];
+    const validCatIds = new Set(allCategories.map(c => c.id));
+    if (!validCatIds.has(activeId) && allCategories.length > 0) {
+      activeId = allCategories[0].id;
+    }
 
     hiddenInput.value = activeId;
+
+    if (allCategories.length === 0) {
+      gridEl.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 1.5rem; color: var(--gray-500); font-size: 0.85rem;">
+          No operational divisions found. Click &quot;Add Division&quot; above to create one.
+        </div>
+      `;
+      return;
+    }
 
     gridEl.innerHTML = allCategories.map(cat => {
       const isSelected = cat.id === activeId;
@@ -1232,22 +1312,28 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="modular-cat-name">${escapeHtml(cat.name)}</span>
             <span class="modular-cat-sub">${escapeHtml(cat.sub)}</span>
           </div>
-          <div class="modular-cat-check">
-            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          <div class="modular-cat-actions">
+            <button type="button" class="modular-cat-remove-btn" title="Remove this division" onclick="window.removeDivisionById('${escapeHtml(cat.rawId || cat.id)}', event)">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </button>
+            <div class="modular-cat-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
           </div>
         </div>
       `;
     }).join('');
 
     gridEl.querySelectorAll('.modular-cat-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.modular-cat-remove-btn')) return;
         const catId = card.getAttribute('data-cat-id');
         hiddenInput.value = catId;
         gridEl.querySelectorAll('.modular-cat-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
       });
     });
-  };
+  }
 
   const openGalleryModal = () => {
     if (galleryForm) galleryForm.reset();
@@ -1487,29 +1573,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cms = getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
-    const coreDivisionIds = new Set([
-      'welding_fabrication', 'pipeline_offshore', 'dredging_valves',
-      'logistics_heavy_equipment', 'manpower_instrumentation',
-      'general_contracts_procurement', 'fabrication', 'pipeline',
-      'dredging', 'equipment', 'instrumentation'
-    ]);
-    const customDivs = divisions.filter(d => d && !coreDivisionIds.has(d.id));
 
-    const standardFilters = [
-      { id: 'all', name: 'All Assets' },
-      { id: 'fabrication', name: 'Fabrication & Testing' },
-      { id: 'pipeline', name: 'Pipeline & Offshore' },
-      { id: 'dredging', name: 'Dredging & Valves' },
-      { id: 'equipment', name: 'Heavy Machinery' },
-      { id: 'instrumentation', name: 'Control & Safety' }
-    ];
+    const divisionFilters = divisions.map(d => {
+      if (coreDivisionInfo[d.id]) {
+        return {
+          id: coreDivisionInfo[d.id].id,
+          rawId: d.id,
+          name: d.title || coreDivisionInfo[d.id].name
+        };
+      }
+      return {
+        id: d.id,
+        rawId: d.id,
+        name: d.title || 'Custom Division'
+      };
+    });
 
     const allFilters = [
-      ...standardFilters,
-      ...customDivs.map(d => ({
-        id: d.id,
-        name: d.title || 'Custom Division'
-      }))
+      { id: 'all', name: 'All Assets', isAll: true },
+      ...divisionFilters
     ];
 
     const validFilterIds = new Set(allFilters.map(f => f.id));
@@ -1518,11 +1600,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     filtersContainer.innerHTML = allFilters.map(f => `
-      <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">${escapeHtml(f.name)}</button>
+      <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">
+        <span>${escapeHtml(f.name)}</span>
+        ${!f.isAll ? `
+          <span class="filter-btn-remove" title="Remove this division" onclick="window.removeDivisionById('${escapeHtml(f.rawId || f.id)}', event)">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </span>
+        ` : ''}
+      </button>
     `).join('');
 
     filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        if (e.target.closest('.filter-btn-remove')) return;
         filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentAdminGalleryFilter = btn.getAttribute('data-filter') || 'all';

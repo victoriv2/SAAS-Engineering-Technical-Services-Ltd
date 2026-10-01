@@ -858,173 +858,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   };
 
-  // Division Photo / Cover Image DOM controls
-  const divisionFileInput = document.getElementById('divisionFileInput');
-  const divisionDropzone = document.getElementById('divisionDropzone');
-  const divisionPreviewCard = document.getElementById('divisionPreviewCard');
-  const divisionPreviewImg = document.getElementById('divisionPreviewImg');
-  const divisionPreviewFilename = document.getElementById('divisionPreviewFilename');
-  const changeDivisionPhotoBtn = document.getElementById('changeDivisionPhotoBtn');
-  const editDivisionImg = document.getElementById('editDivisionImg');
-  const toggleDivisionUrlBtn = document.getElementById('toggleDivisionUrlBtn');
-  const divisionUrlInputContainer = document.getElementById('divisionUrlInputContainer');
-  const divisionManualUrlInput = document.getElementById('divisionManualUrlInput');
+  const editDivisionTitleInput = document.getElementById('editDivisionTitle');
+  const editDivisionSubInput = document.getElementById('editDivisionSub');
+  const previewDivTitle = document.getElementById('previewDivTitle');
+  const previewDivSub = document.getElementById('previewDivSub');
 
-  const divisionPresets = [
-    { title: 'Fabrication Workshop', src: 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg' },
-    { title: 'Pipeline Construction', src: 'assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg' },
-    { title: 'Dredge Pump Skid', src: 'assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg' },
-    { title: 'Caterpillar Fleet', src: 'assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg' },
-    { title: 'Instrumentation Bench', src: 'assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg' },
-    { title: 'Safety Gear & PPE', src: 'assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg' }
-  ];
-
-  const renderDivisionPresets = (activeSrc = '') => {
-    const container = document.getElementById('divisionPresetGrid');
-    if (!container) return;
-    const cleanActive = (activeSrc || '').replace(/^(\.\.\/)+/, '');
-    container.innerHTML = divisionPresets.map(p => {
-      const isSelected = cleanActive && cleanActive.includes(p.src);
-      return `
-        <div class="division-preset-thumb ${isSelected ? 'active' : ''}" data-src="${p.src}" title="${p.title}" role="button" tabindex="0">
-          <img src="../../../../${p.src}" alt="${p.title}" onerror="this.src='../../../../logo/logo.png'">
-        </div>
-      `;
-    }).join('');
-
-    container.querySelectorAll('.division-preset-thumb').forEach(thumb => {
-      thumb.addEventListener('click', () => {
-        const src = thumb.getAttribute('data-src');
-        container.querySelectorAll('.division-preset-thumb').forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-        setDivisionPreview(src, src.split('/').pop());
-      });
-    });
-  };
-
-  const setDivisionPreview = (src, filename = 'division_cover.jpg') => {
-    if (!editDivisionImg) return;
-    editDivisionImg.value = src;
-    if (divisionPreviewImg) {
-      divisionPreviewImg.src = (src.startsWith('data:') || src.startsWith('http')) ? src : '../../../../' + src.replace(/^(\.\.\/)+/, '');
-    }
-    if (divisionPreviewFilename) {
-      divisionPreviewFilename.textContent = filename;
-    }
-    if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
-    if (divisionDropzone) divisionDropzone.style.display = 'none';
-
-    const presetContainer = document.getElementById('divisionPresetGrid');
-    if (presetContainer) {
-      presetContainer.querySelectorAll('.division-preset-thumb').forEach(t => {
-        const thumbSrc = t.getAttribute('data-src');
-        if (thumbSrc && src.includes(thumbSrc)) {
-          t.classList.add('active');
-        } else {
-          t.classList.remove('active');
-        }
-      });
-    }
-  };
-
-  const resetDivisionUpload = () => {
-    if (divisionFileInput) divisionFileInput.value = '';
-    if (divisionPreviewCard) divisionPreviewCard.classList.remove('show');
-    if (divisionDropzone) divisionDropzone.style.display = 'flex';
-    if (divisionUrlInputContainer) divisionUrlInputContainer.style.display = 'none';
-    if (divisionManualUrlInput) divisionManualUrlInput.value = '';
-    if (toggleDivisionUrlBtn) toggleDivisionUrlBtn.textContent = 'Or paste image URL instead';
-    const presetContainer = document.getElementById('divisionPresetGrid');
-    if (presetContainer) {
-      presetContainer.querySelectorAll('.division-preset-thumb').forEach(t => t.classList.remove('active'));
-    }
-  };
-
-  const processDivisionImage = (file) => {
-    if (!file || !file.type.startsWith('image/')) {
-      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const maxWidth = 1200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        setDivisionPreview(compressedDataUrl, file.name);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  if (divisionDropzone) {
-    divisionDropzone.addEventListener('click', () => {
-      if (divisionFileInput) divisionFileInput.click();
-    });
-
-    divisionDropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      divisionDropzone.classList.add('dragover');
-    });
-
-    divisionDropzone.addEventListener('dragleave', () => {
-      divisionDropzone.classList.remove('dragover');
-    });
-
-    divisionDropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      divisionDropzone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        processDivisionImage(e.dataTransfer.files[0]);
-      }
+  if (editDivisionTitleInput && previewDivTitle) {
+    editDivisionTitleInput.addEventListener('input', (e) => {
+      previewDivTitle.textContent = e.target.value.trim() || 'Fabrication & Testing';
     });
   }
-
-  if (divisionFileInput) {
-    divisionFileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) {
-        processDivisionImage(e.target.files[0]);
-      }
-    });
-  }
-
-  if (changeDivisionPhotoBtn) {
-    changeDivisionPhotoBtn.addEventListener('click', () => {
-      if (divisionFileInput) divisionFileInput.click();
-    });
-  }
-
-  if (toggleDivisionUrlBtn && divisionUrlInputContainer) {
-    toggleDivisionUrlBtn.addEventListener('click', () => {
-      const isHidden = divisionUrlInputContainer.style.display === 'none';
-      divisionUrlInputContainer.style.display = isHidden ? 'block' : 'none';
-      toggleDivisionUrlBtn.textContent = isHidden ? 'Hide image URL input' : 'Or paste image URL instead';
-      if (isHidden && divisionManualUrlInput) divisionManualUrlInput.focus();
-    });
-  }
-
-  if (divisionManualUrlInput) {
-    divisionManualUrlInput.addEventListener('input', (e) => {
-      const url = e.target.value.trim();
-      if (url) {
-        setDivisionPreview(url, 'custom_url_image.jpg');
-      }
+  if (editDivisionSubInput && previewDivSub) {
+    editDivisionSubInput.addEventListener('input', (e) => {
+      previewDivSub.textContent = e.target.value.trim() || 'Welding, CNC & Test Benches';
     });
   }
 
@@ -1033,41 +879,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const divisions = cms.divisions || defaultCmsData.divisions;
     const title = document.getElementById('divisionModalTitle');
     const indexInput = document.getElementById('editDivisionIndex');
-    const badgeInput = document.getElementById('editDivisionBadge');
-    const titleInput = document.getElementById('editDivisionTitle');
-    const descInput = document.getElementById('editDivisionDesc');
-    const bulletsInput = document.getElementById('editDivisionBullets');
 
-    resetDivisionUpload();
-
-    let targetImg = fallbackDivisionImg;
     if (index >= 0 && divisions[index]) {
       const d = divisions[index];
-      if (title) title.textContent = `Edit Division: ${d.badge}`;
+      if (title) title.textContent = `Edit Division: ${d.title}`;
       if (indexInput) indexInput.value = index;
-      if (badgeInput) badgeInput.value = d.badge;
-      if (titleInput) titleInput.value = d.title;
-      if (descInput) descInput.value = d.desc;
-      if (bulletsInput) bulletsInput.value = (d.bullets || []).join('\n');
-      targetImg = d.img || divisionImages[d.id] || fallbackDivisionImg;
-      setDivisionPreview(targetImg, `${d.badge || 'division'}_photo.jpg`);
+      if (editDivisionTitleInput) editDivisionTitleInput.value = d.title || '';
+      if (editDivisionSubInput) editDivisionSubInput.value = d.sub || d.desc || '';
+      if (previewDivTitle) previewDivTitle.textContent = d.title || 'Division Title';
+      if (previewDivSub) previewDivSub.textContent = d.sub || d.desc || 'Operational Scope';
     } else {
-      const nextNum = divisions.length + 1;
-      if (title) title.textContent = "Add New Operational Division";
+      if (title) title.textContent = "Add Operational Division";
       if (indexInput) indexInput.value = -1;
-      if (badgeInput) badgeInput.value = `Division 0${nextNum}`;
-      if (titleInput) titleInput.value = "";
-      if (descInput) descInput.value = "";
-      if (bulletsInput) bulletsInput.value = "";
-      targetImg = fallbackDivisionImg;
-      setDivisionPreview(fallbackDivisionImg, 'default_division.jpg');
+      if (editDivisionTitleInput) editDivisionTitleInput.value = "";
+      if (editDivisionSubInput) editDivisionSubInput.value = "";
+      if (previewDivTitle) previewDivTitle.textContent = "Fabrication & Testing";
+      if (previewDivSub) previewDivSub.textContent = "Welding, CNC & Test Benches";
     }
-
-    renderDivisionPresets(targetImg);
 
     if (divisionModal) {
       divisionModal.classList.add('active');
       divisionModal.style.zIndex = '35000';
+      if (editDivisionTitleInput) setTimeout(() => editDivisionTitleInput.focus(), 60);
     }
   };
 
@@ -1095,7 +928,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (confirmed) {
       cms.divisions.splice(idx, 1);
-      // Auto sync hero stat1 with divisions count
       if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
       cms.hero.stat1 = String(cms.divisions.length);
       saveCmsData(cms);
@@ -1110,17 +942,24 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const cms = getCmsData();
       const index = parseInt(document.getElementById('editDivisionIndex').value, 10);
-      const bulletsText = document.getElementById('editDivisionBullets').value;
-      const bullets = bulletsText.split('\n').map(s => s.trim()).filter(Boolean);
-      const chosenImg = document.getElementById('editDivisionImg')?.value.trim() || fallbackDivisionImg;
+      const titleVal = editDivisionTitleInput ? editDivisionTitleInput.value.trim() : 'Custom Division';
+      const subVal = editDivisionSubInput ? editDivisionSubInput.value.trim() : 'Operational Scope';
+      const badgeVal = (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].badge)
+        ? cms.divisions[index].badge
+        : `Division 0${cms.divisions ? cms.divisions.length + 1 : 1}`;
 
       const divData = {
         id: (index >= 0 && cms.divisions && cms.divisions[index]) ? cms.divisions[index].id : `division_${Date.now()}`,
-        badge: document.getElementById('editDivisionBadge').value.trim(),
-        title: document.getElementById('editDivisionTitle').value.trim(),
-        desc: document.getElementById('editDivisionDesc').value.trim(),
-        bullets: bullets,
-        img: chosenImg
+        badge: badgeVal,
+        title: titleVal,
+        sub: subVal,
+        desc: subVal,
+        bullets: (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].bullets)
+          ? cms.divisions[index].bullets
+          : [subVal, 'Certified Compliance', 'Technical Support'],
+        img: (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].img)
+          ? cms.divisions[index].img
+          : fallbackDivisionImg
       };
 
       if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
@@ -1131,7 +970,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cms.divisions.push(divData);
       }
 
-      // Automatically keep hero stat1 in sync with active divisions count
       if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
       cms.hero.stat1 = String(cms.divisions.length);
 
@@ -1374,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ...customDivs.map(d => ({
         id: d.id,
         name: d.title || 'Custom Division',
-        sub: d.badge || 'Operational Sector'
+        sub: d.sub || d.desc || 'Operational Sector'
       }))
     ];
 

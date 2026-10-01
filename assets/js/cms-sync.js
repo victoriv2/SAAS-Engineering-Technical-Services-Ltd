@@ -281,7 +281,11 @@
 
         // 3d. Update Division Selection Modal Cards
         let modalOption = document.querySelector(`.division-option-card[data-division-id="${div.id}"]`);
-        const modalGrid = document.querySelector('#divisionModal .division-grid');
+        const modalGrid = document.querySelector('#divisionModal .division-modal-grid') || document.querySelector('#divisionModal .division-grid');
+        const fallbackOptionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
+        const cardImg = div.img || fallbackOptionImg;
+        const displayCardImg = (cardImg.startsWith('data:') || cardImg.startsWith('http')) ? cardImg : cardImg.replace(/^(\.\.\/)+/, '');
+
         if (!modalOption && modalGrid) {
           modalOption = document.createElement('div');
           modalOption.className = 'division-option-card';
@@ -291,6 +295,9 @@
           modalOption.setAttribute('tabindex', '0');
           modalOption.setAttribute('role', 'button');
           modalOption.innerHTML = `
+            <div class="option-thumb-wrap">
+              <img src="${displayCardImg}" alt="${div.title || 'Technical Division'}" class="option-thumb-img" onerror="this.src='logo/logo.png'">
+            </div>
             <div class="option-header">
               <span class="option-badge">${div.badge || `Division 0${index + 1}`}</span>
               <span class="option-check">
@@ -337,6 +344,9 @@
 
         if (modalOption) {
           modalOption.style.display = '';
+          const optThumbImg = modalOption.querySelector('.option-thumb-img');
+          if (optThumbImg && div.img) optThumbImg.src = displayCardImg;
+
           const optBadge = modalOption.querySelector('.option-badge');
           if (optBadge && div.badge) optBadge.textContent = div.badge;
 

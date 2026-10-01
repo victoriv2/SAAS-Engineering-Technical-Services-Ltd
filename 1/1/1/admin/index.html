@@ -618,16 +618,21 @@
             <input type="text" id="galleryAddTitle" class="form-control no-icon" placeholder="e.g. High-Pressure Manifold Testing" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="galleryAddCategory">Division Category</label>
-            <select id="galleryAddCategory" class="form-control no-icon" required>
-              <option value="fabrication">Welding & Metal Fabrication</option>
-              <option value="pipeline">Oil & Gas Pipeline Services</option>
-              <option value="dredging">Dredging & Technical Parts</option>
-              <option value="machining">Machining & Mechanical Works</option>
-              <option value="logistics">Logistics & Heavy Equipment</option>
-              <option value="manpower">Manpower & Instrumentation</option>
-              <option value="procurement">Procurement & Safety PPE</option>
-            </select>
+            <label class="form-label" id="galleryCategoryLabel">Division Category</label>
+            <div class="division-picker-trigger" id="galleryDivisionTrigger" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">
+              <div class="picker-content">
+                <img src="../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg" alt="Division Image" class="picker-thumb" id="gallerySelectedDivisionImg" onerror="this.src='../../../../logo/logo.png'">
+                <div class="picker-text">
+                  <span class="picker-label" id="gallerySelectedDivisionTitle">Welding & Fabrication, Industrial Services & Training</span>
+                  <small class="picker-sub" id="gallerySelectedDivisionSub">Division 01 &bull; Click to open division selection modal</small>
+                </div>
+              </div>
+              <div class="picker-action">
+                <span class="picker-badge" id="galleryDivisionPickerBadge">Select Division</span>
+                <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+              </div>
+            </div>
+            <input type="hidden" id="galleryAddCategory" name="galleryAddCategory" value="welding_fabrication" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="galleryAddSubtitle">Subtitle / Location Tag</label>
@@ -673,6 +678,31 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" id="cancelGalleryModalBtn">Cancel</button>
         <button type="submit" form="galleryAddForm" class="btn btn-accent btn-sm" id="galleryModalSubmitBtn">Add to Gallery</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       Division Selection Modular Modal for Gallery Photo Categorization
+       =================================================================== -->
+  <div class="modal-overlay" id="galleryDivisionSelectModal" role="dialog" aria-modal="true" aria-labelledby="galleryDivSelectModalTitle" style="z-index: 10050;">
+    <div class="modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="galleryDivSelectModalTitle">Select Operational Division</h3>
+          <p style="font-size: 0.85rem; color: var(--gray-500); margin-top: 0.2rem;">Choose which technical division this project photo belongs to:</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeGalleryDivisionSelectModalBtn" aria-label="Close dialog">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem; max-height: 60vh; overflow-y: auto;">
+        <div class="admin-division-select-grid" id="adminGalleryDivisionGrid">
+          <!-- Dynamically populated from cms.divisions with real pictures, badges, and titles -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" id="cancelGalleryDivisionSelectModalBtn">Cancel</button>
       </div>
     </div>
   </div>

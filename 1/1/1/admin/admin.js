@@ -758,6 +758,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (countLabel) countLabel.textContent = divisions.length;
     if (statDivisions) statDivisions.textContent = divisions.length;
 
+    if (typeof renderGalleryDivisionPicker === 'function') {
+      renderGalleryDivisionPicker();
+    }
+
     if (!divisionsContainer) return;
 
     divisionsContainer.innerHTML = divisions.map((div, idx) => `
@@ -834,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cms.divisions.splice(idx, 1);
       saveCmsData(cms);
       renderDivisions();
+      if (typeof renderGalleryDivisionPicker === 'function') renderGalleryDivisionPicker();
       showToast("Division deleted successfully.");
     }
   };
@@ -863,6 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       saveCmsData(cms);
       renderDivisions();
+      if (typeof renderGalleryDivisionPicker === 'function') renderGalleryDivisionPicker();
       closeDivisionModal();
     });
   }
@@ -1037,6 +1043,126 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // =========================================================================
+  // Gallery Division Category Modular Picker Controller
+  // =========================================================================
+  const divisionCategoryMap = {
+    'fabrication': 'welding_fabrication',
+    'pipeline': 'pipeline_offshore',
+    'dredging': 'dredging_valves',
+    'equipment': 'logistics_heavy_equipment',
+    'logistics': 'logistics_heavy_equipment',
+    'instrumentation': 'manpower_instrumentation',
+    'manpower': 'manpower_instrumentation',
+    'procurement': 'general_contracts_procurement'
+  };
+
+  const divisionImages = {
+    'welding_fabrication': 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg',
+    'pipeline_offshore': 'assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg',
+    'dredging_valves': 'assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg',
+    'logistics_heavy_equipment': 'assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg',
+    'manpower_instrumentation': 'assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg',
+    'general_contracts_procurement': 'assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg'
+  };
+  const fallbackDivisionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
+
+  const galleryDivTrigger = document.getElementById('galleryDivisionTrigger');
+  const galleryDivModal = document.getElementById('galleryDivisionSelectModal');
+  const closeGalleryDivModalBtn = document.getElementById('closeGalleryDivisionSelectModalBtn');
+  const cancelGalleryDivModalBtn = document.getElementById('cancelGalleryDivisionSelectModalBtn');
+  const adminGalleryDivisionGrid = document.getElementById('adminGalleryDivisionGrid');
+
+  const getDivisionImgSrc = (div) => {
+    if (!div) return '../../../../' + fallbackDivisionImg;
+    const raw = div.img || divisionImages[div.id] || fallbackDivisionImg;
+    return (raw.startsWith('data:') || raw.startsWith('http')) ? raw : '../../../../' + raw.replace(/^(\.\.\/)+/, '');
+  };
+
+  const setGallerySelectedDivision = (div) => {
+    if (!div) return;
+    const hiddenCategory = document.getElementById('galleryAddCategory');
+    const thumbEl = document.getElementById('gallerySelectedDivisionImg');
+    const titleEl = document.getElementById('gallerySelectedDivisionTitle');
+    const subEl = document.getElementById('gallerySelectedDivisionSub');
+
+    if (hiddenCategory) hiddenCategory.value = div.id;
+    if (titleEl) titleEl.textContent = div.title || 'Technical Division';
+    if (subEl) subEl.textContent = `${div.badge || 'Division'} \u2022 Click to open division selection modal`;
+    if (thumbEl) thumbEl.src = getDivisionImgSrc(div);
+  };
+
+  const renderGalleryDivisionPicker = (selectedId = '') => {
+    const cms = getCmsData();
+    const divisions = cms.divisions || defaultCmsData.divisions;
+    if (!adminGalleryDivisionGrid) return;
+
+    const currentVal = selectedId || document.getElementById('galleryAddCategory')?.value || (divisions[0] ? divisions[0].id : 'welding_fabrication');
+
+    adminGalleryDivisionGrid.innerHTML = divisions.map(div => {
+      const displayImg = getDivisionImgSrc(div);
+      const isSelected = div.id === currentVal || divisionCategoryMap[currentVal] === div.id;
+
+      return `
+        <div class="admin-division-select-card ${isSelected ? 'selected' : ''}" data-division-id="${escapeHtml(div.id)}" tabindex="0" role="button">
+          <div class="admin-div-card-img-wrap">
+            <img src="${displayImg}" alt="${escapeHtml(div.title)}" class="admin-div-card-img" onerror="this.src='../../../../logo/logo.png'">
+            <span class="admin-div-card-badge">${escapeHtml(div.badge || 'Division')}</span>
+            <div class="admin-div-card-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          </div>
+          <div class="admin-div-card-body">
+            <h4>${escapeHtml(div.title)}</h4>
+            <p>${escapeHtml(div.desc || '')}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    adminGalleryDivisionGrid.querySelectorAll('.admin-division-select-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const divId = card.getAttribute('data-division-id');
+        const chosen = divisions.find(d => d.id === divId) || divisions[0];
+        setGallerySelectedDivision(chosen);
+        closeGalleryDivisionSelectModal();
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+  };
+
+  const openGalleryDivisionSelectModal = () => {
+    const curVal = document.getElementById('galleryAddCategory')?.value;
+    renderGalleryDivisionPicker(curVal);
+    if (galleryDivModal) galleryDivModal.classList.add('active');
+  };
+
+  const closeGalleryDivisionSelectModal = () => {
+    if (galleryDivModal) galleryDivModal.classList.remove('active');
+  };
+
+  if (galleryDivTrigger) {
+    galleryDivTrigger.addEventListener('click', openGalleryDivisionSelectModal);
+    galleryDivTrigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openGalleryDivisionSelectModal();
+      }
+    });
+  }
+  if (closeGalleryDivModalBtn) closeGalleryDivModalBtn.addEventListener('click', closeGalleryDivisionSelectModal);
+  if (cancelGalleryDivModalBtn) cancelGalleryDivModalBtn.addEventListener('click', closeGalleryDivisionSelectModal);
+  if (galleryDivModal) {
+    galleryDivModal.addEventListener('click', (e) => {
+      if (e.target === galleryDivModal) closeGalleryDivisionSelectModal();
+    });
+  }
+
   const openGalleryModal = () => {
     if (galleryForm) galleryForm.reset();
     resetGalleryUploadState();
@@ -1046,6 +1172,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modalTitle) modalTitle.textContent = 'Add Project Photo to Gallery';
     const submitBtn = document.getElementById('galleryModalSubmitBtn');
     if (submitBtn) submitBtn.textContent = 'Add to Gallery';
+
+    // Set default division category to the first published division
+    const cms = getCmsData();
+    const divisions = cms.divisions || defaultCmsData.divisions;
+    if (divisions.length > 0) {
+      setGallerySelectedDivision(divisions[0]);
+    }
+
     if (galleryModal) galleryModal.classList.add('active');
   };
 
@@ -1067,7 +1201,6 @@ document.addEventListener('DOMContentLoaded', () => {
     resetGalleryUploadState();
 
     const titleInput = document.getElementById('galleryAddTitle');
-    const categoryInput = document.getElementById('galleryAddCategory');
     const subtitleInput = document.getElementById('galleryAddSubtitle');
     const indexInput = document.getElementById('editGalleryIndex');
     const hiddenImg = document.getElementById('galleryAddImgUrl');
@@ -1079,9 +1212,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('galleryModalSubmitBtn');
 
     if (titleInput) titleInput.value = item.title || '';
-    if (categoryInput) categoryInput.value = item.category || 'fabrication';
     if (subtitleInput) subtitleInput.value = item.subtitle || '';
     if (indexInput) indexInput.value = idx;
+
+    // Match division category
+    const divisions = cms.divisions || defaultCmsData.divisions;
+    const catVal = item.category || (divisions[0] ? divisions[0].id : 'welding_fabrication');
+    const matchedDiv = divisions.find(d => d.id === catVal || d.id === divisionCategoryMap[catVal] || (catVal && d.id.includes(catVal))) || divisions[0];
+    setGallerySelectedDivision(matchedDiv);
 
     if (item.img) {
       if (hiddenImg) hiddenImg.value = item.img;

@@ -1413,6 +1413,26 @@ textarea.form-control {
   flex-direction: column;
 }
 
+.option-thumb-wrap {
+  width: 100%;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  background: var(--gray-100);
+}
+
+.option-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.division-option-card:hover .option-thumb-img {
+  transform: scale(1.05);
+}
+
 .division-option-card:hover {
   border-color: var(--primary-light);
   background: var(--gray-50);

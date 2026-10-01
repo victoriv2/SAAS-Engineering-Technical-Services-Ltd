@@ -27,82 +27,94 @@ document.addEventListener('DOMContentLoaded', () => {
       badge: "Registered Nigerian Engineering Contractor",
       title: "Industrial Engineering, Pipeline Services & Oilfield Solutions",
       subtitle: "Delivering high-precision welding, structural metal fabrication, surface pipeline construction, dredging spare parts, and heavy equipment leasing for upstream oilfield and industrial sectors across Nigeria.",
-      stat1: "15+ Years",
-      stat2: "6 Divisions",
-      stat3: "100% Safety",
-      stat4: "24/7 Ready"
+      stat1: "6",
+      stat2: "100%",
+      stat3: "24/7",
+      stat4: "PHC"
     },
     divisions: [
       {
         id: "welding_fabrication",
         badge: "Division 01",
         title: "Welding & Fabrication, Industrial Services & Training",
-        desc: "Structural steel, heavy spool fabrication, CNC machining, hydrostatic testing & coded welder apprenticeship.",
+        desc: "Our workshop and field teams carry out precision structural steel fabrication, specialized pipe spool manufacturing, and industrial machining. We feature advanced machinery including Pinacho CNC lathes, PEGAS bandsaws, and automated oxy-fuel track torch cutters, accompanied by comprehensive NDT testing and vocational training programs for certified pipefitters.",
         bullets: [
-          "Structural Steel & Heavy Metal Fabrication",
-          "ASME / API Certified Pipe Spool Welding",
-          "Industrial Lathe & CNC Precision Machining",
-          "Hydrostatic Pressure Testing (up to 15,000 PSI)"
+          "Structural Steel & Pipe Spool Fabrication",
+          "Automated Plate & Saddle Flame Cutting",
+          "Precision Lathe Machining & Milling",
+          "Hydrostatic Testing & NDT Inspection",
+          "Technical Welding & Pipefitting Training",
+          "Plant Mechanical Maintenance & Repairs"
         ]
       },
       {
         id: "pipeline_offshore",
         badge: "Division 02",
-        title: "Oil & Gas Services, Surface Pipeline & Offshore Support",
-        desc: "Surface pipeline trenching & laying, field orbital welding, saddle profiling & offshore platform maintenance.",
+        title: "Oil & Gas Services, Surface Pipeline Activities & Offshore Support",
+        desc: "We execute surface and cross-country pipeline construction, including route clearing, trenching, pipe stringing, field alignment, and certified orbital/stick welding. Our oilfield services extend to specialized pipe saddle profiling, energy equipment supplies, and maintenance support for deepwater and offshore production platforms.",
         bullets: [
-          "Cross-Country & Flowline Pipeline Construction",
-          "Saddle Fitting, Riser Clamping & Hot Tapping",
-          "Offshore Deck Structural Welding & Repairs",
-          "Pipeline Decommissioning & Hydro-testing"
+          "Surface Pipeline Construction & Laying",
+          "Field Pipe Welding & Tie-ins",
+          "Motorized Pipe Profile Cutting & Beveling",
+          "Offshore Platform Facilities Support",
+          "River & Road Pipeline Crossings",
+          "Upstream Oilfield Equipment Supply"
         ]
       },
       {
         id: "dredging_valves",
         badge: "Division 03",
-        title: "Dredging Services & Technical Parts (Valves, Impellers, Pumps)",
-        desc: "Slurry pump assemblies (DN200), machined volute casings, cast impellers & METRUS valve overhaul.",
+        title: "Dredging Services & Technical Parts (Valves, Impellers, Dredging Pumps)",
+        desc: "Supplying heavy-duty marine dredging equipment and critical flow control components. We manufacture and supply heavy cast impellers, machined volute pump casings, complete diesel engine-driven dredge pump skids, and an extensive inventory of industrial valves (gate, ball, check, and butterfly valves) tested on automated calibration benches.",
         bullets: [
-          "Heavy Dredge Pump Assemblies & Volute Casings",
-          "Cast High-Chrome Slurry Impeller Machining",
-          "Industrial Gate, Ball & Check Valve Maintenance",
-          "METRUS High-Pressure Test Bench Calibrations"
+          "Diesel Engine Slurry Dredge Pump Skids",
+          "Heavy Cast Iron Dredge Impellers",
+          "Machined Volute Pump Casings",
+          "DN200 (8-inch) Slurry Pump Assemblies",
+          "Industrial Valve Supply (All Sizes & Classes)",
+          "METRUS Pressure Testing & Valve Overhaul"
         ]
       },
       {
         id: "logistics_heavy_equipment",
         badge: "Division 04",
         title: "Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts",
-        desc: "Caterpillar sideboom pipelayers, excavators, heavy-haul trailers & authentic Caterpillar spare parts.",
+        desc: "Our heavy equipment division provides equipment rental, site logistics, and specialized transport across rugged project terrains. From Caterpillar sideboom pipelayers and hydraulic excavators to Goldhofer multi-axle heavy transport trailers, we facilitate seamless material handling, machinery leasing, and authentic Caterpillar replacement parts supply.",
         bullets: [
-          "Caterpillar Pipelayers, Excavators & Cranes",
-          "Lowbed Heavy Haulage Transport Services",
-          "OEM Caterpillar Ground Engaging Tools (G.E.T.)",
-          "Rapid Heavy Machinery Site Mobilization"
+          "Caterpillar Sideboom Pipelayer Hire",
+          "Heavy Hydraulic Excavator Leasing",
+          "Multi-Axle Heavy Haulage Transport",
+          "Mobile Crane Lifting Operations",
+          "Genuine Caterpillar Spares Supply",
+          "Industrial Plant Rigging & Heavy Towing"
         ]
       },
       {
         id: "manpower_instrumentation",
         badge: "Division 05",
         title: "Manpower Supply, Instrumentation & Control Engineering",
-        desc: "Certified engineers & coded welders staffing, SCADA calibration benches & pneumatic actuator servicing.",
+        desc: "Delivering qualified technical staffing and advanced industrial control engineering. We provide certified professionals (coded welders, NDT technicians, electrical engineers) alongside instrumentation design, pressure/temperature transmitter calibration, pneumatic actuator integration, and SCADA automation support.",
         bullets: [
-          "Certified Offshore Welders & NDT Technicians",
-          "Field Electrical & Flow Transmitter Calibration",
-          "Pneumatic & Hydraulic Actuator Maintenance",
-          "Safety-Critical Shutdown Personnel Deployment"
+          "Certified Technical Manpower Staffing",
+          "Instrumentation & Control Engineering",
+          "Pressure & Flow Transmitter Calibration",
+          "Control Valve Actuator Integration",
+          "SCADA & Control Room Operations",
+          "Facility Electrical & Control Maintenance"
         ]
       },
       {
         id: "general_contracts_procurement",
         badge: "Division 06",
         title: "General Contracts, Procurement & Industrial Safety Gadgets (PPE)",
-        desc: "Industrial supply chain, safety helmets, harnesses, PPE equipment & engineering consumables.",
+        desc: "Managing end-to-end industrial supply chain operations, technical materials procurement, and general contracting services. We supply certified Personal Protective Equipment (hard hats, face shields, hearing protection, fall protection harnesses, flame-retardant coveralls), safety instrumentation, office equipment, and engineering consumables.",
         bullets: [
-          "EN/ANSI Certified Industrial Safety Gear (PPE)",
-          "Structural Steel Flanges, Gaskets & Stud Bolts",
-          "Specialty Welding Electrodes & Fluxes",
-          "Turnkey Technical Procurement & Site Delivery"
+          "Certified Personal Protective Equipment (PPE)",
+          "Fall Protection Harnesses & Safety Gear",
+          "Industrial Procurement & Supply Chain",
+          "Technical Parts & Hardware Supply",
+          "General Merchandise & Contracting",
+          "Warehouse Logistics & Fast Delivery"
         ]
       }
     ],
@@ -173,6 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = localStorage.getItem(CMS_KEY);
       if (!data) return defaultCmsData;
       const parsed = JSON.parse(data);
+
+      let needsSave = false;
+
+      // Purge ghost gallery items
       if (Array.isArray(parsed.gallery)) {
         const cleaned = parsed.gallery.filter(item => 
           !item.title.toLowerCase().includes('high-pressure testing plant') &&
@@ -181,9 +197,29 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         if (cleaned.length !== parsed.gallery.length) {
           parsed.gallery = cleaned.length > 0 ? cleaned : defaultCmsData.gallery;
-          localStorage.setItem(CMS_KEY, JSON.stringify(parsed));
+          needsSave = true;
         }
       }
+
+      // Automatically replace outdated mock hero stats with exact user side values
+      if (parsed.hero && (parsed.hero.stat1 === '15+ Years' || parsed.hero.stat3 === '100% Safety')) {
+        parsed.hero.stat1 = defaultCmsData.hero.stat1;
+        parsed.hero.stat2 = defaultCmsData.hero.stat2;
+        parsed.hero.stat3 = defaultCmsData.hero.stat3;
+        parsed.hero.stat4 = defaultCmsData.hero.stat4;
+        needsSave = true;
+      }
+
+      // Automatically update division bullets if old truncated versions exist
+      if (Array.isArray(parsed.divisions) && parsed.divisions.length === 6 && parsed.divisions[0].bullets && parsed.divisions[0].bullets.length === 4) {
+        parsed.divisions = defaultCmsData.divisions;
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        localStorage.setItem(CMS_KEY, JSON.stringify(parsed));
+      }
+
       return parsed;
     } catch (e) {
       return defaultCmsData;

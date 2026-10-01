@@ -396,7 +396,85 @@
         }
       });
 
-      // 3e. Update dropdown-all link to show the exact division count and stay at bottom
+      // 3e. Render Modular Navbar Divisions Modal Grid (#navDivisionsModalGrid)
+      const navDivModalGrid = document.getElementById('navDivisionsModalGrid');
+      const navDivCount = document.getElementById('navDivisionsCount');
+      if (navDivCount) {
+        navDivCount.textContent = String(cmsData.divisions.length);
+      }
+
+      if (navDivModalGrid) {
+        navDivModalGrid.innerHTML = cmsData.divisions.map((div, index) => {
+          const targetId = divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id);
+          const cardImg = div.img || fallbackOptionImg;
+          const displayCardImg = (cardImg.startsWith('data:') || cardImg.startsWith('http')) ? cardImg : cardImg.replace(/^(\.\.\/)+/, '');
+          const badgeText = div.badge || `Division 0${index + 1}`;
+          const titleText = div.title || 'Technical Division';
+          const descText = div.desc || '';
+
+          return `
+            <div class="nav-division-card" data-div-id="${div.id}">
+              <div class="nav-division-thumb-wrap">
+                <span class="nav-division-badge-overlay">${badgeText}</span>
+                <img src="${displayCardImg}" alt="${titleText}" class="nav-division-thumb-img" onerror="this.src='logo/logo.png'">
+              </div>
+              <div class="nav-division-card-content">
+                <h4>${titleText}</h4>
+                <p>${descText}</p>
+                <div class="nav-division-card-actions">
+                  <div class="nav-division-actions-left">
+                    <a href="#${targetId}" class="btn btn-primary btn-xs nav-modal-explore-btn">
+                      <span>Explore</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42 5.43 5.43H5v2z"/></svg>
+                    </a>
+                    <a href="#contact" class="btn btn-secondary btn-xs nav-modal-inquire-btn" data-division-name="${titleText}">
+                      <span>Inquire</span>
+                    </a>
+                  </div>
+                  <button type="button" class="btn btn-outline-danger btn-xs nav-modal-remove-btn" data-div-id="${div.id}" data-div-title="${titleText}" title="Remove Division">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Attach event listeners to explore, inquire, and remove buttons
+        navDivModalGrid.querySelectorAll('.nav-modal-explore-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const navDivModal = document.getElementById('navDivisionsModal');
+            if (navDivModal) navDivModal.classList.remove('active');
+            document.body.style.overflow = '';
+          });
+        });
+
+        navDivModalGrid.querySelectorAll('.nav-modal-inquire-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const divName = btn.getAttribute('data-division-name');
+            const navDivModal = document.getElementById('navDivisionsModal');
+            if (navDivModal) navDivModal.classList.remove('active');
+            document.body.style.overflow = '';
+            const serviceDivisionInput = document.getElementById('serviceDivision');
+            const selectedDivisionText = document.getElementById('selectedDivisionText');
+            if (serviceDivisionInput && divName) serviceDivisionInput.value = divName;
+            if (selectedDivisionText && divName) selectedDivisionText.textContent = divName;
+          });
+        });
+
+        navDivModalGrid.querySelectorAll('.nav-modal-remove-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const divId = btn.getAttribute('data-div-id');
+            const divTitle = btn.getAttribute('data-div-title');
+            if (window.navRemoveDivision) {
+              window.navRemoveDivision(divId, divTitle);
+            }
+          });
+        });
+      }
+
+      // 3f. Update dropdown-all link if fallback dropdown exists
       if (dropdownAll) {
         const span = dropdownAll.querySelector('span');
         if (span) {
@@ -560,4 +638,147 @@
     }
   }, 500);
 
+  // =========================================================================
+  // Public / Admin Interactive Division Management (Add & Remove)
+  // =========================================================================
+  window.navRemoveDivision = async function (divId, divTitle) {
+    const isAuthed = localStorage.getItem('saas_admin_auth') === 'true';
+    let confirmed = false;
+    if (window.customConfirm) {
+      confirmed = await window.customConfirm(`Are you sure you want to remove "${divTitle}"? It will be removed immediately from the public website, navigation menus, and activities section.`, {
+        title: 'Remove Technical Division',
+        subtitle: 'Confirm Removal',
+        confirmText: 'Remove Division',
+        cancelText: 'Cancel',
+        isDanger: true
+      });
+    } else {
+      confirmed = confirm(`Are you sure you want to remove "${divTitle}"?`);
+    }
+
+    if (!confirmed) return;
+
+    if (!isAuthed) {
+      const pass = prompt('Admin authorization required. Enter Admin Password to confirm division removal:');
+      if (pass !== 'admin123') {
+        if (window.customAlert) {
+          window.customAlert('Incorrect password. Action unauthorized.', 'Access Denied', 'danger');
+        } else {
+          alert('Incorrect password. Action unauthorized.');
+        }
+        return;
+      }
+      localStorage.setItem('saas_admin_auth', 'true');
+    }
+
+    try {
+      let stored = localStorage.getItem(CMS_KEY);
+      let cms = stored ? JSON.parse(stored) : null;
+      if (!cms || !Array.isArray(cms.divisions)) return;
+
+      const idx = cms.divisions.findIndex(d => d.id === divId);
+      if (idx !== -1) {
+        cms.divisions.splice(idx, 1);
+        if (!cms.hero) cms.hero = {};
+        cms.hero.stat1 = String(cms.divisions.length);
+        
+        const timestamp = Date.now();
+        localStorage.setItem(CMS_KEY, JSON.stringify(cms));
+        localStorage.setItem(TIMESTAMP_KEY, timestamp);
+
+        if (window.BroadcastChannel) {
+          const ch = new BroadcastChannel(CHANNEL_NAME);
+          ch.postMessage({ type: 'CMS_UPDATED', data: cms, timestamp: timestamp });
+          ch.close();
+        }
+
+        applyCmsData(cms);
+
+        if (window.customAlert) {
+          window.customAlert(`"${divTitle}" has been removed successfully.`, 'Division Removed', 'info');
+        }
+      }
+    } catch (err) {
+      console.error('Error removing division:', err);
+    }
+  };
+
+  const quickAddDivForm = document.getElementById('quickAddDivForm');
+  if (quickAddDivForm) {
+    quickAddDivForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const isAuthed = localStorage.getItem('saas_admin_auth') === 'true';
+      if (!isAuthed) {
+        const pass = prompt('Admin authorization required. Enter Admin Password to add a new division:');
+        if (pass !== 'admin123') {
+          if (window.customAlert) {
+            window.customAlert('Incorrect password. Action unauthorized.', 'Access Denied', 'danger');
+          } else {
+            alert('Incorrect password. Action unauthorized.');
+          }
+          return;
+        }
+        localStorage.setItem('saas_admin_auth', 'true');
+      }
+
+      const titleInput = document.getElementById('quickDivTitle');
+      const badgeInput = document.getElementById('quickDivBadge');
+      const imgSelect = document.getElementById('quickDivImageSelect');
+      const descInput = document.getElementById('quickDivDesc');
+      const bulletsInput = document.getElementById('quickDivBullets');
+
+      const titleVal = titleInput ? titleInput.value.trim() : '';
+      if (!titleVal) return;
+
+      try {
+        let stored = localStorage.getItem(CMS_KEY);
+        let cms = stored ? JSON.parse(stored) : null;
+        if (!cms || !Array.isArray(cms.divisions)) return;
+
+        const badgeVal = badgeInput && badgeInput.value.trim() ? badgeInput.value.trim() : `Division 0${cms.divisions.length + 1}`;
+        const descVal = descInput ? descInput.value.trim() : '';
+        const imgVal = imgSelect ? imgSelect.value : 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
+        const bulletsVal = bulletsInput && bulletsInput.value.trim() 
+          ? bulletsInput.value.split(',').map(b => b.trim()).filter(Boolean)
+          : ['Specialized Engineering', 'Certified Compliance', 'Technical Support'];
+
+        const newDiv = {
+          id: 'div_' + Date.now(),
+          badge: badgeVal,
+          title: titleVal,
+          desc: descVal,
+          img: imgVal,
+          bullets: bulletsVal
+        };
+
+        cms.divisions.push(newDiv);
+        if (!cms.hero) cms.hero = {};
+        cms.hero.stat1 = String(cms.divisions.length);
+
+        const timestamp = Date.now();
+        localStorage.setItem(CMS_KEY, JSON.stringify(cms));
+        localStorage.setItem(TIMESTAMP_KEY, timestamp);
+
+        if (window.BroadcastChannel) {
+          const ch = new BroadcastChannel(CHANNEL_NAME);
+          ch.postMessage({ type: 'CMS_UPDATED', data: cms, timestamp: timestamp });
+          ch.close();
+        }
+
+        const quickAddDivModal = document.getElementById('quickAddDivisionModal');
+        if (quickAddDivModal) quickAddDivModal.classList.remove('active');
+        document.body.style.overflow = '';
+        quickAddDivForm.reset();
+        applyCmsData(cms);
+
+        if (window.customAlert) {
+          window.customAlert(`Division "${titleVal}" created successfully!`, 'Division Created', 'info');
+        }
+      } catch (err) {
+        console.error('Failed to create division:', err);
+      }
+    });
+  }
+
 })();
+

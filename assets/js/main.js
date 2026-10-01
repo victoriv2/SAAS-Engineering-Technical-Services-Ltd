@@ -40,12 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     allNavClickables.forEach(item => {
       item.addEventListener('click', (e) => {
-        // In mobile view, clicking the Core Divisions trigger toggles the sub-menu accordion
-        if (item === dropdownTrigger && window.innerWidth <= 1140) {
+        if (item === dropdownTrigger) {
           e.preventDefault();
-          if (divisionsDropdown) {
-            const isSubOpen = divisionsDropdown.classList.toggle('mobile-open');
-            dropdownTrigger.setAttribute('aria-expanded', isSubOpen);
+          closeMobileMenu();
+          const navDivModal = document.getElementById('navDivisionsModal');
+          if (navDivModal) {
+            navDivModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
           }
           return;
         }
@@ -54,8 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && navMenu.classList.contains('open')) {
-        closeMobileMenu();
+      if (e.key === 'Escape') {
+        if (navMenu.classList.contains('open')) {
+          closeMobileMenu();
+        }
+        const navDivModal = document.getElementById('navDivisionsModal');
+        if (navDivModal && navDivModal.classList.contains('active')) {
+          navDivModal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+        const quickAddDivModal = document.getElementById('quickAddDivisionModal');
+        if (quickAddDivModal && quickAddDivModal.classList.contains('active')) {
+          quickAddDivModal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
       }
     });
 
@@ -63,6 +76,69 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.innerWidth > 1140 && navMenu.classList.contains('open')) {
         closeMobileMenu();
       }
+    });
+  }
+
+  // =========================================================================
+  // Core Operational Divisions Modular Modal Navigation Handlers
+  // =========================================================================
+  const navDivModal = document.getElementById('navDivisionsModal');
+  const closeNavDivisionsModal = document.getElementById('closeNavDivisionsModal');
+  const cancelNavDivisionsModal = document.getElementById('cancelNavDivisionsModal');
+  const viewAllActivitiesBtn = document.getElementById('viewAllActivitiesBtn');
+
+  const closeNavModal = () => {
+    if (navDivModal) navDivModal.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  if (dropdownTrigger) {
+    dropdownTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (navDivModal) {
+        navDivModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
+
+  if (closeNavDivisionsModal) closeNavDivisionsModal.addEventListener('click', closeNavModal);
+  if (cancelNavDivisionsModal) cancelNavDivisionsModal.addEventListener('click', closeNavModal);
+  if (viewAllActivitiesBtn) viewAllActivitiesBtn.addEventListener('click', closeNavModal);
+  if (navDivModal) {
+    navDivModal.addEventListener('click', (e) => {
+      if (e.target === navDivModal) closeNavModal();
+    });
+  }
+
+  // Quick Add Division Modular Modal Open/Close Controls
+  const navAddDivisionBtn = document.getElementById('navAddDivisionBtn');
+  const quickAddDivModal = document.getElementById('quickAddDivisionModal');
+  const closeQuickAddDivModal = document.getElementById('closeQuickAddDivModal');
+  const cancelQuickAddDivModal = document.getElementById('cancelQuickAddDivModal');
+
+  const closeQuickModal = () => {
+    if (quickAddDivModal) quickAddDivModal.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  if (navAddDivisionBtn) {
+    navAddDivisionBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (quickAddDivModal) {
+        quickAddDivModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        const titleInput = document.getElementById('quickDivTitle');
+        if (titleInput) setTimeout(() => titleInput.focus(), 60);
+      }
+    });
+  }
+
+  if (closeQuickAddDivModal) closeQuickAddDivModal.addEventListener('click', closeQuickModal);
+  if (cancelQuickAddDivModal) cancelQuickAddDivModal.addEventListener('click', closeQuickModal);
+  if (quickAddDivModal) {
+    quickAddDivModal.addEventListener('click', (e) => {
+      if (e.target === quickAddDivModal) closeQuickModal();
     });
   }
 

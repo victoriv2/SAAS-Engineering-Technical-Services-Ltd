@@ -653,7 +653,13 @@
             <input type="text" id="galleryAddTitle" class="form-control no-icon" placeholder="e.g. High-Pressure Manifold Testing" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="galleryAddCategory">Division Category</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label" for="galleryAddCategory" style="margin-bottom: 0;">Division Category</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="galleryQuickAddDivBtn" title="Add or manage operational divisions" style="padding: 0.25rem 0.65rem; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <span>+ Add Division</span>
+              </button>
+            </div>
             <select id="galleryAddCategory" class="form-control no-icon" required>
               <option value="welding_fabrication">Division 01 - Welding &amp; Metal Fabrication</option>
               <option value="pipeline_offshore">Division 02 - Oil &amp; Gas Pipeline Services</option>

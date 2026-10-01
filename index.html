@@ -69,60 +69,12 @@
         <a href="#home" class="nav-link active">Home</a>
         <a href="#about" class="nav-link">About Us</a>
         
-        <!-- Core Divisions with Interactive Dropdown -->
+        <!-- Core Divisions with Interactive Modular Modal -->
         <div class="nav-item-dropdown" id="divisionsDropdown">
-          <a href="#activities" class="nav-link nav-dropdown-trigger" id="dropdownTrigger" aria-expanded="false">
+          <button type="button" class="nav-link nav-dropdown-trigger" id="dropdownTrigger" aria-haspopup="dialog" aria-expanded="false" style="background: none; border: none; font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; color: inherit;">
             <span>Core Divisions</span>
-            <svg class="dropdown-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-          </a>
-          <div class="nav-dropdown-menu" id="dropdownMenu">
-            <a href="#div-welding" class="dropdown-item">
-              <span class="dropdown-num">01</span>
-              <div class="dropdown-info">
-                <strong>Welding & Fabrication</strong>
-                <small>Structural Works, Lathe CNC & Training</small>
-              </div>
-            </a>
-            <a href="#div-pipeline" class="dropdown-item">
-              <span class="dropdown-num">02</span>
-              <div class="dropdown-info">
-                <strong>Oil & Gas Pipeline Services</strong>
-                <small>Surface Pipelines & Offshore Platforms</small>
-              </div>
-            </a>
-            <a href="#div-dredging" class="dropdown-item">
-              <span class="dropdown-num">03</span>
-              <div class="dropdown-info">
-                <strong>Dredging & Technical Parts</strong>
-                <small>Slurry Pumps, Impellers & METRUS Testing</small>
-              </div>
-            </a>
-            <a href="#div-logistics" class="dropdown-item">
-              <span class="dropdown-num">04</span>
-              <div class="dropdown-info">
-                <strong>Logistics & Heavy Equipment</strong>
-                <small>Caterpillar Pipelayers, Cranes & Spares</small>
-              </div>
-            </a>
-            <a href="#div-manpower" class="dropdown-item">
-              <span class="dropdown-num">05</span>
-              <div class="dropdown-info">
-                <strong>Manpower & Instrumentation</strong>
-                <small>Certified Staffing, SCADA & Calibration</small>
-              </div>
-            </a>
-            <a href="#div-procurement" class="dropdown-item">
-              <span class="dropdown-num">06</span>
-              <div class="dropdown-info">
-                <strong>Procurement & Safety PPE</strong>
-                <small>Industrial Equipment, Gear & Contracts</small>
-              </div>
-            </a>
-            <a href="#activities" class="dropdown-all">
-              <span>View All 6 Operational Divisions</span>
-              <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42 5.43 5.43H5v2z"/></svg>
-            </a>
-          </div>
+            <svg class="dropdown-chevron" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
         </div>
 
         <a href="#gallery" class="nav-link">Facilities & Gallery</a>
@@ -680,6 +632,103 @@
       </div>
     </section>
   </main>
+
+  <!-- Core Operational Divisions Modular Modal Menu -->
+  <div class="division-modal-overlay" id="navDivisionsModal" role="dialog" aria-modal="true" aria-labelledby="navDivModalTitle">
+    <div class="division-modal-container" style="max-width: 980px;">
+      <div class="division-modal-header" style="align-items: center; justify-content: space-between;">
+        <div>
+          <div class="section-tag" style="margin-bottom: 0.25rem;">
+            <svg viewBox="0 0 24 24"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/></svg>
+            Operational Scope
+          </div>
+          <h3 id="navDivModalTitle" style="margin: 0; font-size: 1.35rem; color: var(--primary);">Core Engineering Divisions</h3>
+          <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--gray-600);">Browse specialized capabilities, explore activities, or add and manage technical divisions.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <button type="button" class="btn btn-accent btn-sm" id="navAddDivisionBtn" style="padding: 0.45rem 0.95rem; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>+ Add Division</span>
+          </button>
+          <button type="button" class="division-modal-close" id="closeNavDivisionsModal" aria-label="Close modal">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="division-modal-grid" id="navDivisionsModalGrid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.15rem; max-height: 60vh; padding: 1.5rem;">
+        <!-- Populated dynamically by cms-sync.js with authentic images, titles, descriptions, and action buttons -->
+      </div>
+      <div class="division-modal-footer" style="justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.85rem; color: var(--gray-600);">
+          <span id="navDivisionsCount" style="font-weight: 700; color: var(--primary);">6</span> Operational Divisions Synced Real-Time
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <button type="button" class="btn btn-secondary btn-sm" id="cancelNavDivisionsModal">Close</button>
+          <a href="#activities" class="btn btn-primary btn-sm" id="viewAllActivitiesBtn">View Full Page Divisions</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Add Division Modular Modal (Public / Admin Interactive) -->
+  <div class="dialog-modal-overlay" id="quickAddDivisionModal" role="dialog" aria-modal="true" aria-labelledby="quickAddDivTitle">
+    <div class="dialog-modal-container" style="max-width: 540px;">
+      <div class="dialog-modal-header">
+        <div class="dialog-icon-wrapper info">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </div>
+        <div style="flex: 1;">
+          <h3 id="quickAddDivTitle" style="font-size: 1.15rem; color: var(--primary); margin: 0;">Add New Operational Division</h3>
+          <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0.15rem 0 0;">Create a service division that immediately appears across all pages</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeQuickAddDivModal" aria-label="Close dialog" style="background: none; border: none; cursor: pointer; color: var(--gray-400); display: flex; align-items: center; justify-content: center; padding: 0.25rem;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <form id="quickAddDivForm">
+        <div class="dialog-modal-body" style="padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0.85rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="quickDivTitle" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 0.3rem;">Division Title *</label>
+            <input type="text" id="quickDivTitle" class="form-control" placeholder="e.g. Subsea Valve Overhaul & Testing" required style="width: 100%; padding: 0.55rem 0.75rem; border: 1.5px solid var(--gray-300); border-radius: 6px; font-size: 0.88rem;">
+          </div>
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="quickDivBadge" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 0.3rem;">Badge Label</label>
+              <input type="text" id="quickDivBadge" class="form-control" placeholder="e.g. Division 07" style="width: 100%; padding: 0.55rem 0.75rem; border: 1.5px solid var(--gray-300); border-radius: 6px; font-size: 0.88rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="quickDivImageSelect" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 0.3rem;">Division Cover Photo</label>
+              <select id="quickDivImageSelect" class="form-control" style="width: 100%; padding: 0.55rem 0.75rem; border: 1.5px solid var(--gray-300); border-radius: 6px; font-size: 0.88rem;">
+                <option value="assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg">Machine Shop Facility</option>
+                <option value="assets/images/2_Oil_Gas_Pipeline_Services_Surface_Offshore/offshore_production_platform_maintenance.jpeg">Offshore Platform</option>
+                <option value="assets/images/3_Dredging_Dredge_Parts_Valves_METRUS/heavy_slurry_dredging_pumps_yard.jpeg">Heavy Slurry Pumps</option>
+                <option value="assets/images/4_Logistics_Heavy_Duty_Equipment_Pipelayers/heavy_pipelayer_fleet_caterpillar_crawler.jpeg">Caterpillar Pipelayers</option>
+                <option value="assets/images/5_Manpower_Supply_Instrumentation_Scada/subsea_diver_underwater_inspection_crew.jpeg">Manpower & Inspection</option>
+                <option value="assets/images/6_General_Contracts_Procurement_Safety_PPE/warehouse_logistics_industrial_equipment_staging.jpeg">Warehouse Logistics</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="quickDivDesc" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 0.3rem;">Description *</label>
+            <textarea id="quickDivDesc" class="form-control" rows="2" placeholder="Brief summary of division operations and engineering capabilities" required style="width: 100%; padding: 0.55rem 0.75rem; border: 1.5px solid var(--gray-300); border-radius: 6px; font-size: 0.88rem;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="quickDivBullets" style="font-size: 0.82rem; font-weight: 700; margin-bottom: 0.3rem;">Key Activities (Comma-separated)</label>
+            <input type="text" id="quickDivBullets" class="form-control" placeholder="Hydrostatic Testing, SCADA Integration, API 598 Inspection" style="width: 100%; padding: 0.55rem 0.75rem; border: 1.5px solid var(--gray-300); border-radius: 6px; font-size: 0.88rem;">
+          </div>
+        </div>
+        <div class="dialog-modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+          <a href="1/1/1/admin/index.html#divisions" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem;">
+            <span>Open Admin Portal &rarr;</span>
+          </a>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary btn-sm" id="cancelQuickAddDivModal">Cancel</button>
+            <button type="submit" class="btn btn-accent btn-sm" style="font-weight: 700;">+ Create Division</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Lightbox Modal -->
   <div class="modal-lightbox" id="lightboxModal">

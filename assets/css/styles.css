@@ -2305,3 +2305,134 @@ textarea.form-control {
   gap: 0.75rem;
 }
 
+/* ==========================================================================
+   Modular Core Divisions Modal Menu & Dynamic Cards
+   ========================================================================== */
+#navDivisionsModal .division-modal-container {
+  max-width: 1040px;
+  max-height: 90vh;
+}
+
+.nav-division-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.nav-division-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.12);
+}
+
+.nav-division-thumb-wrap {
+  width: 100%;
+  height: 135px;
+  position: relative;
+  overflow: hidden;
+  background: var(--gray-800);
+}
+
+.nav-division-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.nav-division-card:hover .nav-division-thumb-img {
+  transform: scale(1.06);
+}
+
+.nav-division-badge-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.88);
+  color: var(--accent);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--radius-sm);
+  z-index: 2;
+}
+
+.nav-division-card-content {
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.nav-division-card-content h4 {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0 0 0.4rem 0;
+  line-height: 1.35;
+}
+
+.nav-division-card-content p {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  line-height: 1.45;
+  margin: 0 0 0.85rem 0;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nav-division-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+.nav-division-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-xs {
+  padding: 0.32rem 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-outline-danger {
+  border: 1px solid #fee2e2;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-outline-danger:hover {
+  background: #dc2626;
+  color: var(--white);
+  border-color: #dc2626;
+}
+
+

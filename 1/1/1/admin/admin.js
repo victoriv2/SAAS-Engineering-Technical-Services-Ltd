@@ -1287,6 +1287,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeGalleryModalBtn) closeGalleryModalBtn.addEventListener('click', closeGalleryModal);
   if (cancelGalleryModalBtn) cancelGalleryModalBtn.addEventListener('click', closeGalleryModal);
 
+  const galleryQuickAddDivBtn = document.getElementById('galleryQuickAddDivBtn');
+  if (galleryQuickAddDivBtn) {
+    galleryQuickAddDivBtn.addEventListener('click', () => {
+      openDivisionModal(-1);
+    });
+  }
+
   window.editGalleryItem = (idx) => {
     const cms = getCmsData();
     const gallery = Array.isArray(cms.gallery) ? cms.gallery : defaultCmsData.gallery;

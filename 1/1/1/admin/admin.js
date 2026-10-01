@@ -226,9 +226,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Real-Time Inter-Tab Broadcast Channel & Timestamp Signaler
+  const TIMESTAMP_KEY = 'saas_cms_timestamp';
+  const CHANNEL_NAME = 'saas_cms_channel';
+  const cmsBroadcast = typeof window.BroadcastChannel !== 'undefined' ? new BroadcastChannel(CHANNEL_NAME) : null;
+
   const saveCmsData = (data) => {
     localStorage.setItem(CMS_KEY, JSON.stringify(data));
-    showToast("Changes published to public website.");
+    localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+    if (cmsBroadcast) {
+      try {
+        cmsBroadcast.postMessage({ type: 'CMS_UPDATED', data: data });
+      } catch (err) {
+        console.warn('BroadcastChannel error:', err);
+      }
+    }
+    showToast("Changes published live to public website.");
   };
 
   const getInquiries = () => {
@@ -979,6 +992,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const parsed = JSON.parse(event.target.result);
           if (parsed.cms) {
             localStorage.setItem(CMS_KEY, JSON.stringify(parsed.cms));
+            localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+            if (cmsBroadcast) {
+              try { cmsBroadcast.postMessage({ type: 'CMS_UPDATED', data: parsed.cms }); } catch(e) {}
+            }
           }
           if (parsed.inquiries) {
             localStorage.setItem(INQUIRIES_KEY, JSON.stringify(parsed.inquiries));
@@ -997,6 +1014,10 @@ document.addEventListener('DOMContentLoaded', () => {
     resetDefaultsBtn.addEventListener('click', () => {
       if (confirm("Reset all website content and configurations back to factory defaults? Any custom edits will be reverted.")) {
         localStorage.removeItem(CMS_KEY);
+        localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+        if (cmsBroadcast) {
+          try { cmsBroadcast.postMessage({ type: 'CMS_UPDATED', data: defaultCmsData }); } catch(e) {}
+        }
         showToast("Reverted to factory default content.");
         initDashboard();
       }

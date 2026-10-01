@@ -108,52 +108,52 @@ document.addEventListener('DOMContentLoaded', () => {
     ],
     gallery: [
       {
-        title: "High-Pressure Manifold Testing",
+        title: "High-Pressure Testing Plant",
         category: "fabrication",
         subtitle: "Hydrostatic Facility, Port Harcourt",
-        img: "../../../assets/images/1_Welding_and_Fabrication/pressure_testing_assembly_plant.jpeg"
+        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/pressure_testing_assembly_plant.jpeg"
       },
       {
         title: "Precision Lathe Machining",
         category: "fabrication",
         subtitle: "Mechanical Machine Shop",
-        img: "../../../assets/images/1_Welding_and_Fabrication/heavy_duty_lathe_machine.jpeg"
+        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/pinacho_cnc_lathe_machining_equipment.jpeg"
       },
       {
         title: "Offshore Production Platform",
         category: "pipeline",
         subtitle: "Niger Delta Offshore Field",
-        img: "../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/offshore_oil_and_gas_production_platform.jpeg"
+        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/offshore_oil_and_gas_production_platform.jpeg"
       },
       {
-        title: "Subsea Pipeline Saddle Installation",
+        title: "Surface Pipeline Construction",
         category: "pipeline",
         subtitle: "Flowline Trenching Operations",
-        img: "../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/underwater_welding_diving.jpeg"
+        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg"
       },
       {
-        title: "Dredge Slurry Pump Assembly",
+        title: "Dredge Slurry Pump Impellers",
         category: "dredging",
         subtitle: "Channel Sand Mining Site",
-        img: "../../../assets/images/3_Dredging_Services_and_Parts/dredging_slurry_pump_assembly.jpeg"
+        img: "../../../../assets/images/3_Dredging_Services_and_Technical_Parts/dredge_slurry_pump_cast_impellers.jpeg"
       },
       {
-        title: "Industrial Valve Hydrostatic Bench",
+        title: "Industrial Valve Testing Rig",
         category: "dredging",
         subtitle: "METRUS Automated Test Rig",
-        img: "../../../assets/images/3_Dredging_Services_and_Parts/metrus_valve_testing_bench.jpeg"
+        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/valve_pressure_testing_inspection_rig.jpeg"
       },
       {
         title: "Caterpillar Heavy Pipeline Equipment",
         category: "logistics",
         subtitle: "Sideboom Pipelayer Fleet",
-        img: "../../../assets/images/4_Logistics_and_Heavy_Duty_Equipment/caterpillar_heavy_duty_sideboom_pipelayer.jpeg"
+        img: "../../../../assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg"
       },
       {
-        title: "SCADA Instrumentation Rig",
-        category: "manpower",
-        subtitle: "Gas Processing Facility",
-        img: "../../../assets/images/1_Welding_and_Fabrication/precision_welding_pipe_rotator.jpeg"
+        title: "Safety Helmets & PPE",
+        category: "procurement",
+        subtitle: "Industrial Procurement",
+        img: "../../../../assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg"
       }
     ]
   };
@@ -690,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     galleryGrid.innerHTML = gallery.map((item, idx) => `
       <div class="gallery-admin-card">
-        <img src="${item.img}" alt="${escapeHtml(item.title)}" class="gallery-admin-img" onerror="this.src='../../../logo/logo.png'; this.style.padding='2rem';">
+        <img src="${item.img}" alt="${escapeHtml(item.title)}" class="gallery-admin-img" onerror="this.src='../../../../logo/logo.png'; this.style.padding='2rem';">
         <div class="gallery-admin-body">
           <h4>${escapeHtml(item.title)}</h4>
           <span>${escapeHtml(item.subtitle)}</span>

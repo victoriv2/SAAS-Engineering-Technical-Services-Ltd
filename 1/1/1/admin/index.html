@@ -574,36 +574,54 @@
 
   <!-- 2. Division Add / Edit Modal -->
   <div class="modal-overlay" id="divisionEditModal">
-    <div class="modal-container">
+    <div class="modal-container" style="max-width: 660px;">
       <div class="modal-header">
-        <h3 id="divisionModalTitle">Add Operational Division</h3>
-        <button type="button" class="modal-close-btn" id="closeDivisionModalBtn">
+        <div class="modal-header-content">
+          <div class="modal-tag">
+            <svg viewBox="0 0 24 24"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/></svg>
+            Operational Scope
+          </div>
+          <h3 id="divisionModalTitle">Add Operational Division</h3>
+          <p class="modal-sub">Configure engineering scope, service specifications, and public cover imagery.</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeDivisionModalBtn" aria-label="Close dialog">
           <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="padding: 1.5rem;">
         <form id="divisionEditForm">
           <input type="hidden" id="editDivisionIndex">
-          <div class="form-group">
-            <label class="form-label" for="editDivisionBadge">Division Badge (e.g. Division 07)</label>
-            <input type="text" id="editDivisionBadge" class="form-control no-icon" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="editDivisionTitle">Division Title</label>
-            <input type="text" id="editDivisionTitle" class="form-control no-icon" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="editDivisionDesc">Scope Description</label>
-            <textarea id="editDivisionDesc" class="form-control no-icon" rows="3" required></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="editDivisionBullets">Key Bullet Points (one per line)</label>
-            <textarea id="editDivisionBullets" class="form-control no-icon" rows="4" placeholder="Bullet 1&#10;Bullet 2&#10;Bullet 3"></textarea>
+          
+          <div class="form-row" style="display: grid; grid-template-columns: 140px 1fr; gap: 0.85rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="editDivisionBadge">Badge Label *</label>
+              <input type="text" id="editDivisionBadge" class="form-control no-icon" placeholder="Division 07" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="editDivisionTitle">Division Title *</label>
+              <input type="text" id="editDivisionTitle" class="form-control no-icon" placeholder="e.g. Subsea Valve Overhaul & Calibration" required>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Division Photo / Cover Image</label>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="editDivisionDesc">Scope Description *</label>
+            <textarea id="editDivisionDesc" class="form-control no-icon" rows="3" placeholder="Detailed engineering overview of division activities and industrial standards..." required></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="editDivisionBullets">Key Technical Capabilities &amp; Activities</label>
+            <textarea id="editDivisionBullets" class="form-control no-icon" rows="3" placeholder="Hydrostatic Pressure Testing (API 598)&#10;Actuator & Valve Diagnostics&#10;On-Site Emergency Response"></textarea>
+            <small style="font-size: 0.75rem; color: var(--gray-500); display: block; margin-top: 0.25rem;">Enter key operational highlights or certifications, one per line.</small>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Division Cover Photo</label>
             
+            <!-- Quick Preset Thumbnail Picker -->
+            <div class="division-preset-grid" id="divisionPresetGrid">
+              <!-- Dynamically populated or static authentic options -->
+            </div>
+
             <!-- Hidden File Input for Device Gallery Selection -->
             <input type="file" id="divisionFileInput" accept="image/*" style="display: none;">
             
@@ -612,7 +630,7 @@
               <div class="upload-dropzone-icon">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
               </div>
-              <div class="upload-dropzone-title">Click to upload from gallery or drag &amp; drop</div>
+              <div class="upload-dropzone-title">Click to upload custom photo or drag &amp; drop</div>
               <div class="upload-dropzone-sub">Supports PNG, JPG, JPEG, WEBP</div>
             </div>
 
@@ -637,9 +655,12 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="padding: 1rem 1.5rem; background: var(--gray-50); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 0.65rem;">
         <button type="button" class="btn btn-secondary btn-sm" id="cancelDivisionEditBtn">Cancel</button>
-        <button type="submit" form="divisionEditForm" class="btn btn-accent btn-sm">Save Division</button>
+        <button type="submit" form="divisionEditForm" class="btn btn-accent btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          <span>Save Division</span>
+        </button>
       </div>
     </div>
   </div>
@@ -668,7 +689,7 @@
               </div>
               <button type="button" class="btn btn-secondary btn-sm" id="galleryQuickAddDivBtn" title="Add or manage operational divisions" style="padding: 0.25rem 0.65rem; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                <span>+ Add Division</span>
+                <span>Add Division</span>
               </button>
             </div>
             <input type="hidden" id="galleryAddCategory" required>

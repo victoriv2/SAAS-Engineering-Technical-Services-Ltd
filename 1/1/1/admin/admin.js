@@ -870,6 +870,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const divisionUrlInputContainer = document.getElementById('divisionUrlInputContainer');
   const divisionManualUrlInput = document.getElementById('divisionManualUrlInput');
 
+  const divisionPresets = [
+    { title: 'Fabrication Workshop', src: 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg' },
+    { title: 'Pipeline Construction', src: 'assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg' },
+    { title: 'Dredge Pump Skid', src: 'assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg' },
+    { title: 'Caterpillar Fleet', src: 'assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg' },
+    { title: 'Instrumentation Bench', src: 'assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg' },
+    { title: 'Safety Gear & PPE', src: 'assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg' }
+  ];
+
+  const renderDivisionPresets = (activeSrc = '') => {
+    const container = document.getElementById('divisionPresetGrid');
+    if (!container) return;
+    const cleanActive = (activeSrc || '').replace(/^(\.\.\/)+/, '');
+    container.innerHTML = divisionPresets.map(p => {
+      const isSelected = cleanActive && cleanActive.includes(p.src);
+      return `
+        <div class="division-preset-thumb ${isSelected ? 'active' : ''}" data-src="${p.src}" title="${p.title}" role="button" tabindex="0">
+          <img src="../../../../${p.src}" alt="${p.title}" onerror="this.src='../../../../logo/logo.png'">
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.division-preset-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        const src = thumb.getAttribute('data-src');
+        container.querySelectorAll('.division-preset-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        setDivisionPreview(src, src.split('/').pop());
+      });
+    });
+  };
+
   const setDivisionPreview = (src, filename = 'division_cover.jpg') => {
     if (!editDivisionImg) return;
     editDivisionImg.value = src;
@@ -881,6 +913,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
     if (divisionDropzone) divisionDropzone.style.display = 'none';
+
+    const presetContainer = document.getElementById('divisionPresetGrid');
+    if (presetContainer) {
+      presetContainer.querySelectorAll('.division-preset-thumb').forEach(t => {
+        const thumbSrc = t.getAttribute('data-src');
+        if (thumbSrc && src.includes(thumbSrc)) {
+          t.classList.add('active');
+        } else {
+          t.classList.remove('active');
+        }
+      });
+    }
   };
 
   const resetDivisionUpload = () => {
@@ -890,6 +934,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (divisionUrlInputContainer) divisionUrlInputContainer.style.display = 'none';
     if (divisionManualUrlInput) divisionManualUrlInput.value = '';
     if (toggleDivisionUrlBtn) toggleDivisionUrlBtn.textContent = 'Or paste image URL instead';
+    const presetContainer = document.getElementById('divisionPresetGrid');
+    if (presetContainer) {
+      presetContainer.querySelectorAll('.division-preset-thumb').forEach(t => t.classList.remove('active'));
+    }
   };
 
   const processDivisionImage = (file) => {
@@ -992,26 +1040,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resetDivisionUpload();
 
+    let targetImg = fallbackDivisionImg;
     if (index >= 0 && divisions[index]) {
       const d = divisions[index];
-      title.textContent = `Edit Division: ${d.badge}`;
-      indexInput.value = index;
-      badgeInput.value = d.badge;
-      titleInput.value = d.title;
-      descInput.value = d.desc;
-      bulletsInput.value = (d.bullets || []).join('\n');
-      const imgPath = d.img || divisionImages[d.id] || fallbackDivisionImg;
-      setDivisionPreview(imgPath, `${d.badge || 'division'}_photo.jpg`);
+      if (title) title.textContent = `Edit Division: ${d.badge}`;
+      if (indexInput) indexInput.value = index;
+      if (badgeInput) badgeInput.value = d.badge;
+      if (titleInput) titleInput.value = d.title;
+      if (descInput) descInput.value = d.desc;
+      if (bulletsInput) bulletsInput.value = (d.bullets || []).join('\n');
+      targetImg = d.img || divisionImages[d.id] || fallbackDivisionImg;
+      setDivisionPreview(targetImg, `${d.badge || 'division'}_photo.jpg`);
     } else {
       const nextNum = divisions.length + 1;
-      title.textContent = "Add New Operational Division";
-      indexInput.value = -1;
-      badgeInput.value = `Division 0${nextNum}`;
-      titleInput.value = "";
-      descInput.value = "";
-      bulletsInput.value = "";
+      if (title) title.textContent = "Add New Operational Division";
+      if (indexInput) indexInput.value = -1;
+      if (badgeInput) badgeInput.value = `Division 0${nextNum}`;
+      if (titleInput) titleInput.value = "";
+      if (descInput) descInput.value = "";
+      if (bulletsInput) bulletsInput.value = "";
+      targetImg = fallbackDivisionImg;
       setDivisionPreview(fallbackDivisionImg, 'default_division.jpg');
     }
+
+    renderDivisionPresets(targetImg);
 
     if (divisionModal) {
       divisionModal.classList.add('active');
@@ -1048,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cms.hero.stat1 = String(cms.divisions.length);
       saveCmsData(cms);
       renderDivisions();
-      if (typeof populateGalleryCategorySelect === 'function') populateGalleryCategorySelect();
+      if (typeof populateGalleryCategoryModularGrid === 'function') populateGalleryCategoryModularGrid();
       showToast("Division deleted successfully.");
     }
   };

@@ -876,19 +876,165 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   };
 
+  const editDivisionBadgeInput = document.getElementById('editDivisionBadge');
   const editDivisionTitleInput = document.getElementById('editDivisionTitle');
   const editDivisionSubInput = document.getElementById('editDivisionSub');
+  const editDivisionDescInput = document.getElementById('editDivisionDesc');
+  const editDivisionBulletsInput = document.getElementById('editDivisionBullets');
+  const editDivisionImgInput = document.getElementById('editDivisionImg');
+  const divisionFileInput = document.getElementById('divisionFileInput');
+  const divisionDropzone = document.getElementById('divisionDropzone');
+  const divisionPreviewCard = document.getElementById('divisionPreviewCard');
+  const divisionPreviewImg = document.getElementById('divisionPreviewImg');
+  const divisionPreviewFilename = document.getElementById('divisionPreviewFilename');
+  const changeDivisionPhotoBtn = document.getElementById('changeDivisionPhotoBtn');
+  const removeDivisionPhotoBtn = document.getElementById('removeDivisionPhotoBtn');
+  const toggleDivisionUrlBtn = document.getElementById('toggleDivisionUrlBtn');
+  const divisionUrlInputContainer = document.getElementById('divisionUrlInputContainer');
+  const divisionManualUrlInput = document.getElementById('divisionManualUrlInput');
   const previewDivTitle = document.getElementById('previewDivTitle');
   const previewDivSub = document.getElementById('previewDivSub');
 
-  if (editDivisionTitleInput && previewDivTitle) {
-    editDivisionTitleInput.addEventListener('input', (e) => {
-      previewDivTitle.textContent = e.target.value.trim() || 'Fabrication & Testing';
+  const processAndPreviewDivisionImage = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxWidth;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        if (editDivisionImgInput) editDivisionImgInput.value = dataUrl;
+        if (divisionPreviewImg) divisionPreviewImg.src = dataUrl;
+        if (divisionPreviewFilename) divisionPreviewFilename.textContent = file.name;
+        if (divisionDropzone) divisionDropzone.style.display = 'none';
+        if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const resetDivisionUploadState = (currentImg = '') => {
+    if (divisionFileInput) divisionFileInput.value = '';
+    if (divisionManualUrlInput) divisionManualUrlInput.value = '';
+    if (divisionUrlInputContainer) divisionUrlInputContainer.style.display = 'none';
+    if (toggleDivisionUrlBtn) toggleDivisionUrlBtn.textContent = 'Or paste image URL instead';
+
+    if (currentImg) {
+      if (editDivisionImgInput) editDivisionImgInput.value = currentImg;
+      if (divisionPreviewImg) divisionPreviewImg.src = currentImg;
+      if (divisionPreviewFilename) divisionPreviewFilename.textContent = 'Current Cover Photo';
+      if (divisionDropzone) divisionDropzone.style.display = 'none';
+      if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
+    } else {
+      if (editDivisionImgInput) editDivisionImgInput.value = '';
+      if (divisionPreviewImg) divisionPreviewImg.src = '';
+      if (divisionPreviewCard) divisionPreviewCard.classList.remove('show');
+      if (divisionDropzone) divisionDropzone.style.display = 'flex';
+    }
+  };
+
+  if (divisionDropzone && divisionFileInput) {
+    divisionDropzone.addEventListener('click', () => divisionFileInput.click());
+    divisionDropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        divisionFileInput.click();
+      }
+    });
+
+    divisionDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      divisionDropzone.classList.add('dragover');
+    });
+
+    divisionDropzone.addEventListener('dragleave', () => {
+      divisionDropzone.classList.remove('dragover');
+    });
+
+    divisionDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      divisionDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processAndPreviewDivisionImage(e.dataTransfer.files[0]);
+      }
     });
   }
-  if (editDivisionSubInput && previewDivSub) {
+
+  if (divisionFileInput) {
+    divisionFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        processAndPreviewDivisionImage(e.target.files[0]);
+      }
+    });
+  }
+
+  if (changeDivisionPhotoBtn && divisionFileInput) {
+    changeDivisionPhotoBtn.addEventListener('click', () => divisionFileInput.click());
+  }
+
+  if (removeDivisionPhotoBtn) {
+    removeDivisionPhotoBtn.addEventListener('click', () => resetDivisionUploadState(''));
+  }
+
+  if (toggleDivisionUrlBtn && divisionUrlInputContainer && divisionManualUrlInput) {
+    toggleDivisionUrlBtn.addEventListener('click', () => {
+      const isVisible = divisionUrlInputContainer.style.display === 'block';
+      divisionUrlInputContainer.style.display = isVisible ? 'none' : 'block';
+      toggleDivisionUrlBtn.textContent = isVisible ? 'Or paste image URL instead' : 'Hide image URL input';
+    });
+
+    divisionManualUrlInput.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        if (editDivisionImgInput) editDivisionImgInput.value = url;
+        if (divisionPreviewImg) divisionPreviewImg.src = url;
+        if (divisionPreviewFilename) divisionPreviewFilename.textContent = url.slice(0, 30) + '...';
+        if (divisionDropzone) divisionDropzone.style.display = 'none';
+        if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
+      }
+    });
+  }
+
+  if (editDivisionTitleInput && previewDivTitle) {
+    editDivisionTitleInput.addEventListener('input', (e) => {
+      previewDivTitle.textContent = editDivisionSubInput.value.trim() || e.target.value.trim() || 'Fabrication & Testing';
+    });
+  }
+  if (editDivisionSubInput && previewDivTitle) {
     editDivisionSubInput.addEventListener('input', (e) => {
-      previewDivSub.textContent = e.target.value.trim() || 'Welding, CNC & Test Benches';
+      previewDivTitle.textContent = e.target.value.trim() || editDivisionTitleInput.value.trim() || 'Fabrication & Testing';
+    });
+  }
+  if (editDivisionDescInput && previewDivSub) {
+    editDivisionDescInput.addEventListener('input', (e) => {
+      const txt = e.target.value.trim();
+      previewDivSub.textContent = txt ? (txt.length > 45 ? txt.slice(0, 45) + '...' : txt) : 'Operational Scope';
     });
   }
 
@@ -900,19 +1046,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (index >= 0 && divisions[index]) {
       const d = divisions[index];
+      const shortCat = d.sub || (coreDivisionInfo[d.id] ? coreDivisionInfo[d.id].name : '') || d.title;
       if (title) title.textContent = `Edit Division: ${d.title}`;
       if (indexInput) indexInput.value = index;
+      if (editDivisionBadgeInput) editDivisionBadgeInput.value = d.badge || `Division 0${index + 1}`;
       if (editDivisionTitleInput) editDivisionTitleInput.value = d.title || '';
-      if (editDivisionSubInput) editDivisionSubInput.value = d.sub || d.desc || '';
-      if (previewDivTitle) previewDivTitle.textContent = d.title || 'Division Title';
-      if (previewDivSub) previewDivSub.textContent = d.sub || d.desc || 'Operational Scope';
+      if (editDivisionSubInput) editDivisionSubInput.value = shortCat || '';
+      if (editDivisionDescInput) editDivisionDescInput.value = d.desc || '';
+      if (editDivisionBulletsInput) {
+        editDivisionBulletsInput.value = Array.isArray(d.bullets) ? d.bullets.join('\n') : (d.bullets || '');
+      }
+      resetDivisionUploadState(d.img || '');
+
+      if (previewDivTitle) previewDivTitle.textContent = shortCat || d.title || 'Division Title';
+      if (previewDivSub) previewDivSub.textContent = d.desc ? (d.desc.length > 45 ? d.desc.slice(0, 45) + '...' : d.desc) : 'Operational Scope';
     } else {
       if (title) title.textContent = "Add Operational Division";
       if (indexInput) indexInput.value = -1;
+      const nextNum = divisions.length + 1;
+      if (editDivisionBadgeInput) editDivisionBadgeInput.value = `Division ${nextNum < 10 ? '0' + nextNum : nextNum}`;
       if (editDivisionTitleInput) editDivisionTitleInput.value = "";
       if (editDivisionSubInput) editDivisionSubInput.value = "";
-      if (previewDivTitle) previewDivTitle.textContent = "Fabrication & Testing";
-      if (previewDivSub) previewDivSub.textContent = "Welding, CNC & Test Benches";
+      if (editDivisionDescInput) editDivisionDescInput.value = "";
+      if (editDivisionBulletsInput) editDivisionBulletsInput.value = "";
+      resetDivisionUploadState('');
+
+      if (previewDivTitle) previewDivTitle.textContent = "New Division";
+      if (previewDivSub) previewDivSub.textContent = "Operational Scope";
     }
 
     if (divisionModal) {
@@ -962,23 +1122,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const cms = getCmsData();
       const index = parseInt(document.getElementById('editDivisionIndex').value, 10);
       const titleVal = editDivisionTitleInput ? editDivisionTitleInput.value.trim() : 'Custom Division';
-      const subVal = editDivisionSubInput ? editDivisionSubInput.value.trim() : 'Operational Scope';
-      const badgeVal = (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].badge)
-        ? cms.divisions[index].badge
+      const subVal = editDivisionSubInput ? editDivisionSubInput.value.trim() : titleVal;
+      const descVal = editDivisionDescInput ? editDivisionDescInput.value.trim() : subVal;
+      const badgeVal = (editDivisionBadgeInput && editDivisionBadgeInput.value.trim())
+        ? editDivisionBadgeInput.value.trim()
         : `Division 0${cms.divisions ? cms.divisions.length + 1 : 1}`;
+
+      const bulletsRaw = editDivisionBulletsInput ? editDivisionBulletsInput.value.trim() : '';
+      const bulletsArr = bulletsRaw 
+        ? bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean)
+        : [subVal, 'Certified Compliance', 'Technical Support'];
+
+      const imgVal = (editDivisionImgInput && editDivisionImgInput.value)
+        ? editDivisionImgInput.value
+        : ((index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].img)
+            ? cms.divisions[index].img
+            : fallbackDivisionImg);
 
       const divData = {
         id: (index >= 0 && cms.divisions && cms.divisions[index]) ? cms.divisions[index].id : `division_${Date.now()}`,
         badge: badgeVal,
         title: titleVal,
         sub: subVal,
-        desc: subVal,
-        bullets: (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].bullets)
-          ? cms.divisions[index].bullets
-          : [subVal, 'Certified Compliance', 'Technical Support'],
-        img: (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].img)
-          ? cms.divisions[index].img
-          : fallbackDivisionImg
+        desc: descVal,
+        bullets: bulletsArr,
+        img: imgVal
       };
 
       if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
@@ -1283,15 +1451,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
           id: coreDivisionInfo[d.id].id,
           rawId: d.id,
-          name: d.title || coreDivisionInfo[d.id].name,
-          sub: d.sub || d.desc || coreDivisionInfo[d.id].sub
+          name: coreDivisionInfo[d.id].name,
+          sub: d.sub || coreDivisionInfo[d.id].sub
         };
       }
       return {
         id: d.id,
         rawId: d.id,
-        name: d.title || 'Custom Division',
-        sub: d.sub || d.desc || 'Operational Sector'
+        name: d.sub || d.title || 'Custom Division',
+        sub: d.desc || 'Operational Sector'
       };
     });
 
@@ -1313,7 +1481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (allCategories.length === 0) {
       gridEl.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 1.5rem; color: var(--gray-500); font-size: 0.85rem;">
-          No operational divisions found. Click &quot;Add Division&quot; above to create one.
+          No operational divisions found. Add one in the Core Divisions tab.
         </div>
       `;
       return;
@@ -1327,24 +1495,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="modular-cat-name">${escapeHtml(cat.name)}</span>
             <span class="modular-cat-sub">${escapeHtml(cat.sub)}</span>
           </div>
-          <div class="modular-cat-actions">
-            <button type="button" class="modular-cat-edit-btn" title="Edit this division" onclick="window.editDivisionById('${escapeHtml(cat.rawId || cat.id)}', event)">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-            </button>
-            <button type="button" class="modular-cat-remove-btn" title="Remove this division" onclick="window.removeDivisionById('${escapeHtml(cat.rawId || cat.id)}', event)">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-            <div class="modular-cat-check">
-              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            </div>
+          <div class="modular-cat-check">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
           </div>
         </div>
       `;
     }).join('');
 
     gridEl.querySelectorAll('.modular-cat-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.modular-cat-edit-btn') || e.target.closest('.modular-cat-remove-btn')) return;
+      card.addEventListener('click', () => {
         const catId = card.getAttribute('data-cat-id');
         hiddenInput.value = catId;
         gridEl.querySelectorAll('.modular-cat-card').forEach(c => c.classList.remove('selected'));
@@ -1377,15 +1536,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeGalleryModalBtn) closeGalleryModalBtn.addEventListener('click', closeGalleryModal);
   if (cancelGalleryModalBtn) cancelGalleryModalBtn.addEventListener('click', closeGalleryModal);
 
-  const galleryQuickAddDivBtn = document.getElementById('galleryQuickAddDivBtn');
-  if (galleryQuickAddDivBtn) {
-    galleryQuickAddDivBtn.addEventListener('click', () => {
-      openDivisionModal(-1);
-      if (divisionModal) {
-        divisionModal.style.zIndex = '35000';
-      }
-    });
-  }
 
   window.editGalleryItem = (idx) => {
     const cms = getCmsData();
@@ -1597,13 +1747,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
           id: coreDivisionInfo[d.id].id,
           rawId: d.id,
-          name: d.title || coreDivisionInfo[d.id].name
+          name: coreDivisionInfo[d.id].name
         };
       }
       return {
         id: d.id,
         rawId: d.id,
-        name: d.title || 'Custom Division'
+        name: d.sub || d.title || 'Custom Division'
       };
     });
 
@@ -1618,24 +1768,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     filtersContainer.innerHTML = allFilters.map(f => `
-      <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">
-        <span class="filter-btn-label">${escapeHtml(f.name)}</span>
-        ${!f.isAll ? `
-          <span class="filter-btn-actions">
-            <span class="filter-btn-edit" role="button" title="Edit division" onclick="window.editDivisionById('${escapeHtml(f.rawId || f.id)}', event)">
-              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-            </span>
-            <span class="filter-btn-remove" role="button" title="Remove division" onclick="window.removeDivisionById('${escapeHtml(f.rawId || f.id)}', event)">
-              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </span>
-          </span>
-        ` : ''}
-      </button>
+      <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">${escapeHtml(f.name)}</button>
     `).join('');
 
     filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        if (e.target.closest('.filter-btn-edit') || e.target.closest('.filter-btn-remove')) return;
+      btn.addEventListener('click', () => {
         filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentAdminGalleryFilter = btn.getAttribute('data-filter') || 'all';

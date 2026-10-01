@@ -137,29 +137,31 @@ document.addEventListener('DOMContentLoaded', () => {
     sections.forEach(sec => observer.observe(sec));
   }
 
-  // Gallery Category Filtering
-  const filterBtns = document.querySelectorAll('.filter-btn');
+  // Gallery Category Filtering (Delegated to support dynamically updated CMS filter pills)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.gallery-filters .filter-btn');
+    if (!btn) return;
 
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    const filterContainer = btn.closest('.gallery-filters');
+    if (filterContainer) {
+      filterContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    }
+    btn.classList.add('active');
 
-      const filter = btn.getAttribute('data-filter');
-      const items = document.querySelectorAll('.gallery-item');
+    const filter = btn.getAttribute('data-filter') || 'all';
+    const items = document.querySelectorAll('.gallery-grid .gallery-item, #galleryGrid .gallery-item');
 
-      items.forEach(item => {
-        const category = item.getAttribute('data-category');
-        if (filter === 'all' || category === filter) {
-          item.style.display = 'block';
-          item.style.opacity = '0';
-          setTimeout(() => {
-            item.style.opacity = '1';
-          }, 50);
-        } else {
-          item.style.display = 'none';
-        }
-      });
+    items.forEach(item => {
+      const category = item.getAttribute('data-category');
+      if (filter === 'all' || category === filter) {
+        item.style.display = 'block';
+        item.style.opacity = '0';
+        setTimeout(() => {
+          item.style.opacity = '1';
+        }, 50);
+      } else {
+        item.style.display = 'none';
+      }
     });
   });
 

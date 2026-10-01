@@ -933,6 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
       saveCmsData(cms);
       renderDivisions();
       if (typeof populateGalleryCategoryModularGrid === 'function') populateGalleryCategoryModularGrid();
+      if (typeof renderAdminGalleryFilters === 'function') renderAdminGalleryFilters();
       showToast("Division deleted successfully.");
     }
   };
@@ -976,6 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
       saveCmsData(cms);
       renderDivisions();
       if (typeof populateGalleryCategoryModularGrid === 'function') populateGalleryCategoryModularGrid(divData.id);
+      if (typeof renderAdminGalleryFilters === 'function') renderAdminGalleryFilters();
       closeDivisionModal();
       showToast("Division saved and synchronized successfully.");
     });
@@ -1475,10 +1477,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const setupAdminGalleryFilters = () => {
+  const renderAdminGalleryFilters = () => {
     const filtersContainer = document.getElementById('adminGalleryFilters');
-    if (!filtersContainer || filtersContainer.dataset.initialized) return;
-    filtersContainer.dataset.initialized = 'true';
+    if (!filtersContainer) return;
+
+    const cms = getCmsData();
+    const divisions = cms.divisions || defaultCmsData.divisions;
+    const coreDivisionIds = new Set([
+      'welding_fabrication', 'pipeline_offshore', 'dredging_valves',
+      'logistics_heavy_equipment', 'manpower_instrumentation',
+      'general_contracts_procurement', 'fabrication', 'pipeline',
+      'dredging', 'equipment', 'instrumentation'
+    ]);
+    const customDivs = divisions.filter(d => d && !coreDivisionIds.has(d.id));
+
+    const standardFilters = [
+      { id: 'all', name: 'All Assets' },
+      { id: 'fabrication', name: 'Fabrication & Testing' },
+      { id: 'pipeline', name: 'Pipeline & Offshore' },
+      { id: 'dredging', name: 'Dredging & Valves' },
+      { id: 'equipment', name: 'Heavy Machinery' },
+      { id: 'instrumentation', name: 'Control & Safety' }
+    ];
+
+    const allFilters = [
+      ...standardFilters,
+      ...customDivs.map(d => ({
+        id: d.id,
+        name: d.title || 'Custom Division'
+      }))
+    ];
+
+    const validFilterIds = new Set(allFilters.map(f => f.id));
+    if (!validFilterIds.has(currentAdminGalleryFilter)) {
+      currentAdminGalleryFilter = 'all';
+    }
+
+    filtersContainer.innerHTML = allFilters.map(f => `
+      <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">${escapeHtml(f.name)}</button>
+    `).join('');
+
     filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1497,12 +1535,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadContactSettings();
     renderDivisions();
     renderGallery();
-    setupAdminGalleryFilters();
+    renderAdminGalleryFilters();
     loadHeroSettings();
   };
 
   // Utilities
-  const escapeHtml = (str) => {
+  function escapeHtml(str) {
     if (!str) return '';
     return String(str)
       .replace(/&/g, '&amp;')
@@ -1510,7 +1548,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
-  };
+  }
 
   const cleanCsv = (str) => {
     if (!str) return '';

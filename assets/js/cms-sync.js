@@ -21,6 +21,16 @@
     'general_contracts_procurement': 'div-procurement'
   };
 
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function applyCmsData(customData) {
     let cmsData = customData;
     if (!cmsData) {
@@ -603,6 +613,58 @@
             });
           }
         }
+      }
+    }
+
+    // =========================================================================
+    // 4b. Gallery Filters Synchronization (Dynamic Custom Division Filter Pills)
+    // =========================================================================
+    const publicGalleryFilters = document.querySelector('.gallery-filters');
+    if (publicGalleryFilters && Array.isArray(cmsData.divisions)) {
+      const coreDivisionIds = new Set([
+        'welding_fabrication', 'pipeline_offshore', 'dredging_valves',
+        'logistics_heavy_equipment', 'manpower_instrumentation',
+        'general_contracts_procurement', 'fabrication', 'pipeline',
+        'dredging', 'equipment', 'instrumentation'
+      ]);
+      const customDivs = cmsData.divisions.filter(d => d && !coreDivisionIds.has(d.id));
+
+      const standardFilters = [
+        { id: 'all', name: 'All Assets' },
+        { id: 'fabrication', name: 'Fabrication & Testing' },
+        { id: 'pipeline', name: 'Pipeline & Offshore' },
+        { id: 'dredging', name: 'Dredging & Valves' },
+        { id: 'equipment', name: 'Heavy Machinery' },
+        { id: 'instrumentation', name: 'Control & Safety' }
+      ];
+
+      const allFilters = [
+        ...standardFilters,
+        ...customDivs.map(d => ({
+          id: d.id,
+          name: d.title || 'Custom Division'
+        }))
+      ];
+
+      const activeBtn = publicGalleryFilters.querySelector('.filter-btn.active');
+      const activeFilterId = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+      const validFilterIds = new Set(allFilters.map(f => f.id));
+      const targetFilterId = validFilterIds.has(activeFilterId) ? activeFilterId : 'all';
+
+      publicGalleryFilters.innerHTML = allFilters.map(f => `
+        <button type="button" class="filter-btn ${f.id === targetFilterId ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">${escapeHtml(f.name)}</button>
+      `).join('');
+
+      // Re-apply active category filter
+      const currentGrid = document.getElementById('galleryGrid');
+      if (currentGrid) {
+        currentGrid.querySelectorAll('.gallery-item').forEach(el => {
+          if (!targetFilterId || targetFilterId === 'all') {
+            el.style.display = 'block';
+          } else {
+            el.style.display = el.getAttribute('data-category') === targetFilterId ? 'block' : 'none';
+          }
+        });
       }
     }
   }

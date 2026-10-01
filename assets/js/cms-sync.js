@@ -186,6 +186,17 @@
           if (numEl) numEl.textContent = stats[idx];
         }
       });
+
+      // Synchronize Specialized Divisions stat counter with actual active divisions count
+      if (Array.isArray(cmsData.divisions)) {
+        statItems.forEach(item => {
+          const label = item.querySelector('.stat-label');
+          if (label && label.textContent.trim().toLowerCase().includes('specialized divisions')) {
+            const numEl = item.querySelector('.stat-number');
+            if (numEl) numEl.textContent = String(cmsData.divisions.length);
+          }
+        });
+      }
     }
 
     // =========================================================================
@@ -207,9 +218,15 @@
 
       // 3b. Update or dynamically create division cards
       const activitiesContainer = document.querySelector('#activities .container');
+      const navMenu = document.querySelector('.nav-dropdown-menu');
+      const dropdownAll = navMenu ? navMenu.querySelector('.dropdown-all') : null;
+      const fallbackOptionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
+
       cmsData.divisions.forEach((div, index) => {
         const targetId = divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id);
         let card = document.getElementById(targetId) || document.querySelector(`[id*="${div.id}"]`);
+        const cardImg = div.img || fallbackOptionImg;
+        const displayCardImg = (cardImg.startsWith('data:') || cardImg.startsWith('http')) ? cardImg : cardImg.replace(/^(\.\.\/)+/, '');
 
         if (!card && activitiesContainer) {
           card = document.createElement('article');
@@ -218,7 +235,7 @@
           card.innerHTML = `
             <div class="division-image">
               <span class="division-badge">${div.badge || `Division 0${index + 1}`}</span>
-              <img src="assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg" alt="${div.title || 'Technical Division'}">
+              <img src="${displayCardImg}" alt="${div.title || 'Technical Division'}">
             </div>
             <div class="division-body">
               <h3>${div.title || ''}</h3>
@@ -243,6 +260,12 @@
           const p = card.querySelector('.division-body > p');
           if (p && div.desc) p.textContent = div.desc;
 
+          const imgEl = card.querySelector('.division-image img');
+          if (imgEl && div.img) {
+            imgEl.src = displayCardImg;
+            if (div.title) imgEl.alt = div.title;
+          }
+
           const list = card.querySelector('.division-list');
           if (list && Array.isArray(div.bullets)) {
             list.innerHTML = div.bullets.map(bullet => `
@@ -256,7 +279,6 @@
 
         // 3c. Update Navbar Dropdown Link if matching
         let navItem = document.querySelector(`.nav-dropdown-menu a[href="#${targetId}"]`);
-        const navMenu = document.querySelector('.nav-dropdown-menu');
         if (!navItem && navMenu) {
           navItem = document.createElement('a');
           navItem.className = 'dropdown-item';
@@ -268,23 +290,34 @@
               <small>${div.badge || ''}</small>
             </div>
           `;
-          navMenu.appendChild(navItem);
+          if (dropdownAll) {
+            navMenu.insertBefore(navItem, dropdownAll);
+          } else {
+            navMenu.appendChild(navItem);
+          }
         }
 
         if (navItem) {
           navItem.style.display = '';
+          const numEl = navItem.querySelector('.dropdown-num');
+          if (numEl) numEl.textContent = String(index + 1).padStart(2, '0');
           const strong = navItem.querySelector('.dropdown-info strong');
           if (strong && div.title) {
             strong.textContent = div.title.split(',')[0].trim();
+          }
+          const small = navItem.querySelector('.dropdown-info small');
+          if (small && div.badge) {
+            small.textContent = div.badge;
+          }
+          // Ensure it stays before the dropdown-all link
+          if (dropdownAll && navItem.compareDocumentPosition(dropdownAll) === Node.DOCUMENT_POSITION_PRECEDING) {
+            navMenu.insertBefore(navItem, dropdownAll);
           }
         }
 
         // 3d. Update Division Selection Modal Cards
         let modalOption = document.querySelector(`.division-option-card[data-division-id="${div.id}"]`);
         const modalGrid = document.querySelector('#divisionModal .division-modal-grid') || document.querySelector('#divisionModal .division-grid');
-        const fallbackOptionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
-        const cardImg = div.img || fallbackOptionImg;
-        const displayCardImg = (cardImg.startsWith('data:') || cardImg.startsWith('http')) ? cardImg : cardImg.replace(/^(\.\.\/)+/, '');
 
         if (!modalOption && modalGrid) {
           modalOption = document.createElement('div');
@@ -363,7 +396,18 @@
         }
       });
 
-      // 3e. Hide dropdown items not matching active divisions
+      // 3e. Update dropdown-all link to show the exact division count and stay at bottom
+      if (dropdownAll) {
+        const span = dropdownAll.querySelector('span');
+        if (span) {
+          span.textContent = `View All ${cmsData.divisions.length} Operational Divisions`;
+        }
+        if (navMenu && navMenu.lastElementChild !== dropdownAll) {
+          navMenu.appendChild(dropdownAll);
+        }
+      }
+
+      // 3f. Hide dropdown items not matching active divisions
       document.querySelectorAll('.nav-dropdown-menu .dropdown-item').forEach(item => {
         const href = item.getAttribute('href');
         if (href && href.startsWith('#')) {
@@ -374,7 +418,7 @@
         }
       });
 
-      // 3f. Hide modal options not matching active divisions
+      // 3g. Hide modal options not matching active divisions
       document.querySelectorAll('.division-option-card').forEach(option => {
         const divId = option.getAttribute('data-division-id');
         if (divId && !activeAdminIds.has(divId)) {
@@ -382,10 +426,51 @@
         }
       });
 
-      // 3g. Update section description count
+      // 3h. Update section description count
       const sectionDesc = document.querySelector('#activities .section-header p');
       if (sectionDesc) {
         sectionDesc.textContent = `Delivering comprehensive engineering solutions structured across ${cmsData.divisions.length} distinct operational divisions to meet rigorous industrial specifications.`;
+      }
+
+      // 3i. Sync footer core divisions links
+      const footerUl = (function() {
+        const cols = document.querySelectorAll('.footer-col');
+        for (let col of cols) {
+          const h4 = col.querySelector('h4');
+          if (h4 && h4.textContent.trim().toLowerCase().includes('core divisions')) {
+            return col.querySelector('ul.footer-links');
+          }
+        }
+        return null;
+      })();
+
+      if (footerUl) {
+        const activeFooterHrefs = new Set(cmsData.divisions.map(d => '#' + (divisionIdMap[d.id] || (d.id.startsWith('div-') ? d.id : 'div-' + d.id))));
+        cmsData.divisions.forEach(div => {
+          const targetHref = '#' + (divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id));
+          let existingLink = footerUl.querySelector(`a[href="${targetHref}"]`);
+          const shortTitle = div.title ? div.title.split(',')[0].trim() : 'Division';
+          if (!existingLink) {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${targetHref}"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>${shortTitle}</a>`;
+            footerUl.appendChild(li);
+          } else {
+            const svg = existingLink.querySelector('svg');
+            existingLink.innerHTML = '';
+            if (svg) existingLink.appendChild(svg);
+            existingLink.appendChild(document.createTextNode(shortTitle));
+            if (existingLink.parentElement) existingLink.parentElement.style.display = '';
+          }
+        });
+        footerUl.querySelectorAll('li').forEach(li => {
+          const a = li.querySelector('a');
+          if (a) {
+            const href = a.getAttribute('href');
+            if (href && href.startsWith('#div-') && !activeFooterHrefs.has(href)) {
+              li.style.display = 'none';
+            }
+          }
+        });
       }
     }
 

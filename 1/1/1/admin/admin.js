@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: "Division 01",
         title: "Welding & Fabrication, Industrial Services & Training",
         desc: "Our workshop and field teams carry out precision structural steel fabrication, specialized pipe spool manufacturing, and industrial machining. We feature advanced machinery including Pinacho CNC lathes, PEGAS bandsaws, and automated oxy-fuel track torch cutters, accompanied by comprehensive NDT testing and vocational training programs for certified pipefitters.",
+        img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg",
         bullets: [
           "Structural Steel & Pipe Spool Fabrication",
           "Automated Plate & Saddle Flame Cutting",
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: "Division 02",
         title: "Oil & Gas Services, Surface Pipeline Activities & Offshore Support",
         desc: "We execute surface and cross-country pipeline construction, including route clearing, trenching, pipe stringing, field alignment, and certified orbital/stick welding. Our oilfield services extend to specialized pipe saddle profiling, energy equipment supplies, and maintenance support for deepwater and offshore production platforms.",
+        img: "assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg",
         bullets: [
           "Surface Pipeline Construction & Laying",
           "Field Pipe Welding & Tie-ins",
@@ -66,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: "Division 03",
         title: "Dredging Services & Technical Parts (Valves, Impellers, Dredging Pumps)",
         desc: "Supplying heavy-duty marine dredging equipment and critical flow control components. We manufacture and supply heavy cast impellers, machined volute pump casings, complete diesel engine-driven dredge pump skids, and an extensive inventory of industrial valves (gate, ball, check, and butterfly valves) tested on automated calibration benches.",
+        img: "assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg",
         bullets: [
           "Diesel Engine Slurry Dredge Pump Skids",
           "Heavy Cast Iron Dredge Impellers",
@@ -80,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: "Division 04",
         title: "Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts",
         desc: "Our heavy equipment division provides equipment rental, site logistics, and specialized transport across rugged project terrains. From Caterpillar sideboom pipelayers and hydraulic excavators to Goldhofer multi-axle heavy transport trailers, we facilitate seamless material handling, machinery leasing, and authentic Caterpillar replacement parts supply.",
+        img: "assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg",
         bullets: [
           "Caterpillar Sideboom Pipelayer Hire",
           "Heavy Hydraulic Excavator Leasing",
@@ -94,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: "Division 05",
         title: "Manpower Supply, Instrumentation & Control Engineering",
         desc: "Delivering qualified technical staffing and advanced industrial control engineering. We provide certified professionals (coded welders, NDT technicians, electrical engineers) alongside instrumentation design, pressure/temperature transmitter calibration, pneumatic actuator integration, and SCADA automation support.",
+        img: "assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg",
         bullets: [
           "Certified Technical Manpower Staffing",
           "Instrumentation & Control Engineering",
@@ -108,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: "Division 06",
         title: "General Contracts, Procurement & Industrial Safety Gadgets (PPE)",
         desc: "Managing end-to-end industrial supply chain operations, technical materials procurement, and general contracting services. We supply certified Personal Protective Equipment (hard hats, face shields, hearing protection, fall protection harnesses, flame-retardant coveralls), safety instrumentation, office equipment, and engineering consumables.",
+        img: "assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg",
         bullets: [
           "Certified Personal Protective Equipment (PPE)",
           "Fall Protection Harnesses & Safety Gear",
@@ -176,6 +182,23 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
+  // Authentic division image assets
+  const divisionImages = {
+    'welding_fabrication': 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg',
+    'pipeline_offshore': 'assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg',
+    'dredging_valves': 'assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg',
+    'logistics_heavy_equipment': 'assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg',
+    'manpower_instrumentation': 'assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg',
+    'general_contracts_procurement': 'assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg'
+  };
+  const fallbackDivisionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
+
+  const getDivisionImgSrc = (div) => {
+    if (!div) return '../../../../' + fallbackDivisionImg;
+    const raw = div.img || divisionImages[div.id] || fallbackDivisionImg;
+    return (raw.startsWith('data:') || raw.startsWith('http')) ? raw : '../../../../' + raw.replace(/^(\.\.\/)+/, '');
+  };
+
   // Inquiries collection (starts 100% empty until real clients submit consultation forms)
   const defaultInquiries = [];
 
@@ -214,6 +237,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Array.isArray(parsed.divisions) && parsed.divisions.length === 6 && parsed.divisions[0].bullets && parsed.divisions[0].bullets.length === 4) {
         parsed.divisions = defaultCmsData.divisions;
         needsSave = true;
+      }
+
+      // Ensure every division has an authentic img path
+      if (Array.isArray(parsed.divisions)) {
+        parsed.divisions.forEach(d => {
+          if (!d.img) {
+            d.img = divisionImages[d.id] || fallbackDivisionImg;
+            needsSave = true;
+          }
+        });
+      }
+
+      // Auto-sync Specialized Divisions stat count with active divisions count
+      if (parsed.hero && Array.isArray(parsed.divisions)) {
+        if (/^\d+$/.test(parsed.hero.stat1) && parseInt(parsed.hero.stat1, 10) !== parsed.divisions.length) {
+          parsed.hero.stat1 = String(parsed.divisions.length);
+          needsSave = true;
+        }
       }
 
       if (needsSave) {
@@ -764,25 +805,153 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!divisionsContainer) return;
 
-    divisionsContainer.innerHTML = divisions.map((div, idx) => `
-      <div class="division-admin-item">
-        <div class="division-admin-header">
-          <div>
-            <span class="division-badge-tag">${escapeHtml(div.badge)}</span>
-            <strong style="margin-left: 0.5rem; font-size: 1.05rem; color: var(--dark);">${escapeHtml(div.title)}</strong>
+    divisionsContainer.innerHTML = divisions.map((div, idx) => {
+      const displayImg = getDivisionImgSrc(div);
+      return `
+        <div class="division-admin-item">
+          <div class="division-admin-header">
+            <div class="division-admin-header-main">
+              <img src="${displayImg}" alt="${escapeHtml(div.title)}" class="division-admin-thumb" onerror="this.src='../../../../logo/logo.png'">
+              <div>
+                <span class="division-badge-tag">${escapeHtml(div.badge)}</span>
+                <strong style="margin-left: 0.5rem; font-size: 1.05rem; color: var(--dark);">${escapeHtml(div.title)}</strong>
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.editDivision(${idx})">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteDivision(${idx})">Delete</button>
+            </div>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.editDivision(${idx})">Edit</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteDivision(${idx})">Delete</button>
+          <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 0.5rem;">${escapeHtml(div.desc)}</p>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            ${(div.bullets || []).map(b => `<span style="background: var(--gray-100); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: var(--gray-700);">&bull; ${escapeHtml(b)}</span>`).join('')}
           </div>
         </div>
-        <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 0.5rem;">${escapeHtml(div.desc)}</p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          ${(div.bullets || []).map(b => `<span style="background: var(--gray-100); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: var(--gray-700);">&bull; ${escapeHtml(b)}</span>`).join('')}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   };
+
+  // Division Photo / Cover Image DOM controls
+  const divisionFileInput = document.getElementById('divisionFileInput');
+  const divisionDropzone = document.getElementById('divisionDropzone');
+  const divisionPreviewCard = document.getElementById('divisionPreviewCard');
+  const divisionPreviewImg = document.getElementById('divisionPreviewImg');
+  const divisionPreviewFilename = document.getElementById('divisionPreviewFilename');
+  const changeDivisionPhotoBtn = document.getElementById('changeDivisionPhotoBtn');
+  const editDivisionImg = document.getElementById('editDivisionImg');
+  const toggleDivisionUrlBtn = document.getElementById('toggleDivisionUrlBtn');
+  const divisionUrlInputContainer = document.getElementById('divisionUrlInputContainer');
+  const divisionManualUrlInput = document.getElementById('divisionManualUrlInput');
+
+  const setDivisionPreview = (src, filename = 'division_cover.jpg') => {
+    if (!editDivisionImg) return;
+    editDivisionImg.value = src;
+    if (divisionPreviewImg) {
+      divisionPreviewImg.src = (src.startsWith('data:') || src.startsWith('http')) ? src : '../../../../' + src.replace(/^(\.\.\/)+/, '');
+    }
+    if (divisionPreviewFilename) {
+      divisionPreviewFilename.textContent = filename;
+    }
+    if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
+    if (divisionDropzone) divisionDropzone.style.display = 'none';
+  };
+
+  const resetDivisionUpload = () => {
+    if (divisionFileInput) divisionFileInput.value = '';
+    if (divisionPreviewCard) divisionPreviewCard.classList.remove('show');
+    if (divisionDropzone) divisionDropzone.style.display = 'flex';
+    if (divisionUrlInputContainer) divisionUrlInputContainer.style.display = 'none';
+    if (divisionManualUrlInput) divisionManualUrlInput.value = '';
+    if (toggleDivisionUrlBtn) toggleDivisionUrlBtn.textContent = 'Or paste image URL instead';
+  };
+
+  const processDivisionImage = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        setDivisionPreview(compressedDataUrl, file.name);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  if (divisionDropzone) {
+    divisionDropzone.addEventListener('click', () => {
+      if (divisionFileInput) divisionFileInput.click();
+    });
+
+    divisionDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      divisionDropzone.classList.add('dragover');
+    });
+
+    divisionDropzone.addEventListener('dragleave', () => {
+      divisionDropzone.classList.remove('dragover');
+    });
+
+    divisionDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      divisionDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processDivisionImage(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (divisionFileInput) {
+    divisionFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processDivisionImage(e.target.files[0]);
+      }
+    });
+  }
+
+  if (changeDivisionPhotoBtn) {
+    changeDivisionPhotoBtn.addEventListener('click', () => {
+      if (divisionFileInput) divisionFileInput.click();
+    });
+  }
+
+  if (toggleDivisionUrlBtn && divisionUrlInputContainer) {
+    toggleDivisionUrlBtn.addEventListener('click', () => {
+      const isHidden = divisionUrlInputContainer.style.display === 'none';
+      divisionUrlInputContainer.style.display = isHidden ? 'block' : 'none';
+      toggleDivisionUrlBtn.textContent = isHidden ? 'Hide image URL input' : 'Or paste image URL instead';
+      if (isHidden && divisionManualUrlInput) divisionManualUrlInput.focus();
+    });
+  }
+
+  if (divisionManualUrlInput) {
+    divisionManualUrlInput.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        setDivisionPreview(url, 'custom_url_image.jpg');
+      }
+    });
+  }
 
   const openDivisionModal = (index = -1) => {
     const cms = getCmsData();
@@ -794,6 +963,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const descInput = document.getElementById('editDivisionDesc');
     const bulletsInput = document.getElementById('editDivisionBullets');
 
+    resetDivisionUpload();
+
     if (index >= 0 && divisions[index]) {
       const d = divisions[index];
       title.textContent = `Edit Division: ${d.badge}`;
@@ -802,6 +973,8 @@ document.addEventListener('DOMContentLoaded', () => {
       titleInput.value = d.title;
       descInput.value = d.desc;
       bulletsInput.value = (d.bullets || []).join('\n');
+      const imgPath = d.img || divisionImages[d.id] || fallbackDivisionImg;
+      setDivisionPreview(imgPath, `${d.badge || 'division'}_photo.jpg`);
     } else {
       const nextNum = divisions.length + 1;
       title.textContent = "Add New Operational Division";
@@ -810,6 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
       titleInput.value = "";
       descInput.value = "";
       bulletsInput.value = "";
+      setDivisionPreview(fallbackDivisionImg, 'default_division.jpg');
     }
 
     if (divisionModal) divisionModal.classList.add('active');
@@ -836,6 +1010,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (confirmed) {
       cms.divisions.splice(idx, 1);
+      // Auto sync hero stat1 with divisions count
+      if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
+      cms.hero.stat1 = String(cms.divisions.length);
       saveCmsData(cms);
       renderDivisions();
       if (typeof renderGalleryDivisionPicker === 'function') renderGalleryDivisionPicker();
@@ -850,26 +1027,34 @@ document.addEventListener('DOMContentLoaded', () => {
       const index = parseInt(document.getElementById('editDivisionIndex').value, 10);
       const bulletsText = document.getElementById('editDivisionBullets').value;
       const bullets = bulletsText.split('\n').map(s => s.trim()).filter(Boolean);
+      const chosenImg = document.getElementById('editDivisionImg')?.value.trim() || fallbackDivisionImg;
 
       const divData = {
-        id: `division_${Date.now()}`,
+        id: (index >= 0 && cms.divisions && cms.divisions[index]) ? cms.divisions[index].id : `division_${Date.now()}`,
         badge: document.getElementById('editDivisionBadge').value.trim(),
         title: document.getElementById('editDivisionTitle').value.trim(),
         desc: document.getElementById('editDivisionDesc').value.trim(),
-        bullets: bullets
+        bullets: bullets,
+        img: chosenImg
       };
 
-      if (index >= 0) {
-        divData.id = cms.divisions[index].id;
+      if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
+
+      if (index >= 0 && index < cms.divisions.length) {
         cms.divisions[index] = divData;
       } else {
         cms.divisions.push(divData);
       }
 
+      // Automatically keep hero stat1 in sync with active divisions count
+      if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
+      cms.hero.stat1 = String(cms.divisions.length);
+
       saveCmsData(cms);
       renderDivisions();
       if (typeof renderGalleryDivisionPicker === 'function') renderGalleryDivisionPicker();
       closeDivisionModal();
+      showToast("Division saved and synchronized successfully.");
     });
   }
 
@@ -1057,27 +1242,11 @@ document.addEventListener('DOMContentLoaded', () => {
     'procurement': 'general_contracts_procurement'
   };
 
-  const divisionImages = {
-    'welding_fabrication': 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg',
-    'pipeline_offshore': 'assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg',
-    'dredging_valves': 'assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg',
-    'logistics_heavy_equipment': 'assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg',
-    'manpower_instrumentation': 'assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg',
-    'general_contracts_procurement': 'assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg'
-  };
-  const fallbackDivisionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
-
   const galleryDivTrigger = document.getElementById('galleryDivisionTrigger');
   const galleryDivModal = document.getElementById('galleryDivisionSelectModal');
   const closeGalleryDivModalBtn = document.getElementById('closeGalleryDivisionSelectModalBtn');
   const cancelGalleryDivModalBtn = document.getElementById('cancelGalleryDivisionSelectModalBtn');
   const adminGalleryDivisionGrid = document.getElementById('adminGalleryDivisionGrid');
-
-  const getDivisionImgSrc = (div) => {
-    if (!div) return '../../../../' + fallbackDivisionImg;
-    const raw = div.img || divisionImages[div.id] || fallbackDivisionImg;
-    return (raw.startsWith('data:') || raw.startsWith('http')) ? raw : '../../../../' + raw.replace(/^(\.\.\/)+/, '');
-  };
 
   const setGallerySelectedDivision = (div) => {
     if (!div) return;
@@ -1298,7 +1467,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('settingHeroBadge').value = h.badge || '';
     document.getElementById('settingHeroTitle').value = h.title || '';
     document.getElementById('settingHeroSubtitle').value = h.subtitle || '';
-    document.getElementById('settingStat1').value = h.stat1 || '';
+    document.getElementById('settingStat1').value = h.stat1 || String(cms.divisions?.length || 6);
     document.getElementById('settingStat2').value = h.stat2 || '';
     document.getElementById('settingStat3').value = h.stat3 || '';
     document.getElementById('settingStat4').value = h.stat4 || '';
@@ -1312,12 +1481,13 @@ document.addEventListener('DOMContentLoaded', () => {
         badge: document.getElementById('settingHeroBadge').value.trim(),
         title: document.getElementById('settingHeroTitle').value.trim(),
         subtitle: document.getElementById('settingHeroSubtitle').value.trim(),
-        stat1: document.getElementById('settingStat1').value.trim(),
+        stat1: document.getElementById('settingStat1').value.trim() || String(cms.divisions?.length || 6),
         stat2: document.getElementById('settingStat2').value.trim(),
         stat3: document.getElementById('settingStat3').value.trim(),
         stat4: document.getElementById('settingStat4').value.trim()
       };
       saveCmsData(cms);
+      showToast("Hero and performance stats saved successfully.");
     });
   }
 

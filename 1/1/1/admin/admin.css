@@ -661,6 +661,22 @@ svg {
   border-radius: var(--radius-sm);
 }
 
+.division-admin-header-main {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.division-admin-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1.5px solid var(--gray-200);
+  background: var(--gray-100);
+  flex-shrink: 0;
+}
+
 /* Gallery Grid in Admin */
 .gallery-admin-grid {
   display: grid;

@@ -99,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Gallery Category Filtering
   const filterBtns = document.querySelectorAll('.filter-btn');
-  const galleryItems = document.querySelectorAll('.gallery-item');
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -107,8 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
 
       const filter = btn.getAttribute('data-filter');
+      const items = document.querySelectorAll('.gallery-item');
 
-      galleryItems.forEach(item => {
+      items.forEach(item => {
         const category = item.getAttribute('data-category');
         if (filter === 'all' || category === filter) {
           item.style.display = 'block';
@@ -130,18 +130,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalClose = document.getElementById('modalClose');
 
   if (modal && modalImg && modalClose) {
-    galleryItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const img = item.querySelector('img');
-        const title = item.querySelector('h4')?.textContent || '';
-        const category = item.querySelector('span')?.textContent || '';
+    document.addEventListener('click', (e) => {
+      const item = e.target.closest('.gallery-item');
+      if (!item) return;
 
+      const img = item.querySelector('img');
+      const title = item.querySelector('h4')?.textContent || '';
+      const category = item.querySelector('span')?.textContent || '';
+
+      if (img) {
         modalImg.src = img.src;
-        modalImg.alt = img.alt;
+        modalImg.alt = img.alt || '';
         modalCaption.textContent = `${title} — ${category}`;
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-      });
+      }
     });
 
     const closeModal = () => {

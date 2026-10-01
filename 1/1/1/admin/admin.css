@@ -729,9 +729,10 @@ svg {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10000;
   display: none;
   align-items: center;
   justify-content: center;
@@ -740,6 +741,11 @@ svg {
 
 .modal-overlay.active {
   display: flex;
+}
+
+/* Nested Division modal must overlay on top of Gallery modal */
+#divisionEditModal.modal-overlay {
+  z-index: 25000 !important;
 }
 
 .modal-container {
@@ -1083,6 +1089,132 @@ svg {
   justify-content: flex-end;
   gap: 0.75rem;
 }
+
+/* ==========================================================================
+   Project Gallery Filter Tabs in Admin
+   ========================================================================== */
+.admin-gallery-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.admin-gallery-filters .filter-btn {
+  padding: 0.45rem 1.1rem;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.admin-gallery-filters .filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.admin-gallery-filters .filter-btn.active {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+}
+
+/* ==========================================================================
+   Modular Category Selector in Gallery Add/Edit Modal
+   ========================================================================== */
+.gallery-category-modular-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.25rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+}
+
+.modular-cat-card {
+  padding: 0.65rem 0.85rem;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  transition: all 0.18s ease;
+}
+
+.modular-cat-card:hover {
+  border-color: var(--primary-light);
+  background: var(--white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.modular-cat-card.selected {
+  border-color: var(--primary);
+  background: rgba(15, 23, 42, 0.04);
+  box-shadow: 0 0 0 1.5px var(--primary);
+}
+
+.modular-cat-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.modular-cat-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modular-cat-sub {
+  font-size: 0.7rem;
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modular-cat-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: transparent;
+  transition: all 0.18s ease;
+}
+
+.modular-cat-card.selected .modular-cat-check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+}
+
+.modular-cat-check svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
 
 
 

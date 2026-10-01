@@ -986,11 +986,17 @@ document.addEventListener('DOMContentLoaded', () => {
       setDivisionPreview(fallbackDivisionImg, 'default_division.jpg');
     }
 
-    if (divisionModal) divisionModal.classList.add('active');
+    if (divisionModal) {
+      divisionModal.classList.add('active');
+      divisionModal.style.zIndex = '35000';
+    }
   };
 
   const closeDivisionModal = () => {
-    if (divisionModal) divisionModal.classList.remove('active');
+    if (divisionModal) {
+      divisionModal.classList.remove('active');
+      divisionModal.style.zIndex = '';
+    }
   };
 
   if (openDivModalBtn) openDivModalBtn.addEventListener('click', () => openDivisionModal(-1));
@@ -1052,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       saveCmsData(cms);
       renderDivisions();
-      if (typeof populateGalleryCategorySelect === 'function') populateGalleryCategorySelect();
+      if (typeof populateGalleryCategoryModularGrid === 'function') populateGalleryCategoryModularGrid(divData.id);
       closeDivisionModal();
       showToast("Division saved and synchronized successfully.");
     });
@@ -1067,6 +1073,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const openGalleryModalBtn = document.getElementById('addNewGalleryModalBtn');
   const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
   const cancelGalleryModalBtn = document.getElementById('cancelGalleryModalBtn');
+
+  let currentAdminGalleryFilter = 'all';
 
   const renderGallery = () => {
     const cms = getCmsData();
@@ -1085,19 +1093,43 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    galleryGrid.innerHTML = gallery.map((item, idx) => `
-      <div class="gallery-admin-card">
+    const filtered = gallery.filter(item => {
+      if (currentAdminGalleryFilter === 'all') return true;
+      let cat = item.category || 'fabrication';
+      if (cat === 'welding_fabrication') cat = 'fabrication';
+      if (cat === 'pipeline_offshore') cat = 'pipeline';
+      if (cat === 'dredging_valves') cat = 'dredging';
+      if (cat === 'logistics_heavy_equipment') cat = 'equipment';
+      if (cat === 'manpower_instrumentation') cat = 'instrumentation';
+      if (cat === 'general_contracts_procurement') cat = 'equipment';
+      return cat === currentAdminGalleryFilter;
+    });
+
+    if (filtered.length === 0) {
+      galleryGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--gray-500);">
+          No gallery items in this category. Click &quot;Add Project Photo&quot; to upload one.
+        </div>
+      `;
+      return;
+    }
+
+    galleryGrid.innerHTML = filtered.map(item => {
+      const originalIdx = gallery.indexOf(item);
+      return `
+      <div class="gallery-admin-card" data-category="${escapeHtml(item.category || '')}">
         <img src="${item.img}" alt="${escapeHtml(item.title)}" class="gallery-admin-img" onerror="this.src='../../../../logo/logo.png'; this.style.padding='2rem';">
         <div class="gallery-admin-body">
           <h4>${escapeHtml(item.title)}</h4>
           <span>${escapeHtml(item.subtitle)}</span>
           <div class="gallery-admin-actions">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.editGalleryItem(${idx})">Edit</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteGalleryItem(${idx})">Remove</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.editGalleryItem(${originalIdx})">Edit</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="window.deleteGalleryItem(${originalIdx})">Remove</button>
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   };
 
   const galleryFileInput = document.getElementById('galleryFileInput');
@@ -1231,36 +1263,67 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   // Gallery Division Category Modular Picker Controller
   // =========================================================================
-  const divisionCategoryMap = {
-    'fabrication': 'welding_fabrication',
-    'pipeline': 'pipeline_offshore',
-    'dredging': 'dredging_valves',
-    'equipment': 'logistics_heavy_equipment',
-    'logistics': 'logistics_heavy_equipment',
-    'instrumentation': 'manpower_instrumentation',
-    'manpower': 'manpower_instrumentation',
-    'procurement': 'general_contracts_procurement'
-  };
+  const standardGalleryCategories = [
+    { id: 'fabrication', name: 'Fabrication & Testing', sub: 'Welding, CNC & Test Benches' },
+    { id: 'pipeline', name: 'Pipeline & Offshore', sub: 'Surfacing & Platforms' },
+    { id: 'dredging', name: 'Dredging & Valves', sub: 'Slurry Pumps & METRUS Testing' },
+    { id: 'equipment', name: 'Heavy Machinery', sub: 'Caterpillar Fleet & Cranes' },
+    { id: 'instrumentation', name: 'Control & Safety', sub: 'SCADA, Calibration & PPE' }
+  ];
 
-  const populateGalleryCategorySelect = (selectedId = '') => {
-    const selectEl = document.getElementById('galleryAddCategory');
-    if (!selectEl) return;
+  const populateGalleryCategoryModularGrid = (selectedId = 'fabrication') => {
+    const gridEl = document.getElementById('galleryCategoryModularGrid');
+    const hiddenInput = document.getElementById('galleryAddCategory');
+    if (!gridEl || !hiddenInput) return;
+
     const cms = getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
 
-    selectEl.innerHTML = divisions.map(div => {
-      return `<option value="${escapeHtml(div.id)}">${escapeHtml(div.badge || 'Division')} - ${escapeHtml(div.title)}</option>`;
+    let activeId = selectedId || 'fabrication';
+    if (activeId === 'welding_fabrication') activeId = 'fabrication';
+    if (activeId === 'pipeline_offshore') activeId = 'pipeline';
+    if (activeId === 'dredging_valves') activeId = 'dredging';
+    if (activeId === 'logistics_heavy_equipment') activeId = 'equipment';
+    if (activeId === 'manpower_instrumentation') activeId = 'instrumentation';
+    if (activeId === 'general_contracts_procurement') activeId = 'equipment';
+
+    const coreDivisionIds = new Set(['welding_fabrication', 'pipeline_offshore', 'dredging_valves', 'logistics_heavy_equipment', 'manpower_instrumentation', 'general_contracts_procurement']);
+    const customDivs = divisions.filter(d => !coreDivisionIds.has(d.id));
+
+    const allCategories = [
+      ...standardGalleryCategories,
+      ...customDivs.map(d => ({
+        id: d.id,
+        name: d.title || 'Custom Division',
+        sub: d.badge || 'Operational Sector'
+      }))
+    ];
+
+    hiddenInput.value = activeId;
+
+    gridEl.innerHTML = allCategories.map(cat => {
+      const isSelected = cat.id === activeId;
+      return `
+        <div class="modular-cat-card ${isSelected ? 'selected' : ''}" data-cat-id="${escapeHtml(cat.id)}" role="button" tabindex="0">
+          <div class="modular-cat-info">
+            <span class="modular-cat-name">${escapeHtml(cat.name)}</span>
+            <span class="modular-cat-sub">${escapeHtml(cat.sub)}</span>
+          </div>
+          <div class="modular-cat-check">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </div>
+        </div>
+      `;
     }).join('');
 
-    if (selectedId) {
-      const targetVal = divisionCategoryMap[selectedId] || selectedId;
-      const found = divisions.find(d => d.id === targetVal || d.id === selectedId || (selectedId && d.id.includes(selectedId)));
-      if (found) {
-        selectEl.value = found.id;
-      } else {
-        selectEl.value = selectedId;
-      }
-    }
+    gridEl.querySelectorAll('.modular-cat-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const catId = card.getAttribute('data-cat-id');
+        hiddenInput.value = catId;
+        gridEl.querySelectorAll('.modular-cat-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+    });
   };
 
   const openGalleryModal = () => {
@@ -1273,7 +1336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('galleryModalSubmitBtn');
     if (submitBtn) submitBtn.textContent = 'Add to Gallery';
 
-    populateGalleryCategorySelect();
+    populateGalleryCategoryModularGrid('fabrication');
 
     if (galleryModal) galleryModal.classList.add('active');
   };
@@ -1291,6 +1354,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (galleryQuickAddDivBtn) {
     galleryQuickAddDivBtn.addEventListener('click', () => {
       openDivisionModal(-1);
+      if (divisionModal) {
+        divisionModal.style.zIndex = '35000';
+      }
     });
   }
 
@@ -1318,8 +1384,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (indexInput) indexInput.value = idx;
 
     // Match division category
-    const catVal = item.category || 'welding_fabrication';
-    populateGalleryCategorySelect(catVal);
+    const catVal = item.category || 'fabrication';
+    populateGalleryCategoryModularGrid(catVal);
 
     if (item.img) {
       if (hiddenImg) hiddenImg.value = item.img;
@@ -1492,6 +1558,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const setupAdminGalleryFilters = () => {
+    const filtersContainer = document.getElementById('adminGalleryFilters');
+    if (!filtersContainer || filtersContainer.dataset.initialized) return;
+    filtersContainer.dataset.initialized = 'true';
+    filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentAdminGalleryFilter = btn.getAttribute('data-filter') || 'all';
+        renderGallery();
+      });
+    });
+  };
+
   // =========================================================================
   // Dashboard Initialization
   // =========================================================================
@@ -1500,6 +1580,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadContactSettings();
     renderDivisions();
     renderGallery();
+    setupAdminGalleryFilters();
     loadHeroSettings();
   };
 

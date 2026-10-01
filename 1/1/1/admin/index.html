@@ -419,6 +419,14 @@
               <h3>Active Gallery Items</h3>
             </div>
             <div class="card-body">
+              <div class="admin-gallery-filters" id="adminGalleryFilters">
+                <button type="button" class="filter-btn active" data-filter="all">All Assets</button>
+                <button type="button" class="filter-btn" data-filter="fabrication">Fabrication &amp; Testing</button>
+                <button type="button" class="filter-btn" data-filter="pipeline">Pipeline &amp; Offshore</button>
+                <button type="button" class="filter-btn" data-filter="dredging">Dredging &amp; Valves</button>
+                <button type="button" class="filter-btn" data-filter="equipment">Heavy Machinery</button>
+                <button type="button" class="filter-btn" data-filter="instrumentation">Control &amp; Safety</button>
+              </div>
               <div class="gallery-admin-grid" id="adminGalleryGrid">
                 <!-- Gallery items populated via JS -->
               </div>
@@ -653,21 +661,20 @@
             <input type="text" id="galleryAddTitle" class="form-control no-icon" placeholder="e.g. High-Pressure Manifold Testing" required>
           </div>
           <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <label class="form-label" for="galleryAddCategory" style="margin-bottom: 0;">Division Category</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+              <div>
+                <label class="form-label" style="margin-bottom: 0;">Division Category</label>
+                <small style="font-size: 0.75rem; color: var(--gray-500);">Select operational sector matching user side</small>
+              </div>
               <button type="button" class="btn btn-secondary btn-sm" id="galleryQuickAddDivBtn" title="Add or manage operational divisions" style="padding: 0.25rem 0.65rem; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                 <span>+ Add Division</span>
               </button>
             </div>
-            <select id="galleryAddCategory" class="form-control no-icon" required>
-              <option value="welding_fabrication">Division 01 - Welding &amp; Metal Fabrication</option>
-              <option value="pipeline_offshore">Division 02 - Oil &amp; Gas Pipeline Services</option>
-              <option value="dredging_valves">Division 03 - Dredging &amp; Technical Parts</option>
-              <option value="logistics_heavy_equipment">Division 04 - Logistics &amp; Heavy Equipment</option>
-              <option value="manpower_instrumentation">Division 05 - Manpower &amp; Instrumentation</option>
-              <option value="general_contracts_procurement">Division 06 - Procurement &amp; Safety PPE</option>
-            </select>
+            <input type="hidden" id="galleryAddCategory" required>
+            <div class="gallery-category-modular-grid" id="galleryCategoryModularGrid">
+              <!-- Dynamically populated modular category cards matching user side -->
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label" for="galleryAddSubtitle">Subtitle / Location Tag</label>

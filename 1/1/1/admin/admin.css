@@ -1172,7 +1172,10 @@ svg {
 }
 
 .admin-gallery-filters .filter-btn {
-  padding: 0.45rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.95rem;
   background: var(--white);
   border: 1.5px solid var(--gray-200);
   border-radius: 9999px;
@@ -1182,6 +1185,7 @@ svg {
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 1.2;
+  user-select: none;
 }
 
 .admin-gallery-filters .filter-btn:hover {
@@ -1291,10 +1295,11 @@ svg {
   flex-shrink: 0;
 }
 
+.modular-cat-edit-btn,
 .modular-cat-remove-btn {
   background: none;
   border: none;
-  padding: 0.2rem;
+  padding: 0.25rem;
   color: var(--gray-400);
   cursor: pointer;
   border-radius: 4px;
@@ -1304,34 +1309,64 @@ svg {
   transition: all 0.15s ease;
 }
 
+.modular-cat-edit-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+}
+
 .modular-cat-remove-btn:hover {
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
 }
 
+.filter-btn-label {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.filter-btn-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.2rem;
+}
+
+.filter-btn-edit,
 .filter-btn-remove {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  margin-left: 0.35rem;
   background: rgba(0, 0, 0, 0.08);
   color: inherit;
-  opacity: 0.65;
+  opacity: 0.75;
   transition: all 0.15s ease;
   cursor: pointer;
-  vertical-align: middle;
+  padding: 0;
+  border: none;
+  flex-shrink: 0;
 }
 
+.filter-btn.active .filter-btn-edit,
 .filter-btn.active .filter-btn-remove {
   background: rgba(255, 255, 255, 0.25);
   color: var(--white);
+  opacity: 0.95;
+}
+
+.filter-btn-edit:hover {
+  opacity: 1;
+  background: var(--accent) !important;
+  color: var(--dark) !important;
+  transform: scale(1.18);
 }
 
 .filter-btn-remove:hover {
   opacity: 1;
   background: var(--danger) !important;
   color: var(--white) !important;
+  transform: scale(1.18);
 }
+

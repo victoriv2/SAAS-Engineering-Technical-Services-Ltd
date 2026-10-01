@@ -1219,6 +1219,21 @@ document.addEventListener('DOMContentLoaded', () => {
     'general_contracts_procurement': { id: 'procurement', name: 'General Contracts & Procurement', sub: 'Supply Chain & PPE' }
   };
 
+  window.editDivisionById = (divId, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const cms = getCmsData();
+    const divisions = cms.divisions || defaultCmsData.divisions;
+    const idx = divisions.findIndex(d => d.id === divId || (coreDivisionInfo[d.id] && coreDivisionInfo[d.id].id === divId));
+    if (idx !== -1) {
+      openDivisionModal(idx);
+    } else {
+      showToast("Division not found.");
+    }
+  };
+
   window.removeDivisionById = async (divId, event) => {
     if (event) {
       event.preventDefault();
@@ -1313,8 +1328,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="modular-cat-sub">${escapeHtml(cat.sub)}</span>
           </div>
           <div class="modular-cat-actions">
+            <button type="button" class="modular-cat-edit-btn" title="Edit this division" onclick="window.editDivisionById('${escapeHtml(cat.rawId || cat.id)}', event)">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
             <button type="button" class="modular-cat-remove-btn" title="Remove this division" onclick="window.removeDivisionById('${escapeHtml(cat.rawId || cat.id)}', event)">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
             <div class="modular-cat-check">
               <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -1326,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     gridEl.querySelectorAll('.modular-cat-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.modular-cat-remove-btn')) return;
+        if (e.target.closest('.modular-cat-edit-btn') || e.target.closest('.modular-cat-remove-btn')) return;
         const catId = card.getAttribute('data-cat-id');
         hiddenInput.value = catId;
         gridEl.querySelectorAll('.modular-cat-card').forEach(c => c.classList.remove('selected'));
@@ -1601,10 +1619,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filtersContainer.innerHTML = allFilters.map(f => `
       <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">
-        <span>${escapeHtml(f.name)}</span>
+        <span class="filter-btn-label">${escapeHtml(f.name)}</span>
         ${!f.isAll ? `
-          <span class="filter-btn-remove" title="Remove this division" onclick="window.removeDivisionById('${escapeHtml(f.rawId || f.id)}', event)">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          <span class="filter-btn-actions">
+            <span class="filter-btn-edit" role="button" title="Edit division" onclick="window.editDivisionById('${escapeHtml(f.rawId || f.id)}', event)">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </span>
+            <span class="filter-btn-remove" role="button" title="Remove division" onclick="window.removeDivisionById('${escapeHtml(f.rawId || f.id)}', event)">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </span>
           </span>
         ` : ''}
       </button>
@@ -1612,7 +1635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        if (e.target.closest('.filter-btn-remove')) return;
+        if (e.target.closest('.filter-btn-edit') || e.target.closest('.filter-btn-remove')) return;
         filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentAdminGalleryFilter = btn.getAttribute('data-filter') || 'all';

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=2.6.0">
 </head>
 <body>
 
@@ -420,12 +420,8 @@
             </div>
             <div class="card-body">
               <div class="admin-gallery-filters" id="adminGalleryFilters">
+                <!-- Dynamically populated with edit/remove actions via admin.js -->
                 <button type="button" class="filter-btn active" data-filter="all">All Assets</button>
-                <button type="button" class="filter-btn" data-filter="fabrication">Fabrication &amp; Testing</button>
-                <button type="button" class="filter-btn" data-filter="pipeline">Pipeline &amp; Offshore</button>
-                <button type="button" class="filter-btn" data-filter="dredging">Dredging &amp; Valves</button>
-                <button type="button" class="filter-btn" data-filter="equipment">Heavy Machinery</button>
-                <button type="button" class="filter-btn" data-filter="instrumentation">Control &amp; Safety</button>
               </div>
               <div class="gallery-admin-grid" id="adminGalleryGrid">
                 <!-- Gallery items populated via JS -->
@@ -755,6 +751,6 @@
     <span id="adminToastText">Changes saved successfully.</span>
   </div>
 
-  <script src="admin.js"></script>
+  <script src="admin.js?v=2.6.0"></script>
 </body>
 </html>

@@ -276,6 +276,136 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // =========================================================================
+  // Modular Custom Dialog Modal (Replaces native browser alert & confirm)
+  // =========================================================================
+  const dialogModal = document.getElementById('customDialogModal');
+  const dialogTitle = document.getElementById('dialogModalTitle');
+  const dialogSub = document.getElementById('dialogModalSub');
+  const dialogMessage = document.getElementById('dialogModalMessage');
+  const dialogIconWrapper = document.getElementById('dialogIconWrapper');
+  const dialogConfirmBtn = document.getElementById('dialogConfirmBtn');
+  const dialogCancelBtn = document.getElementById('dialogCancelBtn');
+  const closeDialogBtn = document.getElementById('closeDialogModalBtn');
+
+  let activeDialogResolver = null;
+
+  const dialogIcons = {
+    info: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+    warning: '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+    danger: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
+  };
+
+  const showCustomDialog = ({
+    title = 'Notification',
+    subtitle = 'System Notice',
+    message = '',
+    type = 'info',
+    confirmText = 'OK',
+    cancelText = null,
+    isDanger = false
+  }) => {
+    return new Promise((resolve) => {
+      activeDialogResolver = resolve;
+
+      if (dialogTitle) dialogTitle.textContent = title;
+      if (dialogSub) dialogSub.textContent = subtitle;
+      if (dialogMessage) dialogMessage.textContent = message;
+
+      if (dialogIconWrapper) {
+        dialogIconWrapper.className = `dialog-icon-wrapper ${type}`;
+        dialogIconWrapper.innerHTML = dialogIcons[type] || dialogIcons.info;
+      }
+
+      if (dialogConfirmBtn) {
+        dialogConfirmBtn.textContent = confirmText;
+        dialogConfirmBtn.className = isDanger ? 'btn btn-danger btn-sm' : 'btn btn-accent btn-sm';
+      }
+
+      if (dialogCancelBtn) {
+        if (cancelText) {
+          dialogCancelBtn.style.display = 'inline-block';
+          dialogCancelBtn.textContent = cancelText;
+        } else {
+          dialogCancelBtn.style.display = 'none';
+        }
+      }
+
+      if (dialogModal) {
+        dialogModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+          if (dialogConfirmBtn) dialogConfirmBtn.focus();
+        }, 50);
+      }
+    });
+  };
+
+  const closeCustomDialog = (result = false) => {
+    if (dialogModal) {
+      dialogModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    if (activeDialogResolver) {
+      const res = activeDialogResolver;
+      activeDialogResolver = null;
+      res(result);
+    }
+  };
+
+  if (dialogConfirmBtn) {
+    dialogConfirmBtn.addEventListener('click', () => closeCustomDialog(true));
+  }
+  if (dialogCancelBtn) {
+    dialogCancelBtn.addEventListener('click', () => closeCustomDialog(false));
+  }
+  if (closeDialogBtn) {
+    closeDialogBtn.addEventListener('click', () => closeCustomDialog(false));
+  }
+  if (dialogModal) {
+    dialogModal.addEventListener('click', (e) => {
+      if (e.target === dialogModal) closeCustomDialog(false);
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (dialogModal && dialogModal.classList.contains('active')) {
+      if (e.key === 'Escape') {
+        closeCustomDialog(false);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        closeCustomDialog(true);
+      }
+    }
+  });
+
+  window.customAlert = (message, title = 'Notification', type = 'info') => {
+    return showCustomDialog({
+      title: title,
+      subtitle: 'System Notice',
+      message: message,
+      type: type,
+      confirmText: 'OK',
+      cancelText: null
+    });
+  };
+
+  window.customConfirm = (message, options = {}) => {
+    return showCustomDialog({
+      title: options.title || 'Please Confirm',
+      subtitle: options.subtitle || 'Confirmation Required',
+      message: message,
+      type: options.isDanger ? 'danger' : (options.type || 'warning'),
+      confirmText: options.confirmText || 'Confirm',
+      cancelText: options.cancelText || 'Cancel',
+      isDanger: options.isDanger || false
+    });
+  };
+
+  // Override window.alert across admin portal
+  window.alert = (msg) => {
+    window.customAlert(String(msg), 'System Notification', 'warning');
+  };
+
+  // =========================================================================
   // Authentication Logic
   // =========================================================================
   const loginWrapper = document.getElementById('loginWrapper');
@@ -444,8 +574,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  window.deleteInquiry = (id) => {
-    if (confirm("Are you sure you want to delete this client inquiry?")) {
+  window.deleteInquiry = async (id) => {
+    const confirmed = await window.customConfirm("Are you sure you want to delete this client inquiry? This action cannot be undone.", {
+      title: "Delete Client Inquiry",
+      confirmText: "Delete Inquiry",
+      isDanger: true
+    });
+    if (confirmed) {
       let list = getInquiries();
       list = list.filter(i => i.id !== id);
       saveInquiries(list);
@@ -538,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
     exportCsvBtn.addEventListener('click', () => {
       const list = getInquiries();
       if (list.length === 0) {
-        alert("No inquiries to export.");
+        window.customAlert("There are currently no client inquiries in the database to export.", "Export Inquiries", "info");
         return;
       }
       let csv = "ID,Name,Organization,Email,Phone,Division,Date,Status,Scope\n";
@@ -553,8 +688,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clear inquiries
   const clearInquiriesBtn = document.getElementById('clearAllInquiriesBtn');
   if (clearInquiriesBtn) {
-    clearInquiriesBtn.addEventListener('click', () => {
-      if (confirm("Are you sure you want to clear all inquiries? This cannot be undone.")) {
+    clearInquiriesBtn.addEventListener('click', async () => {
+      const confirmed = await window.customConfirm("Are you sure you want to permanently clear all inquiries? This action cannot be undone.", {
+        title: "Clear All Inquiries",
+        confirmText: "Clear All",
+        isDanger: true
+      });
+      if (confirmed) {
         saveInquiries([]);
         showToast("All inquiries cleared.");
       }
@@ -680,12 +820,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cancelDivModalBtn) cancelDivModalBtn.addEventListener('click', closeDivisionModal);
 
   window.editDivision = (idx) => openDivisionModal(idx);
-  window.deleteDivision = (idx) => {
+  window.deleteDivision = async (idx) => {
     const cms = getCmsData();
-    if (confirm(`Are you sure you want to delete ${cms.divisions[idx].title}?`)) {
+    if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
+    const div = cms.divisions[idx];
+    const divTitle = div ? div.title : 'this division';
+    const confirmed = await window.customConfirm(`Are you sure you want to delete "${divTitle}"? It will be removed immediately from the public website.`, {
+      title: "Delete Technical Division",
+      confirmText: "Delete Division",
+      isDanger: true
+    });
+    if (confirmed) {
       cms.divisions.splice(idx, 1);
       saveCmsData(cms);
       renderDivisions();
+      showToast("Division deleted successfully.");
     }
   };
 
@@ -774,7 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Compress image to fit within localStorage smoothly
   const processAndPreviewImage = (file) => {
     if (!file || !file.type.startsWith('image/')) {
-      alert("Please select a valid image file (PNG, JPG, JPEG, WEBP).");
+      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
       return;
     }
 
@@ -950,12 +1099,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (galleryModal) galleryModal.classList.add('active');
   };
 
-  window.deleteGalleryItem = (idx) => {
+  window.deleteGalleryItem = async (idx) => {
     const cms = getCmsData();
     if (!Array.isArray(cms.gallery)) cms.gallery = [...defaultCmsData.gallery];
     const item = cms.gallery[idx];
     const itemTitle = item ? item.title : 'this photo';
-    if (confirm(`Remove "${itemTitle}" from project gallery?`)) {
+    const confirmed = await window.customConfirm(`Remove "${itemTitle}" from project gallery? It will be removed immediately from the public website.`, {
+      title: "Remove Photo from Gallery",
+      confirmText: "Remove Photo",
+      isDanger: true
+    });
+    if (confirmed) {
       cms.gallery.splice(idx, 1);
       saveCmsData(cms);
       renderGallery();
@@ -968,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const imgVal = document.getElementById('galleryAddImgUrl')?.value?.trim();
       if (!imgVal) {
-        alert("Please select an image from your device gallery or provide an image URL.");
+        window.customAlert("Please upload an image from your device or provide a valid image URL before saving.", "Photo Required", "warning");
         return;
       }
       const cms = getCmsData();
@@ -1073,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast("Data backup successfully restored.");
           initDashboard();
         } catch (err) {
-          alert("Invalid backup JSON file.");
+          window.customAlert("The selected file is not a valid SAAS Engineering backup file. Please check the JSON format and try again.", "Invalid Backup File", "danger");
         }
       };
       reader.readAsText(file);
@@ -1081,8 +1235,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (resetDefaultsBtn) {
-    resetDefaultsBtn.addEventListener('click', () => {
-      if (confirm("Reset all website content and configurations back to factory defaults? Any custom edits will be reverted.")) {
+    resetDefaultsBtn.addEventListener('click', async () => {
+      const confirmed = await window.customConfirm("Reset all website content, contact information, divisions, and gallery back to factory defaults? Any custom edits will be reverted.", {
+        title: "Reset to Factory Defaults",
+        confirmText: "Reset to Defaults",
+        isDanger: true
+      });
+      if (confirmed) {
         localStorage.removeItem(CMS_KEY);
         localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
         if (cmsBroadcast) {

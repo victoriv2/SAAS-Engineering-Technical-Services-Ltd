@@ -348,4 +348,134 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1200);
     });
   }
+
+  // =========================================================================
+  // Universal Modular Custom Dialog Modal (Replaces native browser alert)
+  // =========================================================================
+  const dialogModal = document.getElementById('customDialogModal');
+  const dialogTitle = document.getElementById('dialogModalTitle');
+  const dialogSub = document.getElementById('dialogModalSub');
+  const dialogMessage = document.getElementById('dialogModalMessage');
+  const dialogIconWrapper = document.getElementById('dialogIconWrapper');
+  const dialogConfirmBtn = document.getElementById('dialogConfirmBtn');
+  const dialogCancelBtn = document.getElementById('dialogCancelBtn');
+  const closeDialogBtn = document.getElementById('closeDialogModalBtn');
+
+  let activeDialogResolver = null;
+
+  const dialogIcons = {
+    info: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+    warning: '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+    danger: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
+  };
+
+  const showCustomDialog = ({
+    title = 'Notification',
+    subtitle = 'System Notice',
+    message = '',
+    type = 'info',
+    confirmText = 'OK',
+    cancelText = null,
+    isDanger = false
+  }) => {
+    return new Promise((resolve) => {
+      activeDialogResolver = resolve;
+
+      if (dialogTitle) dialogTitle.textContent = title;
+      if (dialogSub) dialogSub.textContent = subtitle;
+      if (dialogMessage) dialogMessage.textContent = message;
+
+      if (dialogIconWrapper) {
+        dialogIconWrapper.className = `dialog-icon-wrapper ${type}`;
+        dialogIconWrapper.innerHTML = dialogIcons[type] || dialogIcons.info;
+      }
+
+      if (dialogConfirmBtn) {
+        dialogConfirmBtn.textContent = confirmText;
+        dialogConfirmBtn.className = isDanger ? 'btn btn-danger btn-sm' : 'btn btn-accent btn-sm';
+      }
+
+      if (dialogCancelBtn) {
+        if (cancelText) {
+          dialogCancelBtn.style.display = 'inline-block';
+          dialogCancelBtn.textContent = cancelText;
+        } else {
+          dialogCancelBtn.style.display = 'none';
+        }
+      }
+
+      if (dialogModal) {
+        dialogModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+          if (dialogConfirmBtn) dialogConfirmBtn.focus();
+        }, 50);
+      }
+    });
+  };
+
+  const closeCustomDialog = (result = false) => {
+    if (dialogModal) {
+      dialogModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    if (activeDialogResolver) {
+      const res = activeDialogResolver;
+      activeDialogResolver = null;
+      res(result);
+    }
+  };
+
+  if (dialogConfirmBtn) {
+    dialogConfirmBtn.addEventListener('click', () => closeCustomDialog(true));
+  }
+  if (dialogCancelBtn) {
+    dialogCancelBtn.addEventListener('click', () => closeCustomDialog(false));
+  }
+  if (closeDialogBtn) {
+    closeDialogBtn.addEventListener('click', () => closeCustomDialog(false));
+  }
+  if (dialogModal) {
+    dialogModal.addEventListener('click', (e) => {
+      if (e.target === dialogModal) closeCustomDialog(false);
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (dialogModal && dialogModal.classList.contains('active')) {
+      if (e.key === 'Escape') {
+        closeCustomDialog(false);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        closeCustomDialog(true);
+      }
+    }
+  });
+
+  window.customAlert = (message, title = 'Notification', type = 'info') => {
+    return showCustomDialog({
+      title: title,
+      subtitle: 'System Notice',
+      message: message,
+      type: type,
+      confirmText: 'OK',
+      cancelText: null
+    });
+  };
+
+  window.customConfirm = (message, options = {}) => {
+    return showCustomDialog({
+      title: options.title || 'Please Confirm',
+      subtitle: options.subtitle || 'Confirmation Required',
+      message: message,
+      type: options.isDanger ? 'danger' : (options.type || 'warning'),
+      confirmText: options.confirmText || 'Confirm',
+      cancelText: options.cancelText || 'Cancel',
+      isDanger: options.isDanger || false
+    });
+  };
+
+  // Override native alert globally
+  window.alert = (msg) => {
+    window.customAlert(String(msg), 'System Notification', 'warning');
+  };
 });

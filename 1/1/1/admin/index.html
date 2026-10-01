@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Management Portal | SAAS Engineering Technical Services Ltd</title>
+  <link rel="icon" type="image/png" href="../../../logo/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. Login Portal Screen
+       ========================================================================= -->
+  <div class="login-wrapper" id="loginWrapper">
+    <div class="login-card">
+      <div class="login-header">
+        <img src="../../../logo/logo.png" alt="SAAS Engineering Logo" class="login-logo">
+        <h1>SAAS ENGINEERING</h1>
+        <p>Enterprise CMS & Inquiries Control Portal</p>
+      </div>
+
+      <div class="login-body">
+        <div class="login-alert" id="loginAlert">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span id="loginAlertText">Incorrect username or password.</span>
+        </div>
+
+        <form id="adminLoginForm">
+          <div class="form-group">
+            <label class="form-label" for="adminUsername">Username</label>
+            <div class="input-with-icon">
+              <svg class="input-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <input type="text" id="adminUsername" class="form-control" placeholder="admin" value="admin" required autocomplete="username">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="adminPassword">Password</label>
+            <div class="input-with-icon">
+              <svg class="input-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              <input type="password" id="adminPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-accent btn-block" style="padding: 0.85rem; margin-top: 0.5rem;">
+            Access Admin Workspace
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          </button>
+        </form>
+
+        <div class="login-hint">
+          <strong>Authorized Access:</strong> Default Password: <code>admin123</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. Main Admin Application Workspace
+       ========================================================================= -->
+  <div class="admin-app" id="adminApp">
+    
+    <!-- Top Navbar -->
+    <header class="admin-navbar">
+      <a href="#" class="admin-brand">
+        <img src="../../../logo/logo.png" alt="SAAS Logo">
+        <div class="admin-brand-text">
+          <h2>SAAS ENGINEERING</h2>
+          <span>Admin Management System</span>
+        </div>
+      </a>
+
+      <div class="admin-nav-actions">
+        <div class="live-badge">
+          <span class="live-badge-dot"></span>
+          <span>CMS Sync Active</span>
+        </div>
+        
+        <a href="../../../index.html" target="_blank" class="btn btn-secondary btn-sm" title="Open public facing site in new window">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+          <span>View Public Site</span>
+        </a>
+
+        <button type="button" class="btn btn-danger btn-sm" id="adminLogoutBtn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="admin-layout">
+      
+      <!-- Left Sidebar -->
+      <aside class="admin-sidebar">
+        <div class="sidebar-menu">
+          <div class="sidebar-heading">Navigation</div>
+          
+          <button type="button" class="nav-tab-btn active" data-tab="tab-overview">
+            <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span>Overview</span>
+          </button>
+
+          <button type="button" class="nav-tab-btn" data-tab="tab-inquiries">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span>Inquiries & Quotes</span>
+            <span class="badge-count" id="inquiriesBadgeCount">0</span>
+          </button>
+
+          <div class="sidebar-heading" style="margin-top: 0.5rem;">Content Management</div>
+
+          <button type="button" class="nav-tab-btn" data-tab="tab-contact">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <span>Contact & Social Info</span>
+          </button>
+
+          <button type="button" class="nav-tab-btn" data-tab="tab-divisions">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span>Core Divisions</span>
+          </button>
+
+          <button type="button" class="nav-tab-btn" data-tab="tab-gallery">
+            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <span>Project Gallery</span>
+          </button>
+
+          <button type="button" class="nav-tab-btn" data-tab="tab-hero">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            <span>Hero & Overview</span>
+          </button>
+
+          <div class="sidebar-heading" style="margin-top: 0.5rem;">System</div>
+
+          <button type="button" class="nav-tab-btn" data-tab="tab-backup">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+            <span>Backup & Reset</span>
+          </button>
+        </div>
+
+        <div class="sidebar-footer">
+          SAAS Engineering v2.4 Admin<br>
+          Connected to Public View
+        </div>
+      </aside>
+
+      <!-- Main Content Pane -->
+      <main class="admin-content">
+        
+        <!-- ===================================================================
+             Tab 1: Overview
+             =================================================================== -->
+        <section class="tab-pane active" id="tab-overview">
+          <div class="pane-header">
+            <div>
+              <h2>Executive Dashboard</h2>
+              <p>Welcome to SAAS Engineering Technical Services administrative workspace.</p>
+            </div>
+            <div>
+              <button type="button" class="btn btn-accent btn-sm" id="quickAddDivisionBtn">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Add Operational Division
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon amber">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </div>
+              <div class="stat-info">
+                <h3 id="statTotalInquiries">0</h3>
+                <p>Total Quote Inquiries</p>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon blue">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              </div>
+              <div class="stat-info">
+                <h3 id="statTotalDivisions">6</h3>
+                <p>Active Service Divisions</p>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon green">
+                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              </div>
+              <div class="stat-info">
+                <h3 id="statTotalGallery">8</h3>
+                <p>Published Project Photos</p>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon purple">
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+              </div>
+              <div class="stat-info">
+                <h3>100%</h3>
+                <p>HSE & Quality Audit</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Inquiries Box in Overview -->
+          <div class="admin-card">
+            <div class="card-header">
+              <h3>Latest Inquiries & Quotes</h3>
+              <button type="button" class="btn btn-secondary btn-sm" id="viewAllInquiriesBtn">View Full Inbox</button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="inquiry-table">
+                  <thead>
+                    <tr>
+                      <th>Client Name</th>
+                      <th>Service Division</th>
+                      <th>Contact Info</th>
+                      <th>Date Submitted</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overviewInquiriesTableBody">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             Tab 2: Inquiries & Quotes CRM
+             =================================================================== -->
+        <section class="tab-pane" id="tab-inquiries">
+          <div class="pane-header">
+            <div>
+              <h2>Inquiries & Technical Quotes</h2>
+              <p>Review and process all incoming technical consultations submitted by clients.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm" id="exportInquiriesCsvBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                Export CSV
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="clearAllInquiriesBtn">
+                Clear Inquiries
+              </button>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header">
+              <h3>Client Consultations Inbox</h3>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="inquirySearchInput" class="form-control no-icon" placeholder="Search inquiries..." style="padding: 0.35rem 0.75rem; font-size: 0.85rem; width: 220px;">
+              </div>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive">
+                <table class="inquiry-table">
+                  <thead>
+                    <tr>
+                      <th>Client Name</th>
+                      <th>Organization / Phone</th>
+                      <th>Email Address</th>
+                      <th>Service Division</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fullInquiriesTableBody">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             Tab 3: Company Contact & Social Info
+             =================================================================== -->
+        <section class="tab-pane" id="tab-contact">
+          <div class="pane-header">
+            <div>
+              <h2>Contact, Address & Social Settings</h2>
+              <p>Manage physical headquarters, direct phones, emails, operational hours, and social media handles.</p>
+            </div>
+            <button type="submit" form="contactSettingsForm" class="btn btn-accent btn-sm">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+              Save Contact Settings
+            </button>
+          </div>
+
+          <form id="contactSettingsForm">
+            <div class="admin-card">
+              <div class="card-header">
+                <h3>Corporate Headquarters & Physical Location</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-grid full">
+                  <div class="form-group">
+                    <label class="form-label" for="settingAddress">Physical Headquarters Address</label>
+                    <input type="text" id="settingAddress" class="form-control no-icon" value="No 4, Salvation Avenue Off Rumuocholu, Avhua Pipeline, Eneka, Port Harcourt, Rivers State, Nigeria" required>
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="settingPhonePrimary">Primary Telephone Line</label>
+                    <input type="text" id="settingPhonePrimary" class="form-control no-icon" value="09020379011" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingPhoneAlt">Secondary / International Line</label>
+                    <input type="text" id="settingPhoneAlt" class="form-control no-icon" value="+234 902 037 9011">
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="settingEmail">Official Inquiries Email</label>
+                    <input type="email" id="settingEmail" class="form-control no-icon" value="contact@saasengineeringtechnicalservicesltd.com" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingHours">Operational Hours</label>
+                    <input type="text" id="settingHours" class="form-control no-icon" value="Monday - Friday: 8:00 AM - 6:00 PM | Saturday: 9:00 AM - 3:00 PM" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="card-header">
+                <h3>Live Chat & Social Media Links</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="settingWhatsapp">WhatsApp Consultation Number (format: 2349020379011)</label>
+                    <input type="text" id="settingWhatsapp" class="form-control no-icon" value="2349020379011" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingFacebook">Facebook Page URL</label>
+                    <input type="url" id="settingFacebook" class="form-control no-icon" value="https://facebook.com">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingLinkedin">LinkedIn Company Profile URL</label>
+                    <input type="url" id="settingLinkedin" class="form-control no-icon" value="https://linkedin.com">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingTwitter">Twitter / X URL</label>
+                    <input type="url" id="settingTwitter" class="form-control no-icon" value="https://twitter.com">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingInstagram">Instagram Profile URL</label>
+                    <input type="url" id="settingInstagram" class="form-control no-icon" value="https://instagram.com">
+                  </div>
+                </div>
+
+                <div class="form-footer">
+                  <button type="submit" class="btn btn-accent">Save Contact & Social Settings</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- ===================================================================
+             Tab 4: Core Divisions Manager
+             =================================================================== -->
+        <section class="tab-pane" id="tab-divisions">
+          <div class="pane-header">
+            <div>
+              <h2>Core Technical Divisions</h2>
+              <p>Add, edit, or customize the operational divisions displayed across the website and quote selector.</p>
+            </div>
+            <button type="button" class="btn btn-accent btn-sm" id="addNewDivisionModalBtn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              Add New Division
+            </button>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header">
+              <h3>Published Divisions (<span id="divisionCountLabel">6</span>)</h3>
+            </div>
+            <div class="card-body">
+              <div id="divisionsListContainer">
+                <!-- Divisions rendered dynamically via JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             Tab 5: Facilities & Project Gallery Manager
+             =================================================================== -->
+        <section class="tab-pane" id="tab-gallery">
+          <div class="pane-header">
+            <div>
+              <h2>Project Gallery & Facilities</h2>
+              <p>Manage project photography, machining showcases, and fabrication facility images.</p>
+            </div>
+            <button type="button" class="btn btn-accent btn-sm" id="addNewGalleryModalBtn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              Add Project Photo
+            </button>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header">
+              <h3>Active Gallery Items</h3>
+            </div>
+            <div class="card-body">
+              <div class="gallery-admin-grid" id="adminGalleryGrid">
+                <!-- Gallery items populated via JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             Tab 6: Hero & Overview Content Manager
+             =================================================================== -->
+        <section class="tab-pane" id="tab-hero">
+          <div class="pane-header">
+            <div>
+              <h2>Hero & Corporate Overview Content</h2>
+              <p>Customize the primary headline, accreditation badge, description, and company statistics.</p>
+            </div>
+            <button type="submit" form="heroSettingsForm" class="btn btn-accent btn-sm">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+              Save Hero Settings
+            </button>
+          </div>
+
+          <form id="heroSettingsForm">
+            <div class="admin-card">
+              <div class="card-header">
+                <h3>Hero Banner Content</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-grid full">
+                  <div class="form-group">
+                    <label class="form-label" for="settingHeroBadge">Accreditation Pill Badge Text</label>
+                    <input type="text" id="settingHeroBadge" class="form-control no-icon" value="Registered Nigerian Engineering Contractor" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingHeroTitle">Main Hero Headline</label>
+                    <input type="text" id="settingHeroTitle" class="form-control no-icon" value="Industrial Engineering, Pipeline Services & Oilfield Solutions" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingHeroSubtitle">Hero Description Paragraph</label>
+                    <textarea id="settingHeroSubtitle" class="form-control no-icon" rows="3" required>Delivering high-precision welding, structural metal fabrication, surface pipeline construction, dredging spare parts, and heavy equipment leasing for upstream oilfield and industrial sectors across Nigeria.</textarea>
+                  </div>
+                </div>
+
+                <h4 style="margin: 1.5rem 0 1rem; color: var(--dark); font-size: 1rem;">Experience & Performance Stats Counters</h4>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="settingStat1">Stat 1 (e.g. 15+ Years)</label>
+                    <input type="text" id="settingStat1" class="form-control no-icon" value="15+ Years" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingStat2">Stat 2 (e.g. 6 Operational Divisions)</label>
+                    <input type="text" id="settingStat2" class="form-control no-icon" value="6 Divisions" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingStat3">Stat 3 (e.g. 100% Compliance)</label>
+                    <input type="text" id="settingStat3" class="form-control no-icon" value="100% Safety" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="settingStat4">Stat 4 (e.g. 24/7 Field Support)</label>
+                    <input type="text" id="settingStat4" class="form-control no-icon" value="24/7 Ready" required>
+                  </div>
+                </div>
+
+                <div class="form-footer">
+                  <button type="submit" class="btn btn-accent">Save Hero & Stats</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- ===================================================================
+             Tab 7: Backup & Reset
+             =================================================================== -->
+        <section class="tab-pane" id="tab-backup">
+          <div class="pane-header">
+            <div>
+              <h2>Data Management & Factory Defaults</h2>
+              <p>Export a full backup of all configured website data or reset to default state.</p>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header">
+              <h3>Export / Import Website Data</h3>
+            </div>
+            <div class="card-body">
+              <p style="margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--gray-600);">
+                You can download the entire website configuration as a JSON file to keep an offline backup or transfer settings between devices.
+              </p>
+              
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" id="exportDataJsonBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                  Download Data Backup (.json)
+                </button>
+
+                <button type="button" class="btn btn-secondary" id="importDataJsonBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                  Import Backup File
+                </button>
+                <input type="file" id="importFileInput" accept=".json" style="display: none;">
+              </div>
+
+              <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                <h4 style="color: var(--danger); font-size: 1rem; margin-bottom: 0.5rem;">Reset All Website Content</h4>
+                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem;">
+                  Revert all contact info, divisions, hero content, and gallery items back to factory default code values.
+                </p>
+                <button type="button" class="btn btn-danger" id="resetDefaultsBtn">
+                  Reset to Factory Defaults
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       Modals
+       ========================================================================= -->
+
+  <!-- 1. Inquiry Details Modal -->
+  <div class="modal-overlay" id="inquiryDetailModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="modalInquiryClientName">Inquiry Details</h3>
+        <button type="button" class="modal-close-btn" id="closeInquiryModalBtn">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="inquiryModalContent">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" id="closeInquiryModalFooterBtn">Close</button>
+        <button type="button" class="btn btn-accent btn-sm" id="modalDirectCallBtn">Call Client</button>
+        <button type="button" class="btn btn-primary btn-sm" id="modalDirectEmailBtn">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Division Add / Edit Modal -->
+  <div class="modal-overlay" id="divisionEditModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="divisionModalTitle">Add Operational Division</h3>
+        <button type="button" class="modal-close-btn" id="closeDivisionModalBtn">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="divisionEditForm">
+          <input type="hidden" id="editDivisionIndex">
+          <div class="form-group">
+            <label class="form-label" for="editDivisionBadge">Division Badge (e.g. Division 07)</label>
+            <input type="text" id="editDivisionBadge" class="form-control no-icon" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDivisionTitle">Division Title</label>
+            <input type="text" id="editDivisionTitle" class="form-control no-icon" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDivisionDesc">Scope Description</label>
+            <textarea id="editDivisionDesc" class="form-control no-icon" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDivisionBullets">Key Bullet Points (one per line)</label>
+            <textarea id="editDivisionBullets" class="form-control no-icon" rows="4" placeholder="Bullet 1&#10;Bullet 2&#10;Bullet 3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" id="cancelDivisionEditBtn">Cancel</button>
+        <button type="submit" form="divisionEditForm" class="btn btn-accent btn-sm">Save Division</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Gallery Add Item Modal -->
+  <div class="modal-overlay" id="galleryAddModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Add Project Photo to Gallery</h3>
+        <button type="button" class="modal-close-btn" id="closeGalleryModalBtn">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="galleryAddForm">
+          <div class="form-group">
+            <label class="form-label" for="galleryAddTitle">Project Title</label>
+            <input type="text" id="galleryAddTitle" class="form-control no-icon" placeholder="e.g. High-Pressure Manifold Testing" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="galleryAddCategory">Division Category</label>
+            <select id="galleryAddCategory" class="form-control no-icon" required>
+              <option value="fabrication">Welding & Metal Fabrication</option>
+              <option value="pipeline">Oil & Gas Pipeline Services</option>
+              <option value="dredging">Dredging & Technical Parts</option>
+              <option value="machining">Machining & Mechanical Works</option>
+              <option value="logistics">Logistics & Heavy Equipment</option>
+              <option value="manpower">Manpower & Instrumentation</option>
+              <option value="procurement">Procurement & Safety PPE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="galleryAddSubtitle">Subtitle / Location Tag</label>
+            <input type="text" id="galleryAddSubtitle" class="form-control no-icon" placeholder="e.g. Hydrostatic Facility, Port Harcourt" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="galleryAddImgUrl">Image URL / Path</label>
+            <input type="text" id="galleryAddImgUrl" class="form-control no-icon" placeholder="assets/images/... or https://..." required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" id="cancelGalleryModalBtn">Cancel</button>
+        <button type="submit" form="galleryAddForm" class="btn btn-accent btn-sm">Add to Gallery</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div class="toast-msg" id="adminToast">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    <span id="adminToastText">Changes saved successfully.</span>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

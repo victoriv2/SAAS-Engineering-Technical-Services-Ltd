@@ -292,6 +292,31 @@ document.addEventListener('DOMContentLoaded', () => {
         </svg> Processing Request...
       `;
 
+      // Capture inquiry details for Admin Portal
+      const divisionName = selectedDivisionText ? selectedDivisionText.textContent : (hiddenDivisionInput ? hiddenDivisionInput.value : 'General Engineering');
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      const newInquiry = {
+        id: 'inq-' + Date.now(),
+        name: document.getElementById('fullName') ? document.getElementById('fullName').value.trim() : 'Anonymous',
+        organization: document.getElementById('companyName') ? document.getElementById('companyName').value.trim() : 'Individual',
+        email: document.getElementById('emailAddress') ? document.getElementById('emailAddress').value.trim() : '',
+        phone: document.getElementById('phoneNumber') ? document.getElementById('phoneNumber').value.trim() : '',
+        division: divisionName,
+        scope: document.getElementById('projectScope') ? document.getElementById('projectScope').value.trim() : '',
+        date: dateStr,
+        status: 'new'
+      };
+
+      try {
+        const storedInquiries = JSON.parse(localStorage.getItem('saas_inquiries') || '[]');
+        storedInquiries.unshift(newInquiry);
+        localStorage.setItem('saas_inquiries', JSON.stringify(storedInquiries));
+      } catch (err) {
+        console.error('Could not persist inquiry to localStorage:', err);
+      }
+
       // Simulate quick processing
       setTimeout(() => {
         quoteForm.reset();

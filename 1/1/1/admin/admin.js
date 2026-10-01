@@ -108,51 +108,57 @@ document.addEventListener('DOMContentLoaded', () => {
     ],
     gallery: [
       {
-        title: "High-Pressure Testing Plant",
+        title: "Pinacho CNC Lathe",
         category: "fabrication",
-        subtitle: "Hydrostatic Facility, Port Harcourt",
-        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/pressure_testing_assembly_plant.jpeg"
-      },
-      {
-        title: "Precision Lathe Machining",
-        category: "fabrication",
-        subtitle: "Mechanical Machine Shop",
+        subtitle: "Precision Machining",
         img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/pinacho_cnc_lathe_machining_equipment.jpeg"
       },
       {
-        title: "Offshore Production Platform",
-        category: "pipeline",
-        subtitle: "Niger Delta Offshore Field",
-        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/offshore_oil_and_gas_production_platform.jpeg"
-      },
-      {
-        title: "Surface Pipeline Construction",
-        category: "pipeline",
-        subtitle: "Flowline Trenching Operations",
-        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg"
-      },
-      {
-        title: "Dredge Slurry Pump Impellers",
+        title: "Slurry Pump Impellers",
         category: "dredging",
-        subtitle: "Channel Sand Mining Site",
+        subtitle: "Dredging Components",
         img: "../../../../assets/images/3_Dredging_Services_and_Technical_Parts/dredge_slurry_pump_cast_impellers.jpeg"
       },
       {
-        title: "Industrial Valve Testing Rig",
-        category: "dredging",
-        subtitle: "METRUS Automated Test Rig",
+        title: "Pipe Profile Bevel Cutter",
+        category: "pipeline",
+        subtitle: "Pipeline Tooling",
+        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/pipe_profile_cutter_beveling_tool.jpeg"
+      },
+      {
+        title: "Pressure Testing Rig",
+        category: "fabrication",
+        subtitle: "Inspection & Calibration",
         img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/valve_pressure_testing_inspection_rig.jpeg"
       },
       {
-        title: "Caterpillar Heavy Pipeline Equipment",
-        category: "logistics",
-        subtitle: "Sideboom Pipelayer Fleet",
+        title: "Caterpillar Pipelayer",
+        category: "equipment",
+        subtitle: "Heavy Equipment Fleet",
         img: "../../../../assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg"
       },
       {
-        title: "Safety Helmets & PPE",
-        category: "procurement",
-        subtitle: "Industrial Procurement",
+        title: "Volute Pump Casings",
+        category: "dredging",
+        subtitle: "Dredging Castings",
+        img: "../../../../assets/images/3_Dredging_Services_and_Technical_Parts/dredge_pump_volute_casings_machined.jpeg"
+      },
+      {
+        title: "Pipeline Field Welding",
+        category: "pipeline",
+        subtitle: "Certified Welder Crew",
+        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_field_welding_operation.jpeg"
+      },
+      {
+        title: "Pipefitting Training Rig",
+        category: "fabrication",
+        subtitle: "Technical Training Services",
+        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/welding_and_pipefitting_training_board.jpeg"
+      },
+      {
+        title: "Industrial Safety Helmets",
+        category: "instrumentation",
+        subtitle: "PPE & Procurement",
         img: "../../../../assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg"
       }
     ]
@@ -165,7 +171,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const getCmsData = () => {
     try {
       const data = localStorage.getItem(CMS_KEY);
-      return data ? JSON.parse(data) : defaultCmsData;
+      if (!data) return defaultCmsData;
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed.gallery)) {
+        const cleaned = parsed.gallery.filter(item => 
+          !item.title.toLowerCase().includes('high-pressure testing plant') &&
+          !item.title.toLowerCase().includes('high-pressure manifold') &&
+          !(item.img && item.img.includes('pressure_testing_assembly_plant'))
+        );
+        if (cleaned.length !== parsed.gallery.length) {
+          parsed.gallery = cleaned.length > 0 ? cleaned : defaultCmsData.gallery;
+          localStorage.setItem(CMS_KEY, JSON.stringify(parsed));
+        }
+      }
+      return parsed;
     } catch (e) {
       return defaultCmsData;
     }

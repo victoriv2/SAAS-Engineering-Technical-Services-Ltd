@@ -1579,6 +1579,10 @@ textarea.form-control {
   margin-bottom: 1.25rem;
 }
 
+.footer-brand .brand-logo img {
+  filter: brightness(0) invert(1);
+}
+
 .footer-brand .brand-title {
   color: var(--white);
 }

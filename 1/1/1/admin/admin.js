@@ -1206,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (cat === 'dredging_valves') cat = 'dredging';
       if (cat === 'logistics_heavy_equipment') cat = 'equipment';
       if (cat === 'manpower_instrumentation') cat = 'instrumentation';
-      if (cat === 'general_contracts_procurement') cat = 'equipment';
+      if (cat === 'general_contracts_procurement') cat = 'procurement';
       return cat === currentAdminGalleryFilter;
     });
 
@@ -1767,19 +1767,58 @@ document.addEventListener('DOMContentLoaded', () => {
       currentAdminGalleryFilter = 'all';
     }
 
-    filtersContainer.innerHTML = allFilters.map(f => `
-      <button type="button" class="filter-btn ${f.id === currentAdminGalleryFilter ? 'active' : ''}" data-filter="${escapeHtml(f.id)}">${escapeHtml(f.name)}</button>
-    `).join('');
+    filtersContainer.innerHTML = allFilters.map(f => {
+      const isActive = f.id === currentAdminGalleryFilter;
+      if (f.isAll) {
+        return `<button type="button" class="filter-btn ${isActive ? 'active' : ''}" data-filter="all"><span class="filter-btn-label">All Assets</span></button>`;
+      }
+      return `
+        <button type="button" class="filter-btn ${isActive ? 'active' : ''}" data-filter="${escapeHtml(f.id)}" title="Filter by ${escapeHtml(f.name)}">
+          <span class="filter-btn-label">${escapeHtml(f.name)}</span>
+          <span class="filter-btn-actions">
+            <span role="button" tabindex="0" class="filter-btn-edit" title="Edit ${escapeHtml(f.name)}" onclick="window.editDivisionById('${escapeHtml(f.rawId)}', event)" aria-label="Edit ${escapeHtml(f.name)}">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="pointer-events: none;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </span>
+            <span role="button" tabindex="0" class="filter-btn-remove" title="Remove ${escapeHtml(f.name)}" onclick="window.removeDivisionById('${escapeHtml(f.rawId)}', event)" aria-label="Remove ${escapeHtml(f.name)}">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="pointer-events: none;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </span>
+          </span>
+        </button>
+      `;
+    }).join('');
 
     filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        if (e.target.closest('.filter-btn-edit') || e.target.closest('.filter-btn-remove')) {
+          return;
+        }
         filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentAdminGalleryFilter = btn.getAttribute('data-filter') || 'all';
         renderGallery();
       });
     });
-  };
+
+    filtersContainer.querySelectorAll('.filter-btn-edit').forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          el.click();
+        }
+      });
+    });
+
+    filtersContainer.querySelectorAll('.filter-btn-remove').forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          el.click();
+        }
+      });
+    });
+  }
 
   // =========================================================================
   // Dashboard Initialization

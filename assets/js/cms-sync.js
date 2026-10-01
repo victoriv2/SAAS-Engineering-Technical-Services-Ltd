@@ -588,7 +588,8 @@
             if (normCat === 'welding_fabrication') normCat = 'fabrication';
             else if (normCat === 'pipeline_offshore') normCat = 'pipeline';
             else if (normCat === 'dredging_valves') normCat = 'dredging';
-            else if (normCat === 'logistics_heavy_equipment' || normCat === 'general_contracts_procurement') normCat = 'equipment';
+            else if (normCat === 'logistics_heavy_equipment') normCat = 'equipment';
+            else if (normCat === 'general_contracts_procurement') normCat = 'procurement';
             else if (normCat === 'manpower_instrumentation') normCat = 'instrumentation';
 
             return `

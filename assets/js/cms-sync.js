@@ -474,26 +474,29 @@
         navDivModalGrid.innerHTML = cmsData.divisions.map((div, index) => {
           const targetId = divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id);
           const cardImg = div.img || fallbackOptionImg;
-          const displayCardImg = (cardImg.startsWith('data:') || cardImg.startsWith('http')) ? cardImg : cardImg.replace(/^(\.\.\/)+/, '');
+          const displayCardImg = (cardImg && (cardImg.startsWith('data:') || cardImg.startsWith('http'))) ? cardImg : (cardImg ? cardImg.replace(/^(\.\.\/)+/, '') : fallbackOptionImg);
           const badgeText = div.badge || `Division 0${index + 1}`;
           const titleText = div.title || 'Technical Division';
-          const descText = div.desc || '';
+          let descText = div.desc || div.sub || '';
+          if (!descText || descText.trim().toLowerCase() === 'erererer') {
+            descText = 'Specialized technical engineering operations and industrial field services.';
+          }
 
           return `
-            <div class="nav-division-card" data-div-id="${div.id}">
+            <div class="nav-division-card" data-div-id="${div.id}" data-target-id="${targetId}" role="button" tabindex="0" aria-label="Explore ${escapeHtml(titleText)}">
               <div class="nav-division-thumb-wrap">
-                <span class="nav-division-badge-overlay">${badgeText}</span>
-                <img src="${displayCardImg}" alt="${titleText}" class="nav-division-thumb-img" onerror="this.src='logo/logo.png'">
+                <span class="nav-division-badge-overlay">${escapeHtml(badgeText)}</span>
+                <img src="${displayCardImg}" alt="${escapeHtml(titleText)}" class="nav-division-thumb-img" onerror="this.src='logo/logo.png'">
               </div>
               <div class="nav-division-card-content">
-                <h4>${titleText}</h4>
-                <p>${descText}</p>
+                <h4>${escapeHtml(titleText)}</h4>
+                <p>${escapeHtml(descText)}</p>
                 <div class="nav-division-card-actions">
                   <a href="#${targetId}" class="btn btn-primary btn-xs nav-modal-explore-btn">
                     <span>Explore</span>
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42 5.43 5.43H5v2z"/></svg>
                   </a>
-                  <a href="#contact" class="btn btn-secondary btn-xs nav-modal-inquire-btn" data-division-name="${titleText}">
+                  <a href="#contact" class="btn btn-secondary btn-xs nav-modal-inquire-btn" data-division-name="${escapeHtml(titleText)}">
                     <span>Inquire</span>
                   </a>
                 </div>
@@ -502,9 +505,27 @@
           `;
         }).join('');
 
-        // Attach event listeners to explore and inquire buttons
+        // Attach event listeners to card and action buttons
+        navDivModalGrid.querySelectorAll('.nav-division-card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            // Ignore if clicking inquire button directly
+            if (e.target.closest('.nav-modal-inquire-btn')) return;
+            const targetId = card.getAttribute('data-target-id');
+            const navDivModal = document.getElementById('navDivisionsModal');
+            if (navDivModal) navDivModal.classList.remove('active');
+            document.body.style.overflow = '';
+            if (targetId) {
+              const targetEl = document.getElementById(targetId);
+              if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth' });
+              }
+            }
+          });
+        });
+
         navDivModalGrid.querySelectorAll('.nav-modal-explore-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const navDivModal = document.getElementById('navDivisionsModal');
             if (navDivModal) navDivModal.classList.remove('active');
             document.body.style.overflow = '';
@@ -512,7 +533,8 @@
         });
 
         navDivModalGrid.querySelectorAll('.nav-modal-inquire-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const divName = btn.getAttribute('data-division-name');
             const navDivModal = document.getElementById('navDivisionsModal');
             if (navDivModal) navDivModal.classList.remove('active');

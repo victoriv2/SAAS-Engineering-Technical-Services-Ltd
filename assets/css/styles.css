@@ -2309,19 +2309,44 @@ textarea.form-control {
    Modular Core Divisions Modal Menu & Dynamic Cards
    ========================================================================== */
 #navDivisionsModal .division-modal-container {
-  max-width: 1040px;
+  max-width: 1080px;
+  width: 95%;
   max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+}
+
+#navDivisionsModal .division-modal-header {
+  padding: 1.25rem 1.75rem;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.nav-divisions-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  overflow-y: auto;
+  max-height: calc(85vh - 160px);
+  background: #f8fafc;
 }
 
 .nav-division-card {
   background: var(--white);
   border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  position: relative;
+  cursor: pointer;
 }
 
 .nav-division-card:hover {
@@ -2332,16 +2357,18 @@ textarea.form-control {
 
 .nav-division-thumb-wrap {
   width: 100%;
-  height: 135px;
+  height: 140px;
   position: relative;
   overflow: hidden;
-  background: var(--gray-800);
+  background: var(--primary);
+  flex-shrink: 0;
 }
 
 .nav-division-thumb-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform 0.35s ease;
 }
 
@@ -2353,67 +2380,199 @@ textarea.form-control {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.9);
   color: var(--accent);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 0.22rem 0.55rem;
+  padding: 0.22rem 0.6rem;
   border-radius: var(--radius-sm);
   z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .nav-division-card-content {
-  padding: 1rem 1.15rem;
+  padding: 1.15rem;
   display: flex;
   flex-direction: column;
   flex: 1;
+  background: var(--white);
 }
 
 .nav-division-card-content h4 {
-  font-size: 0.96rem;
+  font-size: 0.98rem;
   font-weight: 700;
-  color: var(--dark);
-  margin: 0 0 0.4rem 0;
+  color: var(--dark) !important;
+  margin: 0 0 0.45rem 0;
   line-height: 1.35;
+  display: block !important;
+  visibility: visible !important;
 }
 
 .nav-division-card-content p {
   font-size: 0.82rem;
-  color: var(--gray-600);
+  color: var(--gray-600) !important;
   line-height: 1.45;
-  margin: 0 0 0.85rem 0;
+  margin: 0 0 0.95rem 0;
   flex: 1;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  visibility: visible !important;
 }
 
 .nav-division-card-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding-top: 0.75rem;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding-top: 0.85rem;
   border-top: 1px solid var(--gray-100);
 }
 
+.nav-division-card-actions .nav-modal-explore-btn,
+.nav-division-card-actions .nav-modal-inquire-btn {
+  flex: 1;
+}
+
 .btn-xs {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.76rem;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
   border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
   line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+/* Tablet & Mobile Specific Rules for nav-divisions-modal-grid */
+@media (max-width: 900px) {
+  #navDivisionsModal .division-modal-container {
+    max-width: 95%;
+  }
+
+  .nav-divisions-modal-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  #navDivisionsModal .division-modal-container {
+    width: 95%;
+    max-height: 94vh;
+  }
+
+  #navDivisionsModal .division-modal-header {
+    padding: 1rem 1.15rem;
+  }
+
+  #navDivisionsModal .division-modal-header h3 {
+    font-size: 1.15rem;
+  }
+
+  #navDivisionsModal .division-modal-header p {
+    font-size: 0.78rem;
+  }
+
+  .nav-divisions-modal-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    padding: 0.85rem;
+    max-height: calc(85vh - 150px);
+  }
+
+  .nav-division-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    min-height: 100px !important;
+    background: #ffffff !important;
+    border: 1.5px solid var(--gray-200) !important;
+    border-radius: 12px !important;
+  }
+
+  .nav-division-thumb-wrap {
+    width: 110px !important;
+    min-width: 110px !important;
+    height: auto !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+  }
+
+  .nav-division-badge-overlay {
+    top: 6px !important;
+    left: 6px !important;
+    font-size: 0.62rem !important;
+    padding: 0.15rem 0.4rem !important;
+  }
+
+  .nav-division-card-content {
+    padding: 0.75rem 0.85rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .nav-division-card-content h4 {
+    font-size: 0.86rem !important;
+    margin: 0 0 0.25rem 0 !important;
+    color: #0f172a !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .nav-division-card-content p {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+    margin: 0 0 0.5rem 0 !important;
+    -webkit-line-clamp: 2 !important;
+    display: -webkit-box !important;
+    color: #64748b !important;
+    visibility: visible !important;
+  }
+
+  .nav-division-card-actions {
+    display: flex !important;
+    gap: 0.4rem !important;
+    padding-top: 0.45rem !important;
+    border-top: 1px solid var(--gray-100) !important;
+  }
+
+  .nav-division-card-actions .btn-xs {
+    padding: 0.3rem 0.55rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  #navDivisionsModal .division-modal-footer {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.65rem;
+    text-align: center;
+  }
+
+  #navDivisionsModal .division-modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 

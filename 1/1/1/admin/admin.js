@@ -32,6 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
       stat3: "24/7",
       stat4: "PHC"
     },
+    about: {
+      badge: "About Our Company",
+      title: "Committed to Engineering Precision & Operational Integrity",
+      p1: "SAAS Engineering Technical Services Ltd is a multi-disciplinary engineering contractor headquartered in Port Harcourt, Rivers State. We specialize in providing comprehensive engineering, fabrication, pipeline laying, dredging component manufacturing, and industrial procurement services.",
+      p2: "Built upon strict technical standards, qualified craftsmanship, and certified safety management, we support both upstream oil and gas operators and civil industrial clients with turnkey solutions that ensure efficiency, structural integrity, and longevity.",
+      bullets: [
+        "Certified Welders & Machinists",
+        "Full NDT & Hydrostatic Testing",
+        "Heavy Duty Equipment Fleet",
+        "Fast Field Mobilization"
+      ],
+      img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg",
+      badgeTitle: "Modern Facility",
+      badgeDesc: "Fully equipped machine shop with CNC lathes, milling tools, and automated cutting rigs."
+    },
     divisions: [
       {
         id: "welding_fabrication",
@@ -327,6 +342,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // Ensure About Company settings exist
+      if (!parsed.about) {
+        parsed.about = { ...defaultCmsData.about };
+        needsSave = true;
+      }
+
       if (needsSave) {
         localStorage.setItem(CMS_KEY, JSON.stringify(parsed));
       }
@@ -590,6 +611,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabId === 'tab-gallery') {
       renderAdminGalleryFilters();
       renderGallery();
+    }
+    if (tabId === 'tab-about') {
+      loadAboutSettings();
     }
   };
 
@@ -1741,6 +1765,217 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
+  // About Company & Facility Settings
+  // =========================================================================
+  const aboutForm = document.getElementById('aboutSettingsForm');
+  const aboutFileInput = document.getElementById('aboutFileInput');
+  const aboutDropzone = document.getElementById('aboutDropzone');
+  const aboutPreviewCard = document.getElementById('aboutPreviewCard');
+  const aboutPreviewImg = document.getElementById('aboutPreviewImg');
+  const aboutPreviewFilename = document.getElementById('aboutPreviewFilename');
+  const changeAboutPhotoBtn = document.getElementById('changeAboutPhotoBtn');
+  const removeAboutPhotoBtn = document.getElementById('removeAboutPhotoBtn');
+  const toggleAboutUrlBtn = document.getElementById('toggleAboutUrlBtn');
+  const aboutUrlInputContainer = document.getElementById('aboutUrlInputContainer');
+  const aboutManualUrlInput = document.getElementById('aboutManualUrlInput');
+  const aboutImgInput = document.getElementById('settingAboutImg');
+
+  const processAndPreviewAboutImage = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 1400;
+        const maxHeight = 1400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxWidth;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        if (aboutImgInput) aboutImgInput.value = dataUrl;
+        if (aboutPreviewImg) {
+          aboutPreviewImg.src = dataUrl;
+          aboutPreviewImg.onerror = function() {
+            this.src = '../../../../logo/logo.png';
+          };
+        }
+        if (aboutPreviewFilename) aboutPreviewFilename.textContent = file.name;
+        if (aboutDropzone) aboutDropzone.style.display = 'none';
+        if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const resetAboutUploadState = (currentImg = '') => {
+    if (aboutFileInput) aboutFileInput.value = '';
+    if (aboutManualUrlInput) aboutManualUrlInput.value = '';
+    if (aboutUrlInputContainer) aboutUrlInputContainer.style.display = 'none';
+    if (toggleAboutUrlBtn) toggleAboutUrlBtn.textContent = 'Or paste image URL instead';
+
+    if (currentImg && currentImg !== 'none') {
+      if (aboutImgInput) aboutImgInput.value = currentImg;
+      if (aboutPreviewImg) {
+        aboutPreviewImg.src = toAdminAssetPath(currentImg);
+        aboutPreviewImg.onerror = function() {
+          this.src = '../../../../logo/logo.png';
+        };
+      }
+      if (aboutPreviewFilename) aboutPreviewFilename.textContent = 'Current Facility Photo';
+      if (aboutDropzone) aboutDropzone.style.display = 'none';
+      if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
+    } else {
+      if (aboutImgInput) aboutImgInput.value = 'none';
+      if (aboutPreviewImg) aboutPreviewImg.src = '';
+      if (aboutPreviewCard) aboutPreviewCard.classList.remove('show');
+      if (aboutDropzone) aboutDropzone.style.display = 'flex';
+    }
+  };
+
+  if (aboutDropzone && aboutFileInput) {
+    aboutDropzone.addEventListener('click', () => aboutFileInput.click());
+    aboutDropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        aboutFileInput.click();
+      }
+    });
+
+    aboutDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      aboutDropzone.classList.add('dragover');
+    });
+
+    aboutDropzone.addEventListener('dragleave', () => {
+      aboutDropzone.classList.remove('dragover');
+    });
+
+    aboutDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      aboutDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processAndPreviewAboutImage(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (aboutFileInput) {
+    aboutFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        processAndPreviewAboutImage(e.target.files[0]);
+      }
+    });
+  }
+
+  if (changeAboutPhotoBtn && aboutFileInput) {
+    changeAboutPhotoBtn.addEventListener('click', () => aboutFileInput.click());
+  }
+
+  if (removeAboutPhotoBtn) {
+    removeAboutPhotoBtn.addEventListener('click', () => {
+      resetAboutUploadState('none');
+      showToast("Facility photo removed. Click 'Save About Section' to update.");
+    });
+  }
+
+  if (toggleAboutUrlBtn && aboutUrlInputContainer && aboutManualUrlInput) {
+    toggleAboutUrlBtn.addEventListener('click', () => {
+      const isVisible = aboutUrlInputContainer.style.display === 'block';
+      aboutUrlInputContainer.style.display = isVisible ? 'none' : 'block';
+      toggleAboutUrlBtn.textContent = isVisible ? 'Or paste image URL instead' : 'Hide image URL input';
+    });
+
+    aboutManualUrlInput.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        if (aboutImgInput) aboutImgInput.value = url;
+        if (aboutPreviewImg) {
+          aboutPreviewImg.src = toAdminAssetPath(url);
+          aboutPreviewImg.onerror = function() {
+            this.src = '../../../../logo/logo.png';
+          };
+        }
+        if (aboutPreviewFilename) aboutPreviewFilename.textContent = url.slice(0, 30) + '...';
+        if (aboutDropzone) aboutDropzone.style.display = 'none';
+        if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
+      }
+    });
+  }
+
+  const loadAboutSettings = () => {
+    const cms = getCmsData();
+    const ab = cms.about || defaultCmsData.about;
+    const badgeEl = document.getElementById('settingAboutBadge');
+    const titleEl = document.getElementById('settingAboutTitle');
+    const p1El = document.getElementById('settingAboutP1');
+    const p2El = document.getElementById('settingAboutP2');
+    const bulletsEl = document.getElementById('settingAboutBullets');
+    const badgeTitleEl = document.getElementById('settingAboutBadgeTitle');
+    const badgeDescEl = document.getElementById('settingAboutBadgeDesc');
+
+    if (badgeEl) badgeEl.value = ab.badge || 'About Our Company';
+    if (titleEl) titleEl.value = ab.title || '';
+    if (p1El) p1El.value = ab.p1 || '';
+    if (p2El) p2El.value = ab.p2 || '';
+    if (bulletsEl) bulletsEl.value = Array.isArray(ab.bullets) ? ab.bullets.join('\n') : (ab.bullets || '');
+    if (badgeTitleEl) badgeTitleEl.value = ab.badgeTitle || 'Modern Facility';
+    if (badgeDescEl) badgeDescEl.value = ab.badgeDesc || '';
+
+    const currentImg = (ab.img && ab.img !== 'none') ? ab.img : 'none';
+    resetAboutUploadState(currentImg);
+  };
+
+  if (aboutForm) {
+    aboutForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const cms = getCmsData();
+      const bulletsRaw = document.getElementById('settingAboutBullets')?.value?.trim() || '';
+      const bulletsArr = bulletsRaw
+        ? bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean)
+        : defaultCmsData.about.bullets;
+
+      const rawImgVal = document.getElementById('settingAboutImg')?.value?.trim() || '';
+      const imgVal = rawImgVal === 'none' ? 'none' : (rawImgVal || 'none');
+
+      cms.about = {
+        badge: document.getElementById('settingAboutBadge')?.value?.trim() || 'About Our Company',
+        title: document.getElementById('settingAboutTitle')?.value?.trim() || '',
+        p1: document.getElementById('settingAboutP1')?.value?.trim() || '',
+        p2: document.getElementById('settingAboutP2')?.value?.trim() || '',
+        bullets: bulletsArr,
+        img: imgVal,
+        badgeTitle: document.getElementById('settingAboutBadgeTitle')?.value?.trim() || 'Modern Facility',
+        badgeDesc: document.getElementById('settingAboutBadgeDesc')?.value?.trim() || ''
+      };
+
+      saveCmsData(cms);
+      showToast("About Company section saved and synchronized successfully.");
+    });
+  }
+
+  // =========================================================================
   // Backup, Import & Reset Logic
   // =========================================================================
   const exportJsonBtn = document.getElementById('exportDataJsonBtn');
@@ -1905,6 +2140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGallery();
     renderAdminGalleryFilters();
     loadHeroSettings();
+    loadAboutSettings();
   };
 
   // Utilities

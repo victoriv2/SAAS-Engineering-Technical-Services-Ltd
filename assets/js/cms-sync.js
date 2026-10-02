@@ -267,6 +267,83 @@
     }
 
     // =========================================================================
+    // 2b. About Our Company Section Synchronization
+    // =========================================================================
+    if (cmsData.about) {
+      const ab = cmsData.about;
+
+      // Tag badge text
+      const badgeTextEl = document.getElementById('aboutBadgeText');
+      if (badgeTextEl && ab.badge) {
+        badgeTextEl.textContent = ab.badge;
+      } else {
+        const tagEl = document.getElementById('aboutSectionTag') || document.querySelector('#about .section-tag');
+        if (tagEl && ab.badge) {
+          const svg = tagEl.querySelector('svg');
+          tagEl.innerHTML = (svg ? svg.outerHTML : '') + ` <span id="aboutBadgeText">${escapeHtml(ab.badge)}</span>`;
+        }
+      }
+
+      // Main Heading
+      const titleEl = document.getElementById('aboutMainTitle') || document.querySelector('#about .about-text h2');
+      if (titleEl && ab.title) {
+        titleEl.textContent = ab.title;
+      }
+
+      // Paragraph 1
+      const p1El = document.getElementById('aboutParagraph1') || document.querySelector('#about .about-text p:first-of-type');
+      if (p1El && ab.p1) {
+        p1El.innerHTML = ab.p1.includes('<strong>') ? ab.p1 : escapeHtml(ab.p1);
+      }
+
+      // Paragraph 2
+      const p2El = document.getElementById('aboutParagraph2') || document.querySelector('#about .about-text p:nth-of-type(2)');
+      if (p2El && ab.p2) {
+        p2El.textContent = ab.p2;
+      }
+
+      // Feature pills / bullets
+      const featuresEl = document.getElementById('aboutFeaturesList') || document.querySelector('#about .about-features');
+      if (featuresEl && Array.isArray(ab.bullets)) {
+        featuresEl.innerHTML = ab.bullets.map(b => `
+          <div class="feature-pill">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>${escapeHtml(b)}</span>
+          </div>
+        `).join('');
+      }
+
+      // Facility Photo
+      const imgEl = document.getElementById('aboutMainImg') || document.querySelector('#about .about-main-img');
+      if (imgEl) {
+        const hasNoImg = !ab.img || ab.img === 'none';
+        const rawImg = hasNoImg ? 'logo/logo.png' : ab.img;
+        const displayImg = (rawImg.startsWith('data:') || rawImg.startsWith('http')) ? rawImg : rawImg.replace(/^(\.\.\/)+/, '');
+        imgEl.src = displayImg;
+        if (hasNoImg) {
+          imgEl.style.objectFit = 'contain';
+          imgEl.style.padding = '3rem';
+          imgEl.style.background = 'linear-gradient(135deg, #0a192f 0%, #172a45 100%)';
+        } else {
+          imgEl.style.objectFit = '';
+          imgEl.style.padding = '';
+          imgEl.style.background = '';
+        }
+      }
+
+      // Floating Badge Title & Desc
+      const bTitleEl = document.getElementById('aboutBadgeTitle') || document.querySelector('#about .about-badge-card h4');
+      if (bTitleEl && ab.badgeTitle) {
+        bTitleEl.textContent = ab.badgeTitle;
+      }
+
+      const bDescEl = document.getElementById('aboutBadgeDesc') || document.querySelector('#about .about-badge-card p');
+      if (bDescEl && ab.badgeDesc) {
+        bDescEl.textContent = ab.badgeDesc;
+      }
+    }
+
+    // =========================================================================
     // 3. Core Technical Divisions (Real-time Add, Edit, and Removal Sync)
     // =========================================================================
     if (Array.isArray(cmsData.divisions)) {

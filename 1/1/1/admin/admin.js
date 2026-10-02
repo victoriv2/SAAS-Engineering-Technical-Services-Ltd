@@ -203,9 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const getDivisionImgSrc = (div) => {
-    if (!div) return toAdminAssetPath(fallbackDivisionImg);
-    const raw = div.img || divisionImages[div.id] || fallbackDivisionImg;
-    return toAdminAssetPath(raw);
+    if (!div || !div.img || div.img === 'none') return '../../../../logo/logo.png';
+    return toAdminAssetPath(div.img);
   };
 
   // Inquiries collection (starts 100% empty until real clients submit consultation forms)
@@ -310,10 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
         needsSave = true;
       }
 
-      // Ensure every division has an authentic img path
+      // Ensure every division has an authentic img path only on initial creation
       if (Array.isArray(parsed.divisions)) {
         parsed.divisions.forEach(d => {
-          if (!d.img) {
+          if (d.img === undefined) {
             d.img = divisionImages[d.id] || fallbackDivisionImg;
             needsSave = true;
           }
@@ -990,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (divisionUrlInputContainer) divisionUrlInputContainer.style.display = 'none';
     if (toggleDivisionUrlBtn) toggleDivisionUrlBtn.textContent = 'Or paste image URL instead';
 
-    if (currentImg) {
+    if (currentImg && currentImg !== 'none') {
       if (editDivisionImgInput) editDivisionImgInput.value = currentImg;
       if (divisionPreviewImg) {
         divisionPreviewImg.src = toAdminAssetPath(currentImg);
@@ -1002,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (divisionDropzone) divisionDropzone.style.display = 'none';
       if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
     } else {
-      if (editDivisionImgInput) editDivisionImgInput.value = '';
+      if (editDivisionImgInput) editDivisionImgInput.value = 'none';
       if (divisionPreviewImg) divisionPreviewImg.src = '';
       if (divisionPreviewCard) divisionPreviewCard.classList.remove('show');
       if (divisionDropzone) divisionDropzone.style.display = 'flex';
@@ -1049,7 +1048,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (removeDivisionPhotoBtn) {
-    removeDivisionPhotoBtn.addEventListener('click', () => resetDivisionUploadState(''));
+    removeDivisionPhotoBtn.addEventListener('click', () => {
+      resetDivisionUploadState('none');
+      showToast("Cover photo removed. Click 'Save Changes' to update.");
+    });
   }
 
   if (toggleDivisionUrlBtn && divisionUrlInputContainer && divisionManualUrlInput) {
@@ -1111,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (editDivisionBulletsInput) {
         editDivisionBulletsInput.value = Array.isArray(d.bullets) ? d.bullets.join('\n') : (d.bullets || '');
       }
-      const currentDivImg = d.img || divisionImages[d.id] || fallbackDivisionImg;
+      const currentDivImg = (d.img && d.img !== 'none') ? d.img : 'none';
       resetDivisionUploadState(currentDivImg);
 
       if (previewDivTitle) previewDivTitle.textContent = shortCat || d.title || 'Division Title';
@@ -1189,11 +1191,17 @@ document.addEventListener('DOMContentLoaded', () => {
         ? bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean)
         : [subVal, 'Certified Compliance', 'Technical Support'];
 
-      const imgVal = (editDivisionImgInput && editDivisionImgInput.value)
-        ? editDivisionImgInput.value
-        : ((index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].img)
-            ? cms.divisions[index].img
-            : fallbackDivisionImg);
+      const rawImgVal = editDivisionImgInput ? editDivisionImgInput.value.trim() : '';
+      let imgVal = 'none';
+      if (rawImgVal === 'none') {
+        imgVal = 'none';
+      } else if (rawImgVal) {
+        imgVal = rawImgVal;
+      } else {
+        imgVal = (index >= 0 && cms.divisions && cms.divisions[index] && cms.divisions[index].img !== 'none')
+          ? (cms.divisions[index].img || 'none')
+          : 'none';
+      }
 
       const divData = {
         id: (index >= 0 && cms.divisions && cms.divisions[index]) ? cms.divisions[index].id : `division_${Date.now()}`,

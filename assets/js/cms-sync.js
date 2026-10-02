@@ -292,7 +292,8 @@
       cmsData.divisions.forEach((div, index) => {
         const targetId = divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id);
         let card = document.getElementById(targetId) || document.querySelector(`[id*="${div.id}"]`);
-        const cardImg = div.img || fallbackOptionImg;
+        const hasNoImg = !div.img || div.img === 'none';
+        const cardImg = hasNoImg ? 'logo/logo.png' : div.img;
         const displayCardImg = (cardImg.startsWith('data:') || cardImg.startsWith('http')) ? cardImg : cardImg.replace(/^(\.\.\/)+/, '');
 
         if (!card && activitiesContainer) {
@@ -328,8 +329,17 @@
           if (p && div.desc) p.textContent = div.desc;
 
           const imgEl = card.querySelector('.division-image img');
-          if (imgEl && div.img) {
+          if (imgEl) {
             imgEl.src = displayCardImg;
+            if (hasNoImg) {
+              imgEl.style.objectFit = 'contain';
+              imgEl.style.padding = '2.5rem';
+              imgEl.style.background = 'linear-gradient(135deg, #0a192f 0%, #172a45 100%)';
+            } else {
+              imgEl.style.objectFit = '';
+              imgEl.style.padding = '';
+              imgEl.style.background = '';
+            }
             if (div.title) imgEl.alt = div.title;
           }
 
@@ -445,7 +455,18 @@
         if (modalOption) {
           modalOption.style.display = '';
           const optThumbImg = modalOption.querySelector('.option-thumb-img');
-          if (optThumbImg && div.img) optThumbImg.src = displayCardImg;
+          if (optThumbImg) {
+            optThumbImg.src = displayCardImg;
+            if (hasNoImg) {
+              optThumbImg.style.objectFit = 'contain';
+              optThumbImg.style.padding = '0.5rem';
+              optThumbImg.style.background = '#0a192f';
+            } else {
+              optThumbImg.style.objectFit = '';
+              optThumbImg.style.padding = '';
+              optThumbImg.style.background = '';
+            }
+          }
 
           const optBadge = modalOption.querySelector('.option-badge');
           if (optBadge && div.badge) optBadge.textContent = div.badge;
@@ -473,8 +494,9 @@
       if (navDivModalGrid) {
         navDivModalGrid.innerHTML = cmsData.divisions.map((div, index) => {
           const targetId = divisionIdMap[div.id] || (div.id.startsWith('div-') ? div.id : 'div-' + div.id);
-          const cardImg = div.img || fallbackOptionImg;
-          const displayCardImg = (cardImg && (cardImg.startsWith('data:') || cardImg.startsWith('http'))) ? cardImg : (cardImg ? cardImg.replace(/^(\.\.\/)+/, '') : fallbackOptionImg);
+          const hasNoImg = !div.img || div.img === 'none';
+          const cardImg = hasNoImg ? 'logo/logo.png' : div.img;
+          const displayCardImg = (cardImg && (cardImg.startsWith('data:') || cardImg.startsWith('http'))) ? cardImg : (cardImg ? cardImg.replace(/^(\.\.\/)+/, '') : 'logo/logo.png');
           const badgeText = div.badge || `Division 0${index + 1}`;
           const titleText = div.title || 'Technical Division';
           let descText = div.desc || div.sub || '';
@@ -486,7 +508,7 @@
             <div class="nav-division-card" data-div-id="${div.id}" data-target-id="${targetId}" role="button" tabindex="0" aria-label="Explore ${escapeHtml(titleText)}">
               <div class="nav-division-thumb-wrap">
                 <span class="nav-division-badge-overlay">${escapeHtml(badgeText)}</span>
-                <img src="${displayCardImg}" alt="${escapeHtml(titleText)}" class="nav-division-thumb-img" onerror="this.src='logo/logo.png'">
+                <img src="${displayCardImg}" alt="${escapeHtml(titleText)}" class="nav-division-thumb-img" onerror="this.src='logo/logo.png'" style="${hasNoImg ? 'object-fit: contain; padding: 0.5rem; background: #0a192f;' : ''}">
               </div>
               <div class="nav-division-card-content">
                 <h4>${escapeHtml(titleText)}</h4>

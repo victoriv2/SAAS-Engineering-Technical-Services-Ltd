@@ -677,21 +677,27 @@ function startAdminApp() {
 
   function switchTab(tabId, updateUrl = true) {
     if (!tabId) return;
-    const targetPane = document.getElementById(tabId);
+    const cleanId = String(tabId).trim();
+    const candidateTab = cleanId.startsWith('tab-') ? cleanId : 'tab-' + cleanId;
+    const targetPane = document.getElementById(candidateTab) || document.getElementById(cleanId);
     if (!targetPane || !targetPane.classList.contains('tab-pane')) return;
+    const finalTabId = targetPane.id;
 
     let activeBtn = null;
-    tabButtons.forEach(btn => {
-      if (btn.getAttribute('data-tab') === tabId) {
+    const allTabBtns = document.querySelectorAll('.nav-tab-btn, [data-tab]');
+    allTabBtns.forEach(btn => {
+      const bTab = btn.getAttribute('data-tab');
+      if (bTab === finalTabId || bTab === cleanId || ('tab-' + bTab) === finalTabId) {
         btn.classList.add('active');
         activeBtn = btn;
-      } else {
+      } else if (btn.classList.contains('nav-tab-btn')) {
         btn.classList.remove('active');
       }
     });
 
-    tabPanes.forEach(pane => {
-      if (pane.id === tabId) {
+    const allPanes = document.querySelectorAll('.tab-pane');
+    allPanes.forEach(pane => {
+      if (pane.id === finalTabId) {
         pane.classList.add('active');
       } else {
         pane.classList.remove('active');
@@ -699,18 +705,18 @@ function startAdminApp() {
     });
 
     // Invoke tab specific loaders
-    if (tabId === 'tab-gallery') {
+    if (finalTabId === 'tab-gallery') {
       renderAdminGalleryFilters();
       renderGallery();
-    } else if (tabId === 'tab-about') {
+    } else if (finalTabId === 'tab-about') {
       loadAboutSettings();
-    } else if (tabId === 'tab-contact') {
+    } else if (finalTabId === 'tab-contact') {
       loadContactSettings();
-    } else if (tabId === 'tab-hero') {
+    } else if (finalTabId === 'tab-hero') {
       loadHeroSettings();
-    } else if (tabId === 'tab-divisions') {
+    } else if (finalTabId === 'tab-divisions') {
       renderDivisions();
-    } else if (tabId === 'tab-inquiries') {
+    } else if (finalTabId === 'tab-inquiries') {
       renderInquiries();
     }
 
@@ -723,14 +729,14 @@ function startAdminApp() {
 
     // Persist active tab across browser reloads
     try {
-      sessionStorage.setItem(ACTIVE_TAB_KEY, tabId);
+      sessionStorage.setItem(ACTIVE_TAB_KEY, finalTabId);
     } catch (e) {}
 
     // Synchronize URL hash so direct links and browser refresh stay on this tab
     if (updateUrl) {
-      const cleanHash = tabId.replace(/^tab-/, '');
+      const cleanHash = finalTabId.replace(/^tab-/, '');
       const targetHash = '#' + cleanHash;
-      if (window.location.hash !== targetHash && window.location.hash !== '#' + tabId) {
+      if (window.location.hash !== targetHash && window.location.hash !== '#' + finalTabId) {
         try {
           history.replaceState(null, '', targetHash);
         } catch (e) {
@@ -741,6 +747,7 @@ function startAdminApp() {
       }
     }
   }
+  window.switchTab = switchTab;
 
   function restoreActiveTab() {
     // 1. URL Hash has first priority (allows direct bookmarks, back/forward, refresh)
@@ -781,11 +788,41 @@ function startAdminApp() {
     }
   });
 
+  // Direct tab button listeners
   tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       const tabId = btn.getAttribute('data-tab');
       switchTab(tabId);
     });
+  });
+
+  // Delegated document click handler — guarantees buttons always respond even if dynamically re-rendered
+  document.addEventListener('click', (e) => {
+    const tabBtn = e.target.closest('[data-tab], .nav-tab-btn');
+    if (tabBtn) {
+      const tabId = tabBtn.getAttribute('data-tab');
+      if (tabId) {
+        e.preventDefault();
+        switchTab(tabId);
+        return;
+      }
+    }
+
+    const quickAddBtn = e.target.closest('#quickAddDivisionBtn');
+    if (quickAddBtn) {
+      e.preventDefault();
+      switchTab('tab-divisions');
+      if (typeof openDivisionModal === 'function') openDivisionModal(-1);
+      return;
+    }
+
+    const viewAllInqBtn = e.target.closest('#viewAllInquiriesBtn');
+    if (viewAllInqBtn) {
+      e.preventDefault();
+      switchTab('tab-inquiries');
+      return;
+    }
   });
 
   const adminBrand = document.querySelector('.admin-brand');
@@ -1510,6 +1547,10 @@ function startAdminApp() {
   }
 
   const openDivisionModal = async (index = -1) => {
+    if (divisionModal) {
+      divisionModal.classList.add('active');
+      divisionModal.style.zIndex = '35000';
+    }
     const cms = await getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
     const title = document.getElementById('divisionModalTitle');
@@ -1565,6 +1606,8 @@ function startAdminApp() {
   if (closeDivModalBtn) closeDivModalBtn.addEventListener('click', closeDivisionModal);
   if (cancelDivModalBtn) cancelDivModalBtn.addEventListener('click', closeDivisionModal);
 
+  window.openDivisionModal = openDivisionModal;
+  window.closeDivisionModal = closeDivisionModal;
   window.editDivision = (idx) => openDivisionModal(idx);
   window.deleteDivision = async (idx) => {
     const cms = await getCmsData();
@@ -1875,7 +1918,7 @@ function startAdminApp() {
     'general_contracts_procurement': { id: 'procurement', name: 'General Contracts & Procurement', sub: 'Supply Chain & PPE' }
   };
 
-  window.editDivisionById = (divId, event) => {
+  window.editDivisionById = async (divId, event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -1926,7 +1969,7 @@ function startAdminApp() {
     }
   };
 
-  function populateGalleryCategoryModularGrid(selectedId = 'fabrication') {
+  async function populateGalleryCategoryModularGrid(selectedId = 'fabrication') {
     const gridEl = document.getElementById('galleryCategoryModularGrid');
     const hiddenInput = document.getElementById('galleryAddCategory');
     if (!gridEl || !hiddenInput) return;
@@ -2024,8 +2067,11 @@ function startAdminApp() {
   if (closeGalleryModalBtn) closeGalleryModalBtn.addEventListener('click', closeGalleryModal);
   if (cancelGalleryModalBtn) cancelGalleryModalBtn.addEventListener('click', closeGalleryModal);
 
+  window.openGalleryModal = openGalleryModal;
+  window.closeGalleryModal = closeGalleryModal;
 
-  window.editGalleryItem = (idx) => {
+
+  window.editGalleryItem = async (idx) => {
     const cms = await getCmsData();
     const gallery = Array.isArray(cms.gallery) ? cms.gallery : defaultCmsData.gallery;
     const item = gallery[idx];
@@ -2398,7 +2444,7 @@ function startAdminApp() {
     });
   }
 
-  function renderAdminGalleryFilters() {
+  async function renderAdminGalleryFilters() {
     const filtersContainer = document.getElementById('adminGalleryFilters');
     if (!filtersContainer) return;
 

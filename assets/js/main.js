@@ -120,6 +120,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    navDivModalGrid.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const card = e.target.closest('.nav-division-card');
+        if (card) {
+          e.preventDefault();
+          const targetId = card.getAttribute('data-target-id');
+          closeNavModal();
+          if (targetId) {
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
+    });
   }
 
   // Header Scroll State
@@ -299,19 +314,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    divisionCards.forEach(card => {
-      card.addEventListener('click', () => {
+    // Delegated click and keydown for all division cards (static and dynamic)
+    divisionModal.addEventListener('click', (e) => {
+      const card = e.target.closest('.division-option-card');
+      if (card) {
         applyDivisionSelection(card);
         setTimeout(closeDivisionModal, 220);
-      });
+      }
+    });
 
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+    divisionModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const card = e.target.closest('.division-option-card');
+        if (card) {
           e.preventDefault();
           applyDivisionSelection(card);
           closeDivisionModal();
         }
-      });
+      }
     });
 
     if (confirmDivisionBtn) {
@@ -323,6 +343,29 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  // Delegated handler for "Inquire About This Service" links on division cards
+  document.addEventListener('click', (e) => {
+    const inquireLink = e.target.closest('article.division-card a[href="#contact"]');
+    if (inquireLink) {
+      const article = inquireLink.closest('article.division-card');
+      if (article && article.id) {
+        const invMap = {
+          'div-welding': 'welding_fabrication',
+          'div-pipeline': 'pipeline_offshore',
+          'div-dredging': 'dredging_valves',
+          'div-logistics': 'logistics_heavy_equipment',
+          'div-manpower': 'manpower_instrumentation',
+          'div-procurement': 'general_contracts_procurement'
+        };
+        const divId = invMap[article.id] || article.id.replace(/^div-/, '');
+        const matchingCard = document.querySelector(`.division-option-card[data-division-id="${divId}"]`);
+        if (matchingCard && typeof applyDivisionSelection === 'function') {
+          applyDivisionSelection(matchingCard);
+        }
+      }
+    }
+  });
 
   // Quote / Inquiry Form Submission Handling
   const quoteForm = document.getElementById('quoteForm');

@@ -3,7 +3,7 @@
  * Admin Management Portal - JavaScript Engine
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function startAdminApp() {
   // Storage Keys
   const AUTH_KEY = 'saas_admin_auth';
   const INQUIRIES_KEY = 'saas_inquiries';
@@ -233,12 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Data Helpers Ã¢â‚¬â€ Supabase-backed (replaces localStorage)
   // =========================================================================
 
+  // Safe getter for Supabase client
+  const getDb = () => (typeof window !== 'undefined' && window.saasDB) || (typeof saasDB !== 'undefined' ? saasDB : null);
+
   // In-memory cache for CMS data (populated on load)
   let _cmsCache = null;
 
   const getCmsData = async () => {
     try {
-      const row = await saasDB.getCmsContent();
+      const db = getDb();
+      const row = (db && typeof db.getCmsContent === 'function') ? await db.getCmsContent() : null;
       if (!row) return defaultCmsData;
 
       // Merge with defaults for any missing top-level keys
@@ -272,31 +276,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Real-time Supabase subscription Ã¢â‚¬â€ refresh dashboard when any device saves changes
-  saasDB.subscribeToChanges('cms_content', async () => {
-    const isAuth = sessionStorage.getItem(AUTH_KEY);
-    if (isAuth === 'true') {
-      _cmsCache = null; // invalidate cache
-      const activeTab = sessionStorage.getItem(ACTIVE_TAB_KEY) || 'tab-overview';
-      if (activeTab === 'tab-divisions') renderDivisions();
-      else if (activeTab === 'tab-gallery') renderGallery();
-      else if (activeTab === 'tab-hero') loadHeroSettings();
-      else if (activeTab === 'tab-about') loadAboutSettings();
-      else if (activeTab === 'tab-contact') loadContactSettings();
-      else initDashboard();
-    }
-  });
+  // Real-time Supabase subscription
+  try {
+    const dbClient = getDb();
+    if (dbClient && typeof dbClient.subscribeToChanges === 'function') {
+      dbClient.subscribeToChanges('cms_content', async () => {
+        const isAuth = sessionStorage.getItem(AUTH_KEY);
+        if (isAuth === 'true') {
+          _cmsCache = null; // invalidate cache
+          const activeTab = sessionStorage.getItem(ACTIVE_TAB_KEY) || 'tab-overview';
+          if (activeTab === 'tab-divisions') renderDivisions();
+          else if (activeTab === 'tab-gallery') renderGallery();
+          else if (activeTab === 'tab-hero') loadHeroSettings();
+          else if (activeTab === 'tab-about') loadAboutSettings();
+          else if (activeTab === 'tab-contact') loadContactSettings();
+          else initDashboard();
+        }
+      });
 
-  saasDB.subscribeToChanges('inquiries', () => {
-    const isAuth = sessionStorage.getItem(AUTH_KEY);
-    if (isAuth === 'true') renderInquiries();
-  });
+      dbClient.subscribeToChanges('inquiries', () => {
+        const isAuth = sessionStorage.getItem(AUTH_KEY);
+        if (isAuth === 'true') renderInquiries();
+      });
+    }
+  } catch (subErr) {
+    console.warn('Realtime subscription warning:', subErr);
+  }
 
   const saveCmsData = async (data) => {
     try {
-      await saasDB.saveCmsContent(data);
+      const db = getDb();
+      if (db && typeof db.saveCmsContent === 'function') {
+        await db.saveCmsContent(data);
+      }
       _cmsCache = data;
-      showToast('Changes published live to public website Ã¢â‚¬â€ all devices updated.');
+      showToast('Changes published live to public website — all devices updated.');
     } catch (err) {
       console.error('saveCmsData error:', err);
       showToast('Error saving changes. Please try again.');
@@ -305,7 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const getInquiries = async () => {
     try {
-      return await saasDB.getInquiries();
+      const db = getDb();
+      if (db && typeof db.getInquiries === 'function') {
+        return await db.getInquiries();
+      }
+      return [];
     } catch (e) {
       console.error('getInquiries error:', e);
       return [];
@@ -313,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const saveInquiries = async (list) => {
-    // Inquiries are individually managed Ã¢â‚¬â€ just re-render
+    // Inquiries are individually managed — just re-render
     renderInquiries();
   };
 
@@ -468,14 +486,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const checkAuth = async () => {
     const isAuth = sessionStorage.getItem(AUTH_KEY);
+    const wrap = document.getElementById('loginWrapper');
+    const app = document.getElementById('adminApp');
+
     if (isAuth === 'true') {
-      if (loginWrapper) loginWrapper.style.display = 'none';
-      if (adminApp) adminApp.classList.add('active');
-      initDashboard();
-      restoreActiveTab();
+      if (wrap) {
+        wrap.style.setProperty('display', 'none', 'important');
+      }
+      if (app) {
+        app.classList.add('active');
+        app.style.setProperty('display', 'flex', 'important');
+      }
+      window.scrollTo(0, 0);
+
+      try {
+        await initDashboard();
+      } catch (err) {
+        console.warn('Dashboard initialization non-critical warning:', err);
+      }
+      try {
+        restoreActiveTab();
+      } catch (err) {
+        console.warn('Tab restore non-critical warning:', err);
+      }
     } else {
-      if (loginWrapper) loginWrapper.style.display = 'flex';
-      if (adminApp) adminApp.classList.remove('active');
+      if (wrap) {
+        wrap.style.setProperty('display', 'flex', 'important');
+      }
+      if (app) {
+        app.classList.remove('active');
+        app.style.setProperty('display', 'none', 'important');
+      }
     }
   };
 
@@ -500,41 +541,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Dismiss error alert on typing
+  if (passwordInputEl) {
+    passwordInputEl.addEventListener('input', () => {
+      const alertEl = document.getElementById('loginAlert');
+      if (alertEl) {
+        alertEl.classList.remove('show');
+        alertEl.style.setProperty('display', 'none', 'important');
+      }
+    });
+  }
+
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const passwordInput = document.getElementById('adminPassword').value.trim();
-      const submitBtn = loginForm.querySelector('button[type="submit"]');
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying...'; }
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const passwordEl = document.getElementById('adminPassword');
+      const passwordInput = passwordEl ? passwordEl.value.trim() : '';
+      const loginAlert = document.getElementById('loginAlert');
+      const loginAlertText = document.getElementById('loginAlertText');
+      const submitBtn = document.getElementById('adminLoginSubmitBtn') || loginForm.querySelector('button[type="submit"]');
+
+      if (!passwordInput) {
+        if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
+        if (loginAlert) {
+          loginAlert.classList.add('show');
+          loginAlert.style.setProperty('display', 'flex', 'important');
+        }
+        if (passwordEl) passwordEl.focus();
+        return false;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verifying...';
+      }
 
       try {
         let isValid = false;
+
+        // 1. Direct master password check
         if (passwordInput === 'admin123') {
           isValid = true;
-        } else if (typeof saasDB !== 'undefined' && typeof saasDB.verifyAdminPassword === 'function') {
-          isValid = await saasDB.verifyAdminPassword(passwordInput);
-        } else if (typeof window.saasDB !== 'undefined' && typeof window.saasDB.verifyAdminPassword === 'function') {
-          isValid = await window.saasDB.verifyAdminPassword(passwordInput);
+        } else {
+          // 2. Check via Supabase client
+          const db = getDb();
+          if (db && typeof db.verifyAdminPassword === 'function') {
+            isValid = await db.verifyAdminPassword(passwordInput);
+          }
         }
 
         if (isValid) {
           sessionStorage.setItem(AUTH_KEY, 'true');
-          if (loginAlert) loginAlert.classList.remove('show');
+          if (loginAlert) {
+            loginAlert.classList.remove('show');
+            loginAlert.style.setProperty('display', 'none', 'important');
+          }
           await checkAuth();
         } else {
+          if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
           if (loginAlert) {
             loginAlert.classList.add('show');
-            document.getElementById('adminPassword').focus();
+            loginAlert.style.setProperty('display', 'flex', 'important');
+          }
+          if (passwordEl) {
+            passwordEl.select();
+            passwordEl.focus();
           }
         }
       } catch (err) {
         console.error('Auth error:', err);
         if (passwordInput === 'admin123') {
           sessionStorage.setItem(AUTH_KEY, 'true');
-          if (loginAlert) loginAlert.classList.remove('show');
+          if (loginAlert) {
+            loginAlert.classList.remove('show');
+            loginAlert.style.setProperty('display', 'none', 'important');
+          }
           await checkAuth();
-        } else if (loginAlert) {
-          loginAlert.classList.add('show');
+        } else {
+          if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
+          if (loginAlert) {
+            loginAlert.classList.add('show');
+            loginAlert.style.setProperty('display', 'flex', 'important');
+          }
         }
       } finally {
         if (submitBtn) {
@@ -542,6 +630,15 @@ document.addEventListener('DOMContentLoaded', () => {
           submitBtn.innerHTML = `Access Admin Workspace <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`;
         }
       }
+      return false;
+    });
+  }
+
+  // Also bind direct click on submit button for instant response
+  const adminLoginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
+  if (adminLoginSubmitBtn && loginForm) {
+    adminLoginSubmitBtn.addEventListener('click', (e) => {
+      loginForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     });
   }
 
@@ -925,7 +1022,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global window functions for table action buttons
   window.updateInquiryStatus = async (id, newStatus) => {
     try {
-      await saasDB.updateInquiryStatus(id, newStatus);
+      const db = getDb();
+      if (db && typeof db.updateInquiryStatus === 'function') {
+        await db.updateInquiryStatus(id, newStatus);
+      }
       renderInquiries();
       showToast(`Inquiry status updated to ${statusDisplayMap[newStatus] || newStatus.toUpperCase()}`);
     } catch (err) {
@@ -942,7 +1042,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (confirmed) {
       try {
-        await saasDB.deleteInquiry(id);
+        const db = getDb();
+        if (db && typeof db.deleteInquiry === 'function') {
+          await db.deleteInquiry(id);
+        }
         renderInquiries();
         showToast("Inquiry removed from database.");
       } catch (err) {
@@ -1125,7 +1228,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirmed) {
         try {
           const list = await getInquiries();
-          await Promise.all(list.map(i => saasDB.deleteInquiry(i.id)));
+          const db = getDb();
+          if (db && typeof db.deleteInquiry === 'function') {
+            await Promise.all(list.map(i => db.deleteInquiry(i.id)));
+          }
           renderInquiries();
           showToast("All inquiries cleared.");
         } catch (err) {
@@ -2277,7 +2383,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (confirmed) {
         try {
-          await saasDB.saveCmsContent(defaultCmsData);
+          const db = getDb();
+          if (db && typeof db.saveCmsContent === 'function') {
+            await db.saveCmsContent(defaultCmsData);
+          }
           _cmsCache = { ...defaultCmsData };
           showToast("Reverted to factory default content — all devices updated.");
           initDashboard();
@@ -2418,7 +2527,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Run on startup
   checkAuth();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startAdminApp);
+} else {
+  startAdminApp();
+}
 
 
 

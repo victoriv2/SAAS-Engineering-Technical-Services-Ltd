@@ -457,63 +457,130 @@
   }
 
   // =========================================================================
-  // Initialise: fetch from Supabase with smart client caching & realtime preview
+  // Initialise: Smart Caching with Instant Admin Invalidation & Realtime Sync
   // =========================================================================
-  async function init() {
-    const CMS_CACHE_KEY = 'saas_cms_cached_data';
-    const CMS_CACHE_TS_KEY = 'saas_cms_cached_ts';
-    const CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute cache TTL for anonymous visitors
+  const CMS_CACHE_KEY = 'saas_cms_cached_data';
+  const CMS_CACHE_TS_KEY = 'saas_cms_cached_ts';
+  const CMS_CACHE_UPDATED_AT_KEY = 'saas_cms_cached_updated_at';
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute cache TTL when no updates occur
 
+  // Fetch full fresh content from Supabase and cache it
+  async function fetchAndApplyFresh() {
+    try {
+      const row = await saasDB.getCmsContent();
+      if (row) {
+        applyCmsData(row);
+        try {
+          localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(row));
+          localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
+          if (row.updated_at) {
+            localStorage.setItem(CMS_CACHE_UPDATED_AT_KEY, row.updated_at);
+          }
+        } catch (_) {}
+      }
+    } catch (err) {
+      console.warn('SAAS CMS: Could not load content from Supabase.', err);
+    }
+  }
+
+  // Ultra-lightweight micro-check: queries only updated_at timestamp (~40 bytes)
+  // If admin made an update, re-fetches immediately; otherwise keeps the 5-minute cache.
+  async function checkForServerUpdates() {
+    try {
+      const cachedUpdatedAt = localStorage.getItem(CMS_CACHE_UPDATED_AT_KEY);
+      const serverUpdatedAt = await saasDB.getCmsTimestamp();
+
+      if (serverUpdatedAt && (!cachedUpdatedAt || cachedUpdatedAt !== serverUpdatedAt)) {
+        // Admin updated content: fetch and apply fresh data immediately!
+        await fetchAndApplyFresh();
+      } else {
+        // No update has occurred: refresh cache timestamp so the 5-minute window continues
+        try {
+          localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
+        } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('SAAS CMS: Update check notice:', e);
+    }
+  }
+
+  async function init() {
     const isAdminPreview = (typeof sessionStorage !== 'undefined') && (sessionStorage.getItem('saas_admin_auth') === 'true');
 
-    // 1. Check local cache first for anonymous visitors (saves 80-90% egress on repeat views/reloads)
-    let appliedFromCache = false;
-    if (!isAdminPreview) {
-      try {
-        const raw = localStorage.getItem(CMS_CACHE_KEY);
-        const ts = Number(localStorage.getItem(CMS_CACHE_TS_KEY) || 0);
-        if (raw && (Date.now() - ts < CACHE_TTL_MS)) {
-          const cached = JSON.parse(raw);
-          if (cached) {
-            applyCmsData(cached);
-            appliedFromCache = true;
-          }
+    // 1. Instant Paint: Render local cached data immediately (0ms network delay)
+    let hasLocalCache = false;
+    try {
+      const raw = localStorage.getItem(CMS_CACHE_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached) {
+          applyCmsData(cached);
+          hasLocalCache = true;
         }
-      } catch (_) {}
+      }
+    } catch (_) {}
+
+    // 2. Freshness Check:
+    // If no cache exists, or admin is previewing, fetch fresh immediately.
+    // If cache exists, check updated_at timestamp. If changed, updates immediately!
+    if (!hasLocalCache || isAdminPreview) {
+      await fetchAndApplyFresh();
+    } else {
+      // Check if server has newer update than what is in cache
+      checkForServerUpdates();
     }
 
-    // 2. Fetch fresh content if no cache, expired, or admin previewing
-    if (!appliedFromCache || isAdminPreview) {
-      try {
-        const row = await saasDB.getCmsContent();
-        if (row) {
-          applyCmsData(row);
+    // 3. Instant Cross-Tab Sync via BroadcastChannel & Storage Event
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('saas_cms_sync');
+        bc.onmessage = (event) => {
+          if (event.data && event.data.type === 'CMS_UPDATED' && event.data.data) {
+            applyCmsData(event.data.data);
+            try {
+              localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(event.data.data));
+              localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
+              if (event.data.data.updated_at) {
+                localStorage.setItem(CMS_CACHE_UPDATED_AT_KEY, event.data.data.updated_at);
+              }
+            } catch (_) {}
+          }
+        };
+      }
+
+      window.addEventListener('storage', (e) => {
+        if (e.key === CMS_CACHE_KEY && e.newValue) {
           try {
-            localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(row));
-            localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
+            const fresh = JSON.parse(e.newValue);
+            if (fresh) applyCmsData(fresh);
           } catch (_) {}
         }
-      } catch (err) {
-        console.warn('SAAS CMS: Could not load content from Supabase.', err);
-      }
-    }
+      });
+    } catch (_) {}
 
-    // 3. Supabase Free Tier Protection:
-    // Only subscribe to live Realtime WebSocket if an admin is testing/previewing the site.
-    // Anonymous public visitors load the latest data on page load, preserving the 200 concurrent connection limit.
+    // 4. Background update check on tab re-focus (when user returns to site)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        const ts = Number(localStorage.getItem(CMS_CACHE_TS_KEY) || 0);
+        // Only run check if at least 30s has passed since last check
+        if (Date.now() - ts > 30000) {
+          checkForServerUpdates();
+        }
+      }
+    });
+
+    // Periodic check every 2.5 minutes while page is actively open
+    setInterval(() => {
+      if (!document.hidden) {
+        checkForServerUpdates();
+      }
+    }, 150000);
+
+    // 5. Supabase Free Tier Protection: Realtime WebSocket only for active admin preview
     try {
       if (isAdminPreview) {
         saasDB.subscribeToChanges('cms_content', async () => {
-          try {
-            const row = await saasDB.getCmsContent();
-            if (row) {
-              applyCmsData(row);
-              try {
-                localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(row));
-                localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
-              } catch (_) {}
-            }
-          } catch (_) {}
+          await fetchAndApplyFresh();
         });
       }
     } catch (err) {

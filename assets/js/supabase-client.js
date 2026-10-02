@@ -94,6 +94,18 @@ const saasDB = (() => {
     return rows[0] || null;
   }
 
+  async function getCmsTimestamp() {
+    try {
+      const res = await fetch(`${rest('cms_content')}?id=eq.1&select=updated_at`, { headers });
+      if (!res.ok) return null;
+      const rows = await res.json();
+      return rows[0]?.updated_at || null;
+    } catch (e) {
+      console.warn('CMS timestamp check notice:', e);
+      return null;
+    }
+  }
+
   async function saveCmsContent(data) {
     const payload = {
       contact:   data.contact   || {},
@@ -279,6 +291,7 @@ const saasDB = (() => {
 
   const client = {
     getCmsContent,
+    getCmsTimestamp,
     saveCmsContent,
     getInquiries,
     insertInquiry,

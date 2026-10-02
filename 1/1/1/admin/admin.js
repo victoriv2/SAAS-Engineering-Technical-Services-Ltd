@@ -329,6 +329,21 @@ function startAdminApp() {
       }
       _cmsCache = data;
       showToast('Changes published live to public website — all devices updated.');
+
+      // Sync immediately across all open tabs and update local cache timestamp
+      try {
+        const nowIso = new Date().toISOString();
+        data.updated_at = nowIso;
+        localStorage.setItem('saas_cms_cached_data', JSON.stringify(data));
+        localStorage.setItem('saas_cms_cached_ts', String(Date.now()));
+        localStorage.setItem('saas_cms_cached_updated_at', nowIso);
+
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('saas_cms_sync');
+          bc.postMessage({ type: 'CMS_UPDATED', data });
+        }
+      } catch (_) {}
+
       if (typeof renderStorageMetrics === 'function') {
         renderStorageMetrics(true);
       }

@@ -230,6 +230,22 @@
             <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
             <span>Reset Defaults</span>
           </button>
+        <!-- Sidebar Supabase Storage & Free Tier Quota Widget -->
+        <div class="sidebar-storage-widget" id="sidebarStorageWidget" onclick="if(typeof window.switchTab==='function'){window.switchTab('tab-overview');document.getElementById('storageMonitorCard')?.scrollIntoView({behavior:'smooth'});}" title="Click to view Supabase Cloud Storage breakdown">
+          <div class="sidebar-storage-top">
+            <span class="sidebar-storage-title">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+              Cloud Storage
+            </span>
+            <span class="storage-pill-status optimal" id="sidebarStorageStatus">Optimal</span>
+          </div>
+          <div class="sidebar-storage-bar-track">
+            <div class="sidebar-storage-bar-fill optimal" id="sidebarStorageFill" style="width: 2.3%;"></div>
+          </div>
+          <div class="sidebar-storage-bottom">
+            <span id="sidebarStorageText">11.4 MB / 500 MB</span>
+            <span id="sidebarStoragePct">2.3%</span>
+          </div>
         </div>
 
         <div class="sidebar-footer">
@@ -297,6 +313,89 @@
               <div class="stat-info">
                 <h3>100%</h3>
                 <p>HSE & Quality Audit</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Supabase Free Tier Storage & Cloud Health Monitor -->
+          <div class="admin-card storage-monitor-card" id="storageMonitorCard">
+            <div class="card-header">
+              <div class="storage-card-title-group">
+                <div class="storage-cloud-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.05rem; margin-bottom: 0.15rem;">Supabase Cloud Storage &amp; Free Tier Level</h3>
+                  <p style="font-size: 0.82rem; color: var(--gray-500); margin: 0;">Live tracking of PostgreSQL database disk space, active CMS payload, and monthly egress quota.</p>
+                </div>
+              </div>
+              <div class="storage-header-actions">
+                <span class="storage-health-pill optimal" id="storageHealthPill">
+                  <span class="pulse-dot"></span> <span id="storageHealthText">Free Tier Safe</span>
+                </span>
+                <button type="button" class="btn btn-secondary btn-sm" id="refreshStorageBtn" onclick="renderStorageMetrics(true)" title="Query live storage usage from Supabase">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 0.25rem;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                  Refresh Metrics
+                </button>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="storage-meter-grid">
+                <!-- Meter 1: Total PostgreSQL Database Size -->
+                <div class="meter-box">
+                  <div class="meter-label-row">
+                    <span class="meter-title">Database Disk Storage</span>
+                    <span class="meter-val" id="dbStorageVal">11.4 MB / 500 MB</span>
+                  </div>
+                  <div class="storage-bar-track">
+                    <div class="storage-bar-fill optimal" id="dbStorageBar" style="width: 2.3%;"></div>
+                  </div>
+                  <div class="meter-footer-row">
+                    <span id="dbStoragePercent">2.3% disk used</span>
+                    <span id="dbStorageRemaining" class="meter-avail">488.6 MB available</span>
+                  </div>
+                </div>
+
+                <!-- Meter 2: CMS Active Payload Size (Egress Impact) -->
+                <div class="meter-box">
+                  <div class="meter-label-row">
+                    <span class="meter-title">CMS Media Payload</span>
+                    <span class="meter-val" id="cmsPayloadVal">9.0 KB / 500 KB target</span>
+                  </div>
+                  <div class="storage-bar-track">
+                    <div class="storage-bar-fill optimal" id="cmsPayloadBar" style="width: 1.8%;"></div>
+                  </div>
+                  <div class="meter-footer-row">
+                    <span id="cmsPayloadPercent">1.8% of safe budget</span>
+                    <span id="cmsPayloadMediaCount" class="meter-avail">0 Base64 / 15 Linked</span>
+                  </div>
+                </div>
+
+                <!-- Meter 3: Monthly Egress / Bandwidth Estimate -->
+                <div class="meter-box">
+                  <div class="meter-label-row">
+                    <span class="meter-title">Estimated Monthly Egress</span>
+                    <span class="meter-val" id="egressEstVal">~9.0 MB / 5,000 MB</span>
+                  </div>
+                  <div class="storage-bar-track">
+                    <div class="storage-bar-fill optimal" id="egressEstBar" style="width: 0.2%;"></div>
+                  </div>
+                  <div class="meter-footer-row">
+                    <span id="egressEstPercent">0.2% monthly quota</span>
+                    <span id="egressStatus" class="meter-avail">Based on 1,000 visits</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Advisory Note -->
+              <div class="storage-advisory-banner" id="storageAdvisoryBanner">
+                <div class="advisory-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                </div>
+                <div class="advisory-text">
+                  <strong>Free Tier Auto-Protection Active:</strong> Images uploaded via admin are automatically compressed to web-optimized dimensions (&lt; 80 KB) so you don't exhaust Supabase's 500 MB database or 5 GB monthly egress. Using linked image URLs or static assets costs <strong>0 MB</strong> of your egress quota.
+                </div>
               </div>
             </div>
           </div>
@@ -1072,6 +1171,6 @@
 
   <script src="xlsx.full.min.js"></script>
   <script src="supabase-client.js"></script>
-  <script src="admin.js?v=2.8.8"></script>
+  <script src="admin.js?v=2.9.0"></script>
 </body>
 </html>

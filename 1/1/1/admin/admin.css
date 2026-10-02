@@ -1940,3 +1940,263 @@ button:hover,
   transform: none !important;
 }
 
+/* ==========================================================================
+   Supabase Storage Level & Free Tier Quota Monitor Styles
+   ========================================================================== */
+.sidebar-storage-widget {
+  margin: 0.75rem 0.65rem 0.5rem;
+  padding: 0.85rem;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-storage-widget:hover {
+  background: var(--white);
+  border-color: var(--secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar-storage-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin-bottom: 0.45rem;
+}
+
+.sidebar-storage-title {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.storage-pill-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.storage-pill-status.optimal {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.storage-pill-status.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.storage-pill-status.critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.sidebar-storage-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+
+.sidebar-storage-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: #10b981;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+
+.sidebar-storage-bar-fill.optimal {
+  background: #10b981;
+}
+
+.sidebar-storage-bar-fill.warning {
+  background: #f59e0b;
+}
+
+.sidebar-storage-bar-fill.critical {
+  background: #ef4444;
+}
+
+.sidebar-storage-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--gray-500);
+  font-weight: 600;
+}
+
+/* Dashboard Storage Monitor Card */
+.storage-monitor-card {
+  margin-bottom: 2rem;
+  border-top: 3px solid var(--secondary);
+}
+
+.storage-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.storage-cloud-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(30, 77, 140, 0.1);
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.storage-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.storage-health-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.storage-health-pill.optimal {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.storage-health-pill.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.storage-health-pill.critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.storage-meter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.meter-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.meter-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meter-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.meter-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.storage-bar-track {
+  width: 100%;
+  height: 9px;
+  background: var(--gray-200);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: #10b981;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+}
+
+.storage-bar-fill.optimal {
+  background: #10b981;
+}
+
+.storage-bar-fill.warning {
+  background: #f59e0b;
+}
+
+.storage-bar-fill.critical {
+  background: #ef4444;
+}
+
+.meter-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+  color: var(--gray-500);
+  font-weight: 600;
+}
+
+.meter-avail {
+  color: #059669;
+}
+
+.storage-advisory-banner {
+  background: rgba(30, 77, 140, 0.05);
+  border: 1px solid rgba(30, 77, 140, 0.18);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.storage-advisory-banner .advisory-icon {
+  color: var(--secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+

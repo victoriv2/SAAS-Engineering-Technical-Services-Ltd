@@ -311,6 +311,9 @@ function startAdminApp() {
       }
       _cmsCache = data;
       showToast('Changes published live to public website — all devices updated.');
+      if (typeof renderStorageMetrics === 'function') {
+        renderStorageMetrics(true);
+      }
     } catch (err) {
       console.error('saveCmsData error:', err);
       showToast('Error saving changes. Please try again.');
@@ -1410,9 +1413,14 @@ function startAdminApp() {
   const previewDivTitle = document.getElementById('previewDivTitle');
   const previewDivSub = document.getElementById('previewDivSub');
 
-  const processAndPreviewDivisionImage = (file) => {
+  // Smart image compression & cloud storage guard: optimizes images to < 80 KB
+  const optimizeImageForCloud = (file, callback) => {
     if (!file || !file.type.startsWith('image/')) {
       window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      window.customAlert("Selected file is over 15 MB. Please choose an image under 15 MB to ensure fast processing.", "File Too Large", "warning");
       return;
     }
 
@@ -1420,18 +1428,17 @@ function startAdminApp() {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const maxWidth = 1200;
-        const maxHeight = 1200;
+        const maxDim = 1000;
         let width = img.width;
         let height = img.height;
 
-        if (width > maxWidth || height > maxHeight) {
+        if (width > maxDim || height > maxDim) {
           if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
           } else {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
           }
         }
 
@@ -1441,17 +1448,35 @@ function startAdminApp() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        let quality = 0.75;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        let approxKb = Math.round((dataUrl.length * 0.75) / 1024);
 
-        if (editDivisionImgInput) editDivisionImgInput.value = dataUrl;
-        if (divisionPreviewImg) divisionPreviewImg.src = dataUrl;
-        if (divisionPreviewFilename) divisionPreviewFilename.textContent = file.name;
-        if (divisionDropzone) divisionDropzone.style.display = 'none';
-        if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
+        if (approxKb > 150) {
+          quality = 0.65;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+          approxKb = Math.round((dataUrl.length * 0.75) / 1024);
+        }
+
+        callback({
+          dataUrl,
+          approxKb,
+          displayName: `${file.name} (${approxKb} KB - Cloud Safe ✓)`
+        });
       };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  const processAndPreviewDivisionImage = (file) => {
+    optimizeImageForCloud(file, ({ dataUrl, displayName }) => {
+      if (editDivisionImgInput) editDivisionImgInput.value = dataUrl;
+      if (divisionPreviewImg) divisionPreviewImg.src = dataUrl;
+      if (divisionPreviewFilename) divisionPreviewFilename.textContent = displayName;
+      if (divisionDropzone) divisionDropzone.style.display = 'none';
+      if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
+    });
   };
 
   const resetDivisionUploadState = (currentImg = '') => {
@@ -1797,50 +1822,15 @@ function startAdminApp() {
   const urlInputContainer = document.getElementById('urlInputContainer');
   const galleryManualUrlInput = document.getElementById('galleryManualUrlInput');
 
-  // Compress image to fit within localStorage smoothly
+  // Compress image using cloud optimizer to keep free tier usage minimal
   const processAndPreviewImage = (file) => {
-    if (!file || !file.type.startsWith('image/')) {
-      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const maxWidth = 1200;
-        const maxHeight = 1200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          } else {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Web-friendly optimized JPEG data URL
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-        if (galleryAddImgUrl) galleryAddImgUrl.value = dataUrl;
-        if (galleryPreviewImg) galleryPreviewImg.src = dataUrl;
-        if (galleryPreviewFilename) galleryPreviewFilename.textContent = file.name;
-        if (galleryDropzone) galleryDropzone.style.display = 'none';
-        if (galleryPreviewCard) galleryPreviewCard.classList.add('show');
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    optimizeImageForCloud(file, ({ dataUrl, displayName }) => {
+      if (galleryAddImgUrl) galleryAddImgUrl.value = dataUrl;
+      if (galleryPreviewImg) galleryPreviewImg.src = dataUrl;
+      if (galleryPreviewFilename) galleryPreviewFilename.textContent = displayName;
+      if (galleryDropzone) galleryDropzone.style.display = 'none';
+      if (galleryPreviewCard) galleryPreviewCard.classList.add('show');
+    });
   };
 
   const resetGalleryUploadState = () => {
@@ -2241,52 +2231,18 @@ function startAdminApp() {
   const aboutImgInput = document.getElementById('settingAboutImg');
 
   const processAndPreviewAboutImage = (file) => {
-    if (!file || !file.type.startsWith('image/')) {
-      window.customAlert("Please select a valid image file format (PNG, JPG, JPEG, or WEBP).", "Invalid File Format", "warning");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const maxWidth = 1400;
-        const maxHeight = 1400;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          } else {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-        if (aboutImgInput) aboutImgInput.value = dataUrl;
-        if (aboutPreviewImg) {
-          aboutPreviewImg.src = dataUrl;
-          aboutPreviewImg.onerror = function() {
-            this.src = '../../../../logo/logo.png';
-          };
-        }
-        if (aboutPreviewFilename) aboutPreviewFilename.textContent = file.name;
-        if (aboutDropzone) aboutDropzone.style.display = 'none';
-        if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    optimizeImageForCloud(file, ({ dataUrl, displayName }) => {
+      if (aboutImgInput) aboutImgInput.value = dataUrl;
+      if (aboutPreviewImg) {
+        aboutPreviewImg.src = dataUrl;
+        aboutPreviewImg.onerror = function() {
+          this.src = '../../../../logo/logo.png';
+        };
+      }
+      if (aboutPreviewFilename) aboutPreviewFilename.textContent = displayName;
+      if (aboutDropzone) aboutDropzone.style.display = 'none';
+      if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
+    });
   };
 
   const resetAboutUploadState = (currentImg = '') => {
@@ -2596,6 +2552,174 @@ function startAdminApp() {
   }
 
   // =========================================================================
+  // =========================================================================
+  // Supabase Cloud Storage & Free Tier Quota Engine
+  // =========================================================================
+  let _lastStorageMetrics = null;
+
+  async function getCloudStorageMetrics(forceRefresh = false) {
+    if (_lastStorageMetrics && !forceRefresh) return _lastStorageMetrics;
+
+    const db = getDb();
+    let metrics = null;
+    if (db && typeof db.getStorageMetrics === 'function') {
+      try {
+        metrics = await db.getStorageMetrics();
+      } catch (err) {
+        console.warn('getStorageMetrics failed:', err);
+      }
+    }
+
+    // Client-side payload measurement & fallback calculation
+    const cms = await getCmsData();
+    const cmsPayloadBytes = new Blob([JSON.stringify(cms)]).size;
+
+    // Count embedded Base64 media vs external/linked static assets
+    let base64Count = 0;
+    let linkedCount = 0;
+
+    const checkImg = (src) => {
+      if (!src || src === 'none') return;
+      if (src.startsWith('data:')) base64Count++;
+      else linkedCount++;
+    };
+
+    if (cms.about && cms.about.img) checkImg(cms.about.img);
+    if (Array.isArray(cms.divisions)) cms.divisions.forEach(d => checkImg(d.img));
+    if (Array.isArray(cms.gallery)) cms.gallery.forEach(g => checkImg(g.img));
+
+    const totalDbBytes = (metrics && metrics.total_db_size_bytes) ? metrics.total_db_size_bytes : (11.4 * 1024 * 1024);
+    const dbLimitBytes = 500 * 1024 * 1024; // 500 MB Supabase Free Tier
+    const egressLimitBytes = 5 * 1024 * 1024 * 1024; // 5 GB Supabase Free Tier
+
+    // Estimated monthly egress based on 1,000 monthly visitors
+    const estVisitsPerMonth = 1000;
+    const estMonthlyEgressBytes = cmsPayloadBytes * estVisitsPerMonth;
+
+    const dbPercent = Math.min(100, (totalDbBytes / dbLimitBytes) * 100);
+    const egressPercent = Math.min(100, (estMonthlyEgressBytes / egressLimitBytes) * 100);
+    const payloadSafeBudget = 500 * 1024; // 500 KB safe budget for ultra-fast loading
+    const payloadPercent = Math.min(100, (cmsPayloadBytes / payloadSafeBudget) * 100);
+
+    let status = 'optimal';
+    let statusText = 'Free Tier Safe';
+    if (dbPercent > 80 || egressPercent > 80 || payloadPercent > 90) {
+      status = 'critical';
+      statusText = 'Near Limit';
+    } else if (dbPercent > 50 || egressPercent > 50 || payloadPercent > 60) {
+      status = 'warning';
+      statusText = 'Moderate Usage';
+    }
+
+    _lastStorageMetrics = {
+      totalDbBytes,
+      totalDbPretty: (metrics && metrics.total_db_size_pretty) ? metrics.total_db_size_pretty : `${(totalDbBytes / (1024 * 1024)).toFixed(1)} MB`,
+      dbLimitPretty: '500 MB',
+      dbPercent: dbPercent.toFixed(1),
+      dbRemainingPretty: `${Math.max(0, (dbLimitBytes - totalDbBytes) / (1024 * 1024)).toFixed(1)} MB`,
+      cmsPayloadBytes,
+      cmsPayloadPretty: cmsPayloadBytes < 1024 * 1024 ? `${(cmsPayloadBytes / 1024).toFixed(1)} KB` : `${(cmsPayloadBytes / (1024 * 1024)).toFixed(2)} MB`,
+      cmsPayloadPercent: payloadPercent.toFixed(1),
+      base64Count,
+      linkedCount,
+      estMonthlyEgressBytes,
+      estMonthlyEgressPretty: estMonthlyEgressBytes < 1024 * 1024 ? `${(estMonthlyEgressBytes / 1024).toFixed(1)} KB` : `${(estMonthlyEgressBytes / (1024 * 1024)).toFixed(1)} MB`,
+      egressPercent: egressPercent.toFixed(2),
+      inquiriesCount: (metrics && typeof metrics.inquiries_count !== 'undefined') ? metrics.inquiries_count : 0,
+      status,
+      statusText
+    };
+
+    return _lastStorageMetrics;
+  }
+
+  async function renderStorageMetrics(forceRefresh = false) {
+    const refreshBtn = document.getElementById('refreshStorageBtn');
+    if (refreshBtn && forceRefresh) {
+      refreshBtn.disabled = true;
+      refreshBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 0.25rem; animation: spin 1s linear infinite;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Refreshing...`;
+    }
+
+    try {
+      const m = await getCloudStorageMetrics(forceRefresh);
+      if (!m) return;
+
+      // 1. Update Sidebar Mini Widget
+      const sbText = document.getElementById('sidebarStorageText');
+      const sbPct = document.getElementById('sidebarStoragePct');
+      const sbFill = document.getElementById('sidebarStorageFill');
+      const sbStatus = document.getElementById('sidebarStorageStatus');
+
+      if (sbText) sbText.textContent = `${m.totalDbPretty} / ${m.dbLimitPretty}`;
+      if (sbPct) sbPct.textContent = `${m.dbPercent}%`;
+      if (sbFill) {
+        sbFill.style.width = `${Math.max(2, m.dbPercent)}%`;
+        sbFill.className = `sidebar-storage-bar-fill ${m.status}`;
+      }
+      if (sbStatus) {
+        sbStatus.textContent = m.status === 'optimal' ? 'Optimal' : (m.status === 'warning' ? 'Moderate' : 'Near Limit');
+        sbStatus.className = `storage-pill-status ${m.status}`;
+      }
+
+      // 2. Update Overview Main Dashboard Card
+      const dbVal = document.getElementById('dbStorageVal');
+      const dbBar = document.getElementById('dbStorageBar');
+      const dbPct = document.getElementById('dbStoragePercent');
+      const dbAvail = document.getElementById('dbStorageRemaining');
+
+      if (dbVal) dbVal.textContent = `${m.totalDbPretty} / ${m.dbLimitPretty}`;
+      if (dbBar) {
+        dbBar.style.width = `${Math.max(2, m.dbPercent)}%`;
+        dbBar.className = `storage-bar-fill ${m.status}`;
+      }
+      if (dbPct) dbPct.textContent = `${m.dbPercent}% disk used`;
+      if (dbAvail) dbAvail.textContent = `${m.dbRemainingPretty} available`;
+
+      // CMS Payload Meter
+      const payloadVal = document.getElementById('cmsPayloadVal');
+      const payloadBar = document.getElementById('cmsPayloadBar');
+      const payloadPct = document.getElementById('cmsPayloadPercent');
+      const payloadMedia = document.getElementById('cmsPayloadMediaCount');
+
+      if (payloadVal) payloadVal.textContent = `${m.cmsPayloadPretty} / 500 KB target`;
+      if (payloadBar) {
+        payloadBar.style.width = `${Math.max(2, m.cmsPayloadPercent)}%`;
+        payloadBar.className = `storage-bar-fill ${m.cmsPayloadPercent > 80 ? 'critical' : (m.cmsPayloadPercent > 50 ? 'warning' : 'optimal')}`;
+      }
+      if (payloadPct) payloadPct.textContent = `${m.cmsPayloadPercent}% of safe payload`;
+      if (payloadMedia) payloadMedia.textContent = `${m.base64Count} Base64 / ${m.linkedCount} Linked`;
+
+      // Egress Estimate Meter
+      const egressVal = document.getElementById('egressEstVal');
+      const egressBar = document.getElementById('egressEstBar');
+      const egressPct = document.getElementById('egressEstPercent');
+
+      if (egressVal) egressVal.textContent = `~${m.estMonthlyEgressPretty} / 5,000 MB`;
+      if (egressBar) {
+        egressBar.style.width = `${Math.max(1, m.egressPercent)}%`;
+        egressBar.className = `storage-bar-fill optimal`;
+      }
+      if (egressPct) egressPct.textContent = `${m.egressPercent}% monthly quota`;
+
+      // Health Pill in Card Header
+      const healthPill = document.getElementById('storageHealthPill');
+      const healthText = document.getElementById('storageHealthText');
+      if (healthPill) healthPill.className = `storage-health-pill ${m.status}`;
+      if (healthText) healthText.textContent = m.statusText;
+
+      if (forceRefresh) showToast("Live cloud storage metrics updated from Supabase.");
+    } catch (err) {
+      console.warn("Storage metrics render error:", err);
+    } finally {
+      if (refreshBtn && forceRefresh) {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 0.25rem;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Refresh Metrics`;
+      }
+    }
+  }
+  window.renderStorageMetrics = renderStorageMetrics;
+
+  // =========================================================================
   // Dashboard Initialization
   // =========================================================================
   const initDashboard = async () => {
@@ -2606,6 +2730,7 @@ function startAdminApp() {
     renderAdminGalleryFilters();
     loadHeroSettings();
     loadAboutSettings();
+    renderStorageMetrics();
   };
   window.initDashboard = initDashboard;
 

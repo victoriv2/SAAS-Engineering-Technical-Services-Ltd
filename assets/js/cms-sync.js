@@ -467,16 +467,21 @@
       console.warn('SAAS CMS: Could not load content from Supabase.', err);
     }
 
-    // Subscribe to Supabase Realtime — any admin update triggers instant DOM refresh
+    // Supabase Free Tier Protection:
+    // Only subscribe to live Realtime WebSocket if an admin is testing/previewing the site.
+    // Anonymous public visitors load the latest data on page load, preserving the 200 concurrent connection limit.
     try {
-      saasDB.subscribeToChanges('cms_content', async () => {
-        try {
-          const row = await saasDB.getCmsContent();
-          if (row) applyCmsData(row);
-        } catch (_) {}
-      });
+      const isAdminPreview = (typeof sessionStorage !== 'undefined') && (sessionStorage.getItem('saas_admin_auth') === 'true');
+      if (isAdminPreview) {
+        saasDB.subscribeToChanges('cms_content', async () => {
+          try {
+            const row = await saasDB.getCmsContent();
+            if (row) applyCmsData(row);
+          } catch (_) {}
+        });
+      }
     } catch (err) {
-      console.warn('SAAS CMS: Realtime subscription failed.', err);
+      console.warn('SAAS CMS: Realtime preview subscription notice:', err);
     }
   }
 

@@ -262,6 +262,21 @@ const saasDB = (() => {
     return { close: () => ws && ws.close() };
   }
 
+  async function getStorageMetrics() {
+    try {
+      const res = await fetch(rest('rpc/get_storage_metrics'), {
+        method: 'POST',
+        headers,
+        body: '{}'
+      });
+      if (!res.ok) throw new Error(`RPC failed: ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn('Storage metrics RPC failed:', e);
+      return null;
+    }
+  }
+
   const client = {
     getCmsContent,
     saveCmsContent,
@@ -270,7 +285,8 @@ const saasDB = (() => {
     updateInquiryStatus,
     deleteInquiry,
     verifyAdminPassword,
-    subscribeToChanges
+    subscribeToChanges,
+    getStorageMetrics
   };
 
   // Expose on global window object for foolproof accessibility across all scripts

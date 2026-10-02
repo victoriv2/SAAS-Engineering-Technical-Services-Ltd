@@ -969,21 +969,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Export CSV
-  const exportCsvBtn = document.getElementById('exportInquiriesCsvBtn');
-  if (exportCsvBtn) {
-    exportCsvBtn.addEventListener('click', () => {
+  // Export Excel (.xlsx)
+  const exportExcelBtn = document.getElementById('exportInquiriesExcelBtn') || document.getElementById('exportInquiriesCsvBtn');
+  if (exportExcelBtn) {
+    exportExcelBtn.addEventListener('click', () => {
       const list = getInquiries();
       if (list.length === 0) {
         window.customAlert("There are currently no client inquiries in the database to export.", "Export Inquiries", "info");
         return;
       }
-      let csv = "ID,Name,Organization,Email,Phone,Division,Date,Status,Scope\n";
-      list.forEach(i => {
-        csv += `"${i.id}","${cleanCsv(i.name)}","${cleanCsv(i.organization)}","${cleanCsv(i.email)}","${cleanCsv(i.phone)}","${cleanCsv(i.division)}","${cleanCsv(i.date)}","${cleanCsv(i.status)}","${cleanCsv(i.scope)}"\n`;
-      });
-      downloadFile(csv, `saas-inquiries-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
-      showToast("Inquiries CSV exported successfully.");
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `saas-inquiries-${dateStr}`;
+
+      if (typeof XLSX !== 'undefined') {
+        const rows = list.map(i => ({
+          "Inquiry ID": i.id || '',
+          "Client Name": i.name || '',
+          "Organization / Company": i.organization || '',
+          "Email Address": i.email || '',
+          "Phone Number": i.phone || '',
+          "Service Division": i.division || '',
+          "Submission Date": i.date || '',
+          "Workflow Status": statusDisplayMap[i.status] || i.status || 'New',
+          "Technical Specifications & Scope": i.scope || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 15 },
+          { wch: 22 },
+          { wch: 26 },
+          { wch: 26 },
+          { wch: 18 },
+          { wch: 32 },
+          { wch: 16 },
+          { wch: 16 },
+          { wch: 55 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Inquiries");
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+        showToast("Inquiries exported to Excel (.xlsx) successfully.");
+      } else {
+        // Fallback: UTF-8 BOM CSV readable directly by Excel
+        let csv = "\uFEFF\"Inquiry ID\",\"Client Name\",\"Organization\",\"Email Address\",\"Phone Number\",\"Division\",\"Submission Date\",\"Status\",\"Scope\"\n";
+        list.forEach(i => {
+          const status = statusDisplayMap[i.status] || i.status || 'New';
+          csv += `"${cleanCsv(i.id)}","${cleanCsv(i.name)}","${cleanCsv(i.organization)}","${cleanCsv(i.email)}","${cleanCsv(i.phone)}","${cleanCsv(i.division)}","${cleanCsv(i.date)}","${cleanCsv(status)}","${cleanCsv(i.scope)}"\n`;
+        });
+        downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8;');
+        showToast("Inquiries exported successfully.");
+      }
     });
   }
 

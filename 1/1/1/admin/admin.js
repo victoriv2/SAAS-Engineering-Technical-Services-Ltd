@@ -638,9 +638,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
-  // Inquiries Rendering & Management
+  // Inquiries Rendering, Sorting, Filtering & Status Management
   // =========================================================================
-  const renderInquiries = (searchFilter = '') => {
+  const statusDisplayMap = {
+    'new': 'New',
+    'review': 'In Review',
+    'quoted': 'Quoted',
+    'closed': 'Closed'
+  };
+
+  const statusPriorityMap = {
+    'new': 1,
+    'review': 2,
+    'quoted': 3,
+    'closed': 4
+  };
+
+  let inquirySearchQuery = '';
+  let inquirySortCriteria = 'newest';
+  let inquiryStatusFilter = 'all';
+
+  const renderInquiries = (searchFilter = null, sortBy = null, statusFilter = null) => {
+    if (searchFilter !== null) inquirySearchQuery = searchFilter;
+    if (sortBy !== null) inquirySortCriteria = sortBy;
+    if (statusFilter !== null) inquiryStatusFilter = statusFilter;
+
     const list = getInquiries();
     const overviewTbody = document.getElementById('overviewInquiriesTableBody');
     const fullTbody = document.getElementById('fullInquiriesTableBody');
@@ -650,17 +672,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (badgeCount) badgeCount.textContent = list.length;
     if (statTotal) statTotal.textContent = list.length;
 
-    const filtered = searchFilter
-      ? list.filter(item => 
-          item.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-          item.email.toLowerCase().includes(searchFilter.toLowerCase()) ||
-          item.division.toLowerCase().includes(searchFilter.toLowerCase()) ||
-          item.phone.includes(searchFilter)
-        )
-      : list;
+    // 1. Filter by search query
+    let filtered = list;
+    if (inquirySearchQuery) {
+      const q = inquirySearchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        (item.name || '').toLowerCase().includes(q) ||
+        (item.email || '').toLowerCase().includes(q) ||
+        (item.division || '').toLowerCase().includes(q) ||
+        (item.organization || '').toLowerCase().includes(q) ||
+        (item.phone || '').includes(q)
+      );
+    }
+
+    // 2. Filter by status
+    if (inquiryStatusFilter && inquiryStatusFilter !== 'all') {
+      filtered = filtered.filter(item => (item.status || 'new') === inquiryStatusFilter);
+    }
+
+    // 3. Sort
+    filtered = [...filtered].sort((a, b) => {
+      switch (inquirySortCriteria) {
+        case 'oldest':
+          return (a.date || '').localeCompare(b.date || '');
+        case 'name_asc':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'name_desc':
+          return (b.name || '').localeCompare(a.name || '');
+        case 'status': {
+          const pa = statusPriorityMap[a.status || 'new'] || 99;
+          const pb = statusPriorityMap[b.status || 'new'] || 99;
+          return pa - pb;
+        }
+        case 'division':
+          return (a.division || '').localeCompare(b.division || '');
+        case 'newest':
+        default:
+          return (b.date || '').localeCompare(a.date || '');
+      }
+    });
 
     const renderRow = (inq, isFull) => {
       const statusClass = inq.status || 'new';
+      const statusLabel = statusDisplayMap[inq.status] || 'New';
       return `
         <tr>
           <td><strong>${escapeHtml(inq.name)}</strong></td>
@@ -669,12 +723,11 @@ document.addEventListener('DOMContentLoaded', () => {
           <td><span style="font-size: 0.8rem; color: var(--gray-700);">${escapeHtml(inq.division)}</span></td>
           <td><small style="color: var(--gray-500);">${escapeHtml(inq.date)}</small></td>
           <td>
-            <select class="form-control no-icon" onchange="window.updateInquiryStatus('${inq.id}', this.value)" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 9999px; font-weight: 700; width: 110px;">
-              <option value="new" ${inq.status === 'new' ? 'selected' : ''}>New</option>
-              <option value="review" ${inq.status === 'review' ? 'selected' : ''}>In Review</option>
-              <option value="quoted" ${inq.status === 'quoted' ? 'selected' : ''}>Quoted</option>
-              <option value="closed" ${inq.status === 'closed' ? 'selected' : ''}>Closed</option>
-            </select>
+            <button type="button" class="status-badge-pill ${statusClass}" onclick="window.openStatusModal('${inq.id}')" title="Click to update status via modal">
+              <span class="status-pill-dot"></span>
+              <span>${statusLabel}</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
           </td>
           <td>
             <div style="display: flex; gap: 0.35rem;">
@@ -706,6 +759,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Modular Status Modal Logic
+  const statusModal = document.getElementById('inquiryStatusModal');
+  const statusModalTitle = document.getElementById('statusModalTitle');
+  const statusModalSubtitle = document.getElementById('statusModalSubtitle');
+  const statusModalInquiryId = document.getElementById('statusModalInquiryId');
+  const closeStatusModalBtn = document.getElementById('closeStatusModalBtn');
+  const cancelStatusModalBtn = document.getElementById('cancelStatusModalBtn');
+  const statusOptionCards = document.querySelectorAll('#statusOptionsGrid .status-option-card');
+
+  const closeStatusModal = () => {
+    if (statusModal) statusModal.classList.remove('active');
+  };
+
+  if (closeStatusModalBtn) closeStatusModalBtn.addEventListener('click', closeStatusModal);
+  if (cancelStatusModalBtn) cancelStatusModalBtn.addEventListener('click', closeStatusModal);
+  if (statusModal) {
+    statusModal.addEventListener('click', (e) => {
+      if (e.target === statusModal) closeStatusModal();
+    });
+  }
+
+  window.openStatusModal = (id) => {
+    const list = getInquiries();
+    const inq = list.find(i => i.id === id);
+    if (!inq) return;
+
+    if (statusModalInquiryId) statusModalInquiryId.value = id;
+    if (statusModalTitle) statusModalTitle.textContent = `Update Status: ${inq.name}`;
+    if (statusModalSubtitle) statusModalSubtitle.textContent = `${inq.organization || 'Direct Client'} • ${inq.division}`;
+
+    const currentStatus = inq.status || 'new';
+    statusOptionCards.forEach(card => {
+      const cardStatus = card.getAttribute('data-status');
+      card.classList.toggle('selected', cardStatus === currentStatus);
+    });
+
+    if (statusModal) statusModal.classList.add('active');
+  };
+
+  statusOptionCards.forEach(card => {
+    const selectStatus = () => {
+      const selectedStatus = card.getAttribute('data-status');
+      const inqId = statusModalInquiryId ? statusModalInquiryId.value : '';
+      if (!inqId || !selectedStatus) return;
+
+      statusOptionCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+
+      window.updateInquiryStatus(inqId, selectedStatus);
+
+      // Update detail modal badge if open
+      const detailBtn = document.getElementById('detailModalStatusBtn');
+      if (detailBtn) {
+        detailBtn.className = `status-badge-pill ${selectedStatus}`;
+        const spanText = detailBtn.querySelector('span:nth-child(2)');
+        if (spanText) spanText.textContent = statusDisplayMap[selectedStatus] || selectedStatus;
+      }
+
+      setTimeout(closeStatusModal, 200);
+    };
+
+    card.addEventListener('click', selectStatus);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectStatus();
+      }
+    });
+  });
+
   // Global window functions for table action buttons
   window.updateInquiryStatus = (id, newStatus) => {
     const list = getInquiries();
@@ -713,7 +836,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (index !== -1) {
       list[index].status = newStatus;
       saveInquiries(list);
-      showToast(`Inquiry status updated to ${newStatus.toUpperCase()}`);
+      renderInquiries();
+      showToast(`Inquiry status updated to ${statusDisplayMap[newStatus] || newStatus.toUpperCase()}`);
     }
   };
 
@@ -727,6 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let list = getInquiries();
       list = list.filter(i => i.id !== id);
       saveInquiries(list);
+      renderInquiries();
       showToast("Inquiry removed from database.");
     }
   };
@@ -764,9 +889,19 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
 
-        <div style="background: var(--gray-50); border: 1px solid var(--gray-200); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
-          <small style="color: var(--gray-500); font-weight: 700; text-transform: uppercase;">Service Division of Interest</small>
-          <p style="font-weight: 700; color: var(--primary); margin-top: 0.25rem;">${escapeHtml(inq.division)}</p>
+        <div style="background: var(--gray-50); border: 1px solid var(--gray-200); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <small style="color: var(--gray-500); font-weight: 700; text-transform: uppercase;">Service Division of Interest</small>
+            <p style="font-weight: 700; color: var(--primary); margin-top: 0.25rem;">${escapeHtml(inq.division)}</p>
+          </div>
+          <div>
+            <small style="color: var(--gray-500); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Workflow Status</small>
+            <button type="button" class="status-badge-pill ${inq.status || 'new'}" id="detailModalStatusBtn" onclick="window.openStatusModal('${inq.id}')" title="Click to update status via modal">
+              <span class="status-pill-dot"></span>
+              <span>${statusDisplayMap[inq.status] || 'New'}</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+          </div>
         </div>
 
         <div>
@@ -814,7 +949,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('inquirySearchInput');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
-      renderInquiries(e.target.value.trim());
+      renderInquiries(e.target.value.trim(), null, null);
+    });
+  }
+
+  // Sort criteria selector
+  const sortSelect = document.getElementById('inquirySortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      renderInquiries(null, e.target.value, null);
+    });
+  }
+
+  // Status filter selector
+  const statusFilterSelect = document.getElementById('inquiryStatusFilterSelect');
+  if (statusFilterSelect) {
+    statusFilterSelect.addEventListener('change', (e) => {
+      renderInquiries(null, null, e.target.value);
     });
   }
 

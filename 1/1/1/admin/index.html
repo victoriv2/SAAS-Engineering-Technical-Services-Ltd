@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=2.8.1">
+  <link rel="stylesheet" href="admin.css?v=2.8.2">
 </head>
 <body>
 
@@ -262,8 +262,28 @@
           <div class="admin-card">
             <div class="card-header">
               <h3>Client Consultations Inbox</h3>
-              <div style="display: flex; gap: 0.5rem;">
-                <input type="text" id="inquirySearchInput" class="form-control no-icon" placeholder="Search inquiries..." style="padding: 0.35rem 0.75rem; font-size: 0.85rem; width: 220px;">
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <div class="inquiry-filter-group" style="display: flex; align-items: center; gap: 0.35rem;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--gray-500)"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
+                  <select id="inquirySortSelect" class="form-control no-icon" style="padding: 0.35rem 0.65rem; font-size: 0.82rem; width: auto; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm);" title="Sort inquiries">
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                    <option value="name_asc">Client Name (A - Z)</option>
+                    <option value="name_desc">Client Name (Z - A)</option>
+                    <option value="status">Workflow Status</option>
+                    <option value="division">Service Division</option>
+                  </select>
+                </div>
+
+                <select id="inquiryStatusFilterSelect" class="form-control no-icon" style="padding: 0.35rem 0.65rem; font-size: 0.82rem; width: auto; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm);" title="Filter by status">
+                  <option value="all">All Statuses</option>
+                  <option value="new">Status: New</option>
+                  <option value="review">Status: In Review</option>
+                  <option value="quoted">Status: Quoted</option>
+                  <option value="closed">Status: Closed</option>
+                </select>
+
+                <input type="text" id="inquirySearchInput" class="form-control no-icon" placeholder="Search inquiries..." style="padding: 0.35rem 0.75rem; font-size: 0.85rem; width: 175px;">
               </div>
             </div>
             <div class="card-body" style="padding: 0;">
@@ -669,6 +689,72 @@
     </div>
   </div>
 
+  <!-- 1b. Modular Status Update Modal -->
+  <div class="modal-overlay" id="inquiryStatusModal" style="z-index: 36000;">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="statusModalTitle">Update Consultation Status</h3>
+          <p id="statusModalSubtitle" style="font-size: 0.82rem; color: var(--gray-500); margin-top: 0.15rem;">Select current workflow status for this client inquiry</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeStatusModalBtn" title="Close">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="statusModalInquiryId" value="">
+        <div class="status-options-grid" id="statusOptionsGrid">
+          <div class="status-option-card" data-status="new" tabindex="0" role="button">
+            <div class="status-option-badge new">New</div>
+            <div class="status-option-info">
+              <strong>New Inquiry</strong>
+              <p>Fresh inquiry received, waiting for initial assessment.</p>
+            </div>
+            <div class="status-option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          </div>
+
+          <div class="status-option-card" data-status="review" tabindex="0" role="button">
+            <div class="status-option-badge review">In Review</div>
+            <div class="status-option-info">
+              <strong>Under Technical Review</strong>
+              <p>Engineering and estimation team evaluating specifications.</p>
+            </div>
+            <div class="status-option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          </div>
+
+          <div class="status-option-card" data-status="quoted" tabindex="0" role="button">
+            <div class="status-option-badge quoted">Quoted</div>
+            <div class="status-option-info">
+              <strong>Formal Proposal / Quoted</strong>
+              <p>Detailed technical proposal and commercial quote sent to client.</p>
+            </div>
+            <div class="status-option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          </div>
+
+          <div class="status-option-card" data-status="closed" tabindex="0" role="button">
+            <div class="status-option-badge closed">Closed</div>
+            <div class="status-option-info">
+              <strong>Closed / Completed</strong>
+              <p>Contract executed, project mobilised, or consultation closed.</p>
+            </div>
+            <div class="status-option-check">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" id="cancelStatusModalBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 2. Division Add / Edit Modal -->
   <div class="modal-overlay" id="divisionEditModal">
     <div class="modal-container" style="max-width: 660px; max-height: 90vh; display: flex; flex-direction: column;">
@@ -894,6 +980,6 @@
     <span id="adminToastText">Changes saved successfully.</span>
   </div>
 
-  <script src="admin.js?v=2.8.0"></script>
+  <script src="admin.js?v=2.8.2"></script>
 </body>
 </html>

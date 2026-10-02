@@ -193,10 +193,19 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const fallbackDivisionImg = 'assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg';
 
+  const toAdminAssetPath = (rawPath) => {
+    if (!rawPath) return '../../../../logo/logo.png';
+    if (rawPath.startsWith('data:') || rawPath.startsWith('http://') || rawPath.startsWith('https://') || rawPath.startsWith('//')) {
+      return rawPath;
+    }
+    const cleanPath = rawPath.replace(/^(\.\.\/)+/, '').replace(/^\.\//, '').replace(/^\//, '');
+    return '../../../../' + cleanPath;
+  };
+
   const getDivisionImgSrc = (div) => {
-    if (!div) return '../../../../' + fallbackDivisionImg;
+    if (!div) return toAdminAssetPath(fallbackDivisionImg);
     const raw = div.img || divisionImages[div.id] || fallbackDivisionImg;
-    return (raw.startsWith('data:') || raw.startsWith('http')) ? raw : '../../../../' + raw.replace(/^(\.\.\/)+/, '');
+    return toAdminAssetPath(raw);
   };
 
   // Inquiries collection (starts 100% empty until real clients submit consultation forms)
@@ -972,7 +981,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (currentImg) {
       if (editDivisionImgInput) editDivisionImgInput.value = currentImg;
-      if (divisionPreviewImg) divisionPreviewImg.src = currentImg;
+      if (divisionPreviewImg) {
+        divisionPreviewImg.src = toAdminAssetPath(currentImg);
+        divisionPreviewImg.onerror = function() {
+          this.src = '../../../../logo/logo.png';
+        };
+      }
       if (divisionPreviewFilename) divisionPreviewFilename.textContent = 'Current Cover Photo';
       if (divisionDropzone) divisionDropzone.style.display = 'none';
       if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
@@ -1038,7 +1052,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = e.target.value.trim();
       if (url) {
         if (editDivisionImgInput) editDivisionImgInput.value = url;
-        if (divisionPreviewImg) divisionPreviewImg.src = url;
+        if (divisionPreviewImg) {
+          divisionPreviewImg.src = toAdminAssetPath(url);
+          divisionPreviewImg.onerror = function() {
+            this.src = '../../../../logo/logo.png';
+          };
+        }
         if (divisionPreviewFilename) divisionPreviewFilename.textContent = url.slice(0, 30) + '...';
         if (divisionDropzone) divisionDropzone.style.display = 'none';
         if (divisionPreviewCard) divisionPreviewCard.classList.add('show');
@@ -1081,7 +1100,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (editDivisionBulletsInput) {
         editDivisionBulletsInput.value = Array.isArray(d.bullets) ? d.bullets.join('\n') : (d.bullets || '');
       }
-      resetDivisionUploadState(d.img || '');
+      const currentDivImg = d.img || divisionImages[d.id] || fallbackDivisionImg;
+      resetDivisionUploadState(currentDivImg);
 
       if (previewDivTitle) previewDivTitle.textContent = shortCat || d.title || 'Division Title';
       if (previewDivSub) previewDivSub.textContent = d.desc ? (d.desc.length > 45 ? d.desc.slice(0, 45) + '...' : d.desc) : 'Operational Scope';
@@ -1246,9 +1266,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     galleryGrid.innerHTML = filtered.map(item => {
       const originalIdx = gallery.indexOf(item);
+      const displayImg = toAdminAssetPath(item.img);
       return `
       <div class="gallery-admin-card" data-category="${escapeHtml(item.category || '')}">
-        <img src="${item.img}" alt="${escapeHtml(item.title)}" class="gallery-admin-img" onerror="this.src='../../../../logo/logo.png'; this.style.padding='2rem';">
+        <img src="${displayImg}" alt="${escapeHtml(item.title)}" class="gallery-admin-img" onerror="this.src='../../../../logo/logo.png'; this.style.padding='2rem';">
         <div class="gallery-admin-body">
           <h4>${escapeHtml(item.title)}</h4>
           <span>${escapeHtml(item.subtitle)}</span>
@@ -1392,7 +1413,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = e.target.value.trim();
       if (url) {
         if (galleryAddImgUrl) galleryAddImgUrl.value = url;
-        if (galleryPreviewImg) galleryPreviewImg.src = url;
+        if (galleryPreviewImg) {
+          galleryPreviewImg.src = toAdminAssetPath(url);
+          galleryPreviewImg.onerror = function() {
+            this.src = '../../../../logo/logo.png';
+          };
+        }
         if (galleryPreviewFilename) galleryPreviewFilename.textContent = url.slice(0, 30) + '...';
         if (galleryDropzone) galleryDropzone.style.display = 'none';
         if (galleryPreviewCard) galleryPreviewCard.classList.add('show');
@@ -1591,7 +1617,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (item.img) {
       if (hiddenImg) hiddenImg.value = item.img;
-      if (previewImg) previewImg.src = item.img;
+      if (previewImg) {
+        previewImg.src = toAdminAssetPath(item.img);
+        previewImg.onerror = function() {
+          this.src = '../../../../logo/logo.png';
+        };
+      }
       if (previewFilename) {
         previewFilename.textContent = item.img.startsWith('data:') ? 'Current Image' : item.img.split('/').pop();
       }

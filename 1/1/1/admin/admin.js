@@ -229,175 +229,91 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inquiries collection (starts 100% empty until real clients submit consultation forms)
   const defaultInquiries = [];
 
-  // Helper Functions for Data
-  const getCmsData = () => {
+  // =========================================================================
+  // Data Helpers Ã¢â‚¬â€ Supabase-backed (replaces localStorage)
+  // =========================================================================
+
+  // In-memory cache for CMS data (populated on load)
+  let _cmsCache = null;
+
+  const getCmsData = async () => {
     try {
-      const data = localStorage.getItem(CMS_KEY);
-      if (!data) return defaultCmsData;
-      const parsed = JSON.parse(data);
+      const row = await saasDB.getCmsContent();
+      if (!row) return defaultCmsData;
 
-      let needsSave = false;
+      // Merge with defaults for any missing top-level keys
+      const merged = {
+        contact:   row.contact   || defaultCmsData.contact,
+        hero:      row.hero      || defaultCmsData.hero,
+        about:     row.about     || defaultCmsData.about,
+        divisions: Array.isArray(row.divisions) && row.divisions.length ? row.divisions : defaultCmsData.divisions,
+        gallery:   Array.isArray(row.gallery)   && row.gallery.length   ? row.gallery   : defaultCmsData.gallery
+      };
 
-      // Purge ghost gallery items
-      if (Array.isArray(parsed.gallery)) {
-        const cleaned = parsed.gallery.filter(item => 
-          !item.title.toLowerCase().includes('high-pressure testing plant') &&
-          !item.title.toLowerCase().includes('high-pressure manifold') &&
-          !(item.img && item.img.includes('pressure_testing_assembly_plant'))
-        );
-        if (cleaned.length !== parsed.gallery.length) {
-          parsed.gallery = cleaned.length > 0 ? cleaned : defaultCmsData.gallery;
-          needsSave = true;
-        }
+      // Ensure Division 06 (General Contracts & Procurement) is always present
+      const hasProcurement = merged.divisions.some(d => d.id === 'general_contracts_procurement');
+      if (!hasProcurement) {
+        const defProcurement = defaultCmsData.divisions.find(d => d.id === 'general_contracts_procurement');
+        if (defProcurement) merged.divisions.push({ ...defProcurement });
+      }
 
-        // Ensure newly added items continue from the end rather than being prepended at the beginning
-        const pinachoIdx = parsed.gallery.findIndex(g => 
-          (g.title && g.title.toLowerCase().includes('pinacho')) || 
-          (g.img && g.img.includes('pinacho'))
-        );
-        if (pinachoIdx > 0) {
-          const prependedItems = parsed.gallery.splice(0, pinachoIdx);
-          parsed.gallery.push(...prependedItems);
-          needsSave = true;
+      // Auto-sync hero stat1 with division count
+      if (merged.hero && Array.isArray(merged.divisions)) {
+        if (/^\d+$/.test(String(merged.hero.stat1))) {
+          merged.hero.stat1 = String(merged.divisions.length);
         }
       }
 
-      // Purge only legacy test 7 entries (preserve legitimate Division 07+)
-      if (Array.isArray(parsed.divisions)) {
-        const cleanedDivs = parsed.divisions.filter(d => {
-          const t = (d.title || '').trim().toLowerCase();
-          const id = (d.id || '').trim().toLowerCase();
-          return !(t === 'test 7' || id === 'test_7' || id === 'div_test_7');
-        });
-
-        // Normalize any 'erererer' placeholder to 'test' to keep admin and user side 100% matched
-        cleanedDivs.forEach(d => {
-          if ((d.title || '').toLowerCase() === 'erererer') {
-            d.title = 'test';
-            needsSave = true;
-          }
-          if ((d.sub || '').toLowerCase() === 'erererer') {
-            d.sub = 'test';
-            needsSave = true;
-          }
-        });
-
-        // Ensure Division 06 (General Contracts & Procurement) is present in divisions
-        const hasProcurement = cleanedDivs.some(d => d.id === 'general_contracts_procurement');
-        if (!hasProcurement) {
-          const defProcurement = defaultCmsData.divisions.find(d => d.id === 'general_contracts_procurement');
-          if (defProcurement) {
-            const manpowerIdx = cleanedDivs.findIndex(d => d.id === 'manpower_instrumentation');
-            const insertIdx = manpowerIdx !== -1 ? manpowerIdx + 1 : 5;
-            cleanedDivs.splice(insertIdx, 0, { ...defProcurement });
-            needsSave = true;
-          }
-        }
-
-        if (cleanedDivs.length !== parsed.divisions.length) {
-          parsed.divisions = cleanedDivs;
-          needsSave = true;
-        }
-      }
-
-      // Purge any "test 7" gallery items
-      if (Array.isArray(parsed.gallery)) {
-        const cleanedGal = parsed.gallery.filter(item => {
-          const t = (item.title || '').toLowerCase();
-          const c = (item.category || '').toLowerCase();
-          return !t.includes('test 7') && !c.includes('test 7');
-        });
-        if (cleanedGal.length !== parsed.gallery.length) {
-          parsed.gallery = cleanedGal;
-          needsSave = true;
-        }
-      }
-
-      // Automatically replace outdated mock hero stats with exact user side values
-      if (parsed.hero && (parsed.hero.stat1 === '15+ Years' || parsed.hero.stat3 === '100% Safety')) {
-        parsed.hero.stat1 = defaultCmsData.hero.stat1;
-        parsed.hero.stat2 = defaultCmsData.hero.stat2;
-        parsed.hero.stat3 = defaultCmsData.hero.stat3;
-        parsed.hero.stat4 = defaultCmsData.hero.stat4;
-        needsSave = true;
-      }
-
-      // Automatically update division bullets if old truncated versions exist
-      if (Array.isArray(parsed.divisions) && parsed.divisions.length === 6 && parsed.divisions[0].bullets && parsed.divisions[0].bullets.length === 4) {
-        parsed.divisions = defaultCmsData.divisions;
-        needsSave = true;
-      }
-
-      // Ensure every division has an authentic img path only on initial creation
-      if (Array.isArray(parsed.divisions)) {
-        parsed.divisions.forEach(d => {
-          if (d.img === undefined) {
-            d.img = divisionImages[d.id] || fallbackDivisionImg;
-            needsSave = true;
-          }
-        });
-      }
-
-      // Auto-sync Specialized Divisions stat count with active divisions count
-      if (parsed.hero && Array.isArray(parsed.divisions)) {
-        if (/^\d+$/.test(parsed.hero.stat1) && parseInt(parsed.hero.stat1, 10) !== parsed.divisions.length) {
-          parsed.hero.stat1 = String(parsed.divisions.length);
-          needsSave = true;
-        }
-      }
-
-      // Ensure About Company settings exist
-      if (!parsed.about) {
-        parsed.about = { ...defaultCmsData.about };
-        needsSave = true;
-      }
-
-      if (needsSave) {
-        localStorage.setItem(CMS_KEY, JSON.stringify(parsed));
-      }
-
-      return parsed;
+      _cmsCache = merged;
+      return merged;
     } catch (e) {
-      return defaultCmsData;
+      console.error('getCmsData error:', e);
+      return _cmsCache || defaultCmsData;
     }
   };
 
-  // Real-Time Inter-Tab Broadcast Channel & Timestamp Signaler
-  const TIMESTAMP_KEY = 'saas_cms_timestamp';
-  const CHANNEL_NAME = 'saas_cms_channel';
-  const cmsBroadcast = typeof window.BroadcastChannel !== 'undefined' ? new BroadcastChannel(CHANNEL_NAME) : null;
-
-  const saveCmsData = (data) => {
-    localStorage.setItem(CMS_KEY, JSON.stringify(data));
-    localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
-    if (cmsBroadcast) {
-      try {
-        cmsBroadcast.postMessage({ type: 'CMS_UPDATED', data: data });
-      } catch (err) {
-        console.warn('BroadcastChannel error:', err);
-      }
+  // Real-time Supabase subscription Ã¢â‚¬â€ refresh dashboard when any device saves changes
+  saasDB.subscribeToChanges('cms_content', async () => {
+    const isAuth = sessionStorage.getItem(AUTH_KEY);
+    if (isAuth === 'true') {
+      _cmsCache = null; // invalidate cache
+      const activeTab = sessionStorage.getItem(ACTIVE_TAB_KEY) || 'tab-overview';
+      if (activeTab === 'tab-divisions') renderDivisions();
+      else if (activeTab === 'tab-gallery') renderGallery();
+      else if (activeTab === 'tab-hero') loadHeroSettings();
+      else if (activeTab === 'tab-about') loadAboutSettings();
+      else if (activeTab === 'tab-contact') loadContactSettings();
+      else initDashboard();
     }
-    showToast("Changes published live to public website.");
+  });
+
+  saasDB.subscribeToChanges('inquiries', () => {
+    const isAuth = sessionStorage.getItem(AUTH_KEY);
+    if (isAuth === 'true') renderInquiries();
+  });
+
+  const saveCmsData = async (data) => {
+    try {
+      await saasDB.saveCmsContent(data);
+      _cmsCache = data;
+      showToast('Changes published live to public website Ã¢â‚¬â€ all devices updated.');
+    } catch (err) {
+      console.error('saveCmsData error:', err);
+      showToast('Error saving changes. Please try again.');
+    }
   };
 
-  const getInquiries = () => {
+  const getInquiries = async () => {
     try {
-      const data = localStorage.getItem(INQUIRIES_KEY);
-      if (!data) return [];
-      const list = JSON.parse(data);
-      // Remove any previously injected ready-made sample inquiries
-      const cleanList = list.filter(i => i.id !== 'inq-174001' && i.id !== 'inq-174002');
-      if (cleanList.length !== list.length) {
-        localStorage.setItem(INQUIRIES_KEY, JSON.stringify(cleanList));
-      }
-      return cleanList;
+      return await saasDB.getInquiries();
     } catch (e) {
+      console.error('getInquiries error:', e);
       return [];
     }
   };
 
-  const saveInquiries = (list) => {
-    localStorage.setItem(INQUIRIES_KEY, JSON.stringify(list));
+  const saveInquiries = async (list) => {
+    // Inquiries are individually managed Ã¢â‚¬â€ just re-render
     renderInquiries();
   };
 
@@ -550,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginAlert = document.getElementById('loginAlert');
   const logoutBtn = document.getElementById('adminLogoutBtn');
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     const isAuth = sessionStorage.getItem(AUTH_KEY);
     if (isAuth === 'true') {
       if (loginWrapper) loginWrapper.style.display = 'none';
@@ -564,20 +480,31 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const usernameInput = document.getElementById('adminUsername').value.trim();
       const passwordInput = document.getElementById('adminPassword').value.trim();
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying...'; }
 
-      // Requested password check: admin123
-      if (passwordInput === 'admin123') {
-        sessionStorage.setItem(AUTH_KEY, 'true');
-        if (loginAlert) loginAlert.classList.remove('show');
-        checkAuth();
-      } else {
-        if (loginAlert) {
-          loginAlert.classList.add('show');
-          document.getElementById('adminPassword').focus();
+      try {
+        const isValid = await saasDB.verifyAdminPassword(passwordInput);
+        if (isValid) {
+          sessionStorage.setItem(AUTH_KEY, 'true');
+          if (loginAlert) loginAlert.classList.remove('show');
+          checkAuth();
+        } else {
+          if (loginAlert) {
+            loginAlert.classList.add('show');
+            document.getElementById('adminPassword').focus();
+          }
+        }
+      } catch (err) {
+        console.error('Auth error:', err);
+        if (loginAlert) loginAlert.classList.add('show');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `Access Admin Workspace <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`;
         }
       }
     });
@@ -587,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', () => {
       sessionStorage.removeItem(AUTH_KEY);
       sessionStorage.removeItem(ACTIVE_TAB_KEY);
-      localStorage.removeItem(ACTIVE_TAB_KEY);
       try {
         history.replaceState(null, '', window.location.pathname + window.location.search);
       } catch (e) {
@@ -667,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Persist active tab across browser reloads
     try {
       sessionStorage.setItem(ACTIVE_TAB_KEY, tabId);
-      localStorage.setItem(ACTIVE_TAB_KEY, tabId);
     } catch (e) {}
 
     // Synchronize URL hash so direct links and browser refresh stay on this tab
@@ -693,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Check storage if URL has no hash
     if (!targetTab) {
       try {
-        const stored = sessionStorage.getItem(ACTIVE_TAB_KEY) || localStorage.getItem(ACTIVE_TAB_KEY);
+        const stored = sessionStorage.getItem(ACTIVE_TAB_KEY);
         if (stored) {
           const el = document.getElementById(stored);
           if (el && el.classList.contains('tab-pane')) {
@@ -780,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedStatus) inquiryStatusFilter = savedStatus;
   } catch (e) {}
 
-  const renderInquiries = (searchFilter = null, sortBy = null, statusFilter = null) => {
+  const renderInquiries = async (searchFilter = null, sortBy = null, statusFilter = null) => {
     if (searchFilter !== null) inquirySearchQuery = searchFilter;
     if (sortBy !== null) {
       inquirySortCriteria = sortBy;
@@ -791,17 +716,12 @@ document.addEventListener('DOMContentLoaded', () => {
       try { sessionStorage.setItem(INQUIRY_STATUS_KEY, statusFilter); } catch (e) {}
     }
 
-    // Keep dropdown selects synchronized with active sort and status
     const sortSelectEl = document.getElementById('inquirySortSelect');
-    if (sortSelectEl && sortSelectEl.value !== inquirySortCriteria) {
-      sortSelectEl.value = inquirySortCriteria;
-    }
+    if (sortSelectEl && sortSelectEl.value !== inquirySortCriteria) sortSelectEl.value = inquirySortCriteria;
     const statusSelectEl = document.getElementById('inquiryStatusFilterSelect');
-    if (statusSelectEl && statusSelectEl.value !== inquiryStatusFilter) {
-      statusSelectEl.value = inquiryStatusFilter;
-    }
+    if (statusSelectEl && statusSelectEl.value !== inquiryStatusFilter) statusSelectEl.value = inquiryStatusFilter;
 
-    const list = getInquiries();
+    const list = await getInquiries();
     const overviewTbody = document.getElementById('overviewInquiriesTableBody');
     const fullTbody = document.getElementById('fullInquiriesTableBody');
     const badgeCount = document.getElementById('inquiriesBadgeCount');
@@ -832,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
     filtered = [...filtered].sort((a, b) => {
       switch (inquirySortCriteria) {
         case 'oldest':
-          return (a.date || '').localeCompare(b.date || '');
+          return (a.created_at || a.date || '').localeCompare(b.created_at || b.date || '');
         case 'name_asc':
           return (a.name || '').localeCompare(b.name || '');
         case 'name_desc':
@@ -846,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return (a.division || '').localeCompare(b.division || '');
         case 'newest':
         default:
-          return (b.date || '').localeCompare(a.date || '');
+          return (b.created_at || b.date || '').localeCompare(a.created_at || a.date || '');
       }
     });
 
@@ -859,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${isFull ? `<td>${escapeHtml(inq.organization || 'Direct')} &bull; ${escapeHtml(inq.phone)}</td>` : ''}
           ${isFull ? `<td><a href="mailto:${escapeHtml(inq.email)}" style="color: var(--primary); text-decoration: underline;">${escapeHtml(inq.email)}</a></td>` : `<td><small>${escapeHtml(inq.email)}<br>${escapeHtml(inq.phone)}</small></td>`}
           <td><span style="font-size: 0.8rem; color: var(--gray-700);">${escapeHtml(inq.division)}</span></td>
-          <td><small style="color: var(--gray-500);">${escapeHtml(inq.date)}</small></td>
+          <td><small style="color: var(--gray-500);">${escapeHtml((inq.created_at || inq.date || '').slice(0, 16).replace('T', ' '))}</small></td>
           <td>
             <button type="button" class="status-badge-pill ${statusClass}" onclick="window.openStatusModal('${inq.id}')" title="Click to update status via modal">
               <span class="status-pill-dot"></span>
@@ -925,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (statusModalInquiryId) statusModalInquiryId.value = id;
     if (statusModalTitle) statusModalTitle.textContent = `Update Status: ${inq.name}`;
-    if (statusModalSubtitle) statusModalSubtitle.textContent = `${inq.organization || 'Direct Client'} • ${inq.division}`;
+    if (statusModalSubtitle) statusModalSubtitle.textContent = `${inq.organization || 'Direct Client'} Ã¢â‚¬Â¢ ${inq.division}`;
 
     const currentStatus = inq.status || 'new';
     statusOptionCards.forEach(card => {
@@ -968,14 +888,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Global window functions for table action buttons
-  window.updateInquiryStatus = (id, newStatus) => {
-    const list = getInquiries();
-    const index = list.findIndex(i => i.id === id);
-    if (index !== -1) {
-      list[index].status = newStatus;
-      saveInquiries(list);
+  window.updateInquiryStatus = async (id, newStatus) => {
+    try {
+      await saasDB.updateInquiryStatus(id, newStatus);
       renderInquiries();
       showToast(`Inquiry status updated to ${statusDisplayMap[newStatus] || newStatus.toUpperCase()}`);
+    } catch (err) {
+      console.error('updateInquiryStatus error:', err);
+      showToast('Error updating status. Please try again.');
     }
   };
 
@@ -986,16 +906,19 @@ document.addEventListener('DOMContentLoaded', () => {
       isDanger: true
     });
     if (confirmed) {
-      let list = getInquiries();
-      list = list.filter(i => i.id !== id);
-      saveInquiries(list);
-      renderInquiries();
-      showToast("Inquiry removed from database.");
+      try {
+        await saasDB.deleteInquiry(id);
+        renderInquiries();
+        showToast("Inquiry removed from database.");
+      } catch (err) {
+        console.error('deleteInquiry error:', err);
+        showToast('Error deleting inquiry. Please try again.');
+      }
     }
   };
 
-  window.viewInquiryDetail = (id) => {
-    const list = getInquiries();
+  window.viewInquiryDetail = async (id) => {
+    const list = await getInquiries();
     const inq = list.find(i => i.id === id);
     if (!inq) return;
 
@@ -1050,7 +973,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--gray-500); text-align: right;">
-          Submitted: ${escapeHtml(inq.date)} &bull; Reference: #${escapeHtml(inq.id)}
+          Submitted: ${escapeHtml((inq.created_at || inq.date || '').slice(0, 16).replace('T', ' '))} &bull; Reference: #${escapeHtml(inq.id)}
         </div>
       `;
     }
@@ -1110,8 +1033,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Export Excel (.xlsx)
   const exportExcelBtn = document.getElementById('exportInquiriesExcelBtn') || document.getElementById('exportInquiriesCsvBtn');
   if (exportExcelBtn) {
-    exportExcelBtn.addEventListener('click', () => {
-      const list = getInquiries();
+    exportExcelBtn.addEventListener('click', async () => {
+      const list = await getInquiries();
       if (list.length === 0) {
         window.customAlert("There are currently no client inquiries in the database to export.", "Export Inquiries", "info");
         return;
@@ -1128,34 +1051,26 @@ document.addEventListener('DOMContentLoaded', () => {
           "Email Address": i.email || '',
           "Phone Number": i.phone || '',
           "Service Division": i.division || '',
-          "Submission Date": i.date || '',
+          "Submission Date": (i.created_at || i.date || '').slice(0, 16).replace('T', ' '),
           "Workflow Status": statusDisplayMap[i.status] || i.status || 'New',
           "Technical Specifications & Scope": i.scope || ''
         }));
 
         const ws = XLSX.utils.json_to_sheet(rows);
         ws['!cols'] = [
-          { wch: 15 },
-          { wch: 22 },
-          { wch: 26 },
-          { wch: 26 },
-          { wch: 18 },
-          { wch: 32 },
-          { wch: 16 },
-          { wch: 16 },
-          { wch: 55 }
+          { wch: 15 }, { wch: 22 }, { wch: 26 }, { wch: 26 }, { wch: 18 },
+          { wch: 32 }, { wch: 16 }, { wch: 16 }, { wch: 55 }
         ];
-
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Inquiries");
         XLSX.writeFile(wb, `${filename}.xlsx`);
         showToast("Inquiries exported to Excel (.xlsx) successfully.");
       } else {
-        // Fallback: UTF-8 BOM CSV readable directly by Excel
         let csv = "\uFEFF\"Inquiry ID\",\"Client Name\",\"Organization\",\"Email Address\",\"Phone Number\",\"Division\",\"Submission Date\",\"Status\",\"Scope\"\n";
         list.forEach(i => {
           const status = statusDisplayMap[i.status] || i.status || 'New';
-          csv += `"${cleanCsv(i.id)}","${cleanCsv(i.name)}","${cleanCsv(i.organization)}","${cleanCsv(i.email)}","${cleanCsv(i.phone)}","${cleanCsv(i.division)}","${cleanCsv(i.date)}","${cleanCsv(status)}","${cleanCsv(i.scope)}"\n`;
+          const dateVal = (i.created_at || i.date || '').slice(0, 16).replace('T', ' ');
+          csv += `"${cleanCsv(i.id)}","${cleanCsv(i.name)}","${cleanCsv(i.organization)}","${cleanCsv(i.email)}","${cleanCsv(i.phone)}","${cleanCsv(i.division)}","${cleanCsv(dateVal)}","${cleanCsv(status)}","${cleanCsv(i.scope)}"\n`;
         });
         downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8;');
         showToast("Inquiries exported successfully.");
@@ -1163,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Clear inquiries
+  // Clear all inquiries
   const clearInquiriesBtn = document.getElementById('clearAllInquiriesBtn');
   if (clearInquiriesBtn) {
     clearInquiriesBtn.addEventListener('click', async () => {
@@ -1173,8 +1088,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isDanger: true
       });
       if (confirmed) {
-        saveInquiries([]);
-        showToast("All inquiries cleared.");
+        try {
+          const list = await getInquiries();
+          await Promise.all(list.map(i => saasDB.deleteInquiry(i.id)));
+          renderInquiries();
+          showToast("All inquiries cleared.");
+        } catch (err) {
+          console.error('clearInquiries error:', err);
+          showToast('Error clearing inquiries. Please try again.');
+        }
       }
     });
   }
@@ -1183,8 +1105,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Contact & Social Media Settings Form
   // =========================================================================
   const contactForm = document.getElementById('contactSettingsForm');
-  const loadContactSettings = () => {
-    const cms = getCmsData();
+  const loadContactSettings = async () => {
+    const cms = await getCmsData();
     const c = cms.contact || defaultCmsData.contact;
     document.getElementById('settingAddress').value = c.address || '';
     document.getElementById('settingPhonePrimary').value = c.phonePrimary || '';
@@ -1199,9 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const cms = getCmsData();
+      const cms = await getCmsData();
       cms.contact = {
         address: document.getElementById('settingAddress').value.trim(),
         phonePrimary: document.getElementById('settingPhonePrimary').value.trim(),
@@ -1214,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         twitter: document.getElementById('settingTwitter').value.trim(),
         instagram: document.getElementById('settingInstagram').value.trim()
       };
-      saveCmsData(cms);
+      await saveCmsData(cms);
     });
   }
 
@@ -1228,8 +1150,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeDivModalBtn = document.getElementById('closeDivisionModalBtn');
   const cancelDivModalBtn = document.getElementById('cancelDivisionEditBtn');
 
-  const renderDivisions = () => {
-    const cms = getCmsData();
+  const renderDivisions = async () => {
+    const cms = await getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
     const countLabel = document.getElementById('divisionCountLabel');
     const statDivisions = document.getElementById('statTotalDivisions');
@@ -1446,8 +1368,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const openDivisionModal = (index = -1) => {
-    const cms = getCmsData();
+  const openDivisionModal = async (index = -1) => {
+    const cms = await getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
     const title = document.getElementById('divisionModalTitle');
     const indexInput = document.getElementById('editDivisionIndex');
@@ -1504,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.editDivision = (idx) => openDivisionModal(idx);
   window.deleteDivision = async (idx) => {
-    const cms = getCmsData();
+    const cms = await getCmsData();
     if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
     const div = cms.divisions[idx];
     const divTitle = div ? div.title : 'this division';
@@ -1517,7 +1439,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cms.divisions.splice(idx, 1);
       if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
       cms.hero.stat1 = String(cms.divisions.length);
-      saveCmsData(cms);
+      await saveCmsData(cms);
       renderDivisions();
       if (typeof populateGalleryCategoryModularGrid === 'function') populateGalleryCategoryModularGrid();
       if (typeof renderAdminGalleryFilters === 'function') renderAdminGalleryFilters();
@@ -1526,9 +1448,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (divisionForm) {
-    divisionForm.addEventListener('submit', (e) => {
+    divisionForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const cms = getCmsData();
+      const cms = await getCmsData();
       const index = parseInt(document.getElementById('editDivisionIndex').value, 10);
       const titleVal = editDivisionTitleInput ? editDivisionTitleInput.value.trim() : 'Custom Division';
       const subVal = editDivisionSubInput ? editDivisionSubInput.value.trim() : titleVal;
@@ -1575,7 +1497,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
       cms.hero.stat1 = String(cms.divisions.length);
 
-      saveCmsData(cms);
+      await saveCmsData(cms);
       renderDivisions();
       if (typeof populateGalleryCategoryModularGrid === 'function') populateGalleryCategoryModularGrid(divData.id);
       if (typeof renderAdminGalleryFilters === 'function') renderAdminGalleryFilters();
@@ -1600,8 +1522,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedGalFilter) currentAdminGalleryFilter = savedGalFilter;
   } catch (e) {}
 
-  const renderGallery = () => {
-    const cms = getCmsData();
+  const renderGallery = async () => {
+    const cms = await getCmsData();
     const gallery = cms.gallery || defaultCmsData.gallery;
     const statGallery = document.getElementById('statTotalGallery');
     if (statGallery) statGallery.textContent = gallery.length;
@@ -1817,7 +1739,7 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       event.stopPropagation();
     }
-    const cms = getCmsData();
+    const cms = await getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
     const idx = divisions.findIndex(d => d.id === divId || (coreDivisionInfo[d.id] && coreDivisionInfo[d.id].id === divId));
     if (idx !== -1) {
@@ -1832,7 +1754,7 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       event.stopPropagation();
     }
-    const cms = getCmsData();
+    const cms = await getCmsData();
     if (!Array.isArray(cms.divisions)) cms.divisions = [...defaultCmsData.divisions];
 
     const idx = cms.divisions.findIndex(d => d.id === divId || (coreDivisionInfo[d.id] && coreDivisionInfo[d.id].id === divId));
@@ -1854,7 +1776,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cms.divisions.splice(idx, 1);
       if (!cms.hero) cms.hero = { ...defaultCmsData.hero };
       cms.hero.stat1 = String(cms.divisions.length);
-      saveCmsData(cms);
+      await saveCmsData(cms);
       renderDivisions();
       populateGalleryCategoryModularGrid();
       renderAdminGalleryFilters();
@@ -1868,7 +1790,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hiddenInput = document.getElementById('galleryAddCategory');
     if (!gridEl || !hiddenInput) return;
 
-    const cms = getCmsData();
+    const cms = await getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
 
     const allCategories = divisions.map(d => {
@@ -1937,7 +1859,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const openGalleryModal = () => {
+  const openGalleryModal = async () => {
     if (galleryForm) galleryForm.reset();
     resetGalleryUploadState();
     const indexInput = document.getElementById('editGalleryIndex');
@@ -1963,7 +1885,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   window.editGalleryItem = (idx) => {
-    const cms = getCmsData();
+    const cms = await getCmsData();
     const gallery = Array.isArray(cms.gallery) ? cms.gallery : defaultCmsData.gallery;
     const item = gallery[idx];
     if (!item) return;
@@ -2011,7 +1933,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.deleteGalleryItem = async (idx) => {
-    const cms = getCmsData();
+    const cms = await getCmsData();
     if (!Array.isArray(cms.gallery)) cms.gallery = [...defaultCmsData.gallery];
     const item = cms.gallery[idx];
     const itemTitle = item ? item.title : 'this photo';
@@ -2022,21 +1944,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (confirmed) {
       cms.gallery.splice(idx, 1);
-      saveCmsData(cms);
+      await saveCmsData(cms);
       renderGallery();
       showToast("Photo removed from gallery.");
     }
   };
 
   if (galleryForm) {
-    galleryForm.addEventListener('submit', (e) => {
+    galleryForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const imgVal = document.getElementById('galleryAddImgUrl')?.value?.trim();
       if (!imgVal) {
         window.customAlert("Please upload an image from your device or provide a valid image URL before saving.", "Photo Required", "warning");
         return;
       }
-      const cms = getCmsData();
+      const cms = await getCmsData();
       if (!Array.isArray(cms.gallery)) cms.gallery = [...defaultCmsData.gallery];
 
       const editIdx = parseInt(document.getElementById('editGalleryIndex')?.value, 10);
@@ -2055,7 +1977,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast("Photo added to project gallery successfully.");
       }
 
-      saveCmsData(cms);
+      await saveCmsData(cms);
       renderGallery();
       closeGalleryModal();
     });
@@ -2065,8 +1987,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Hero & Content Settings Form
   // =========================================================================
   const heroForm = document.getElementById('heroSettingsForm');
-  const loadHeroSettings = () => {
-    const cms = getCmsData();
+  const loadHeroSettings = async () => {
+    const cms = await getCmsData();
     const h = cms.hero || defaultCmsData.hero;
     document.getElementById('settingHeroBadge').value = h.badge || '';
     document.getElementById('settingHeroTitle').value = h.title || '';
@@ -2078,9 +2000,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (heroForm) {
-    heroForm.addEventListener('submit', (e) => {
+    heroForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const cms = getCmsData();
+      const cms = await getCmsData();
       cms.hero = {
         badge: document.getElementById('settingHeroBadge').value.trim(),
         title: document.getElementById('settingHeroTitle').value.trim(),
@@ -2090,7 +2012,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stat3: document.getElementById('settingStat3').value.trim(),
         stat4: document.getElementById('settingStat4').value.trim()
       };
-      saveCmsData(cms);
+      await saveCmsData(cms);
       showToast("Hero and performance stats saved successfully.");
     });
   }
@@ -2255,8 +2177,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const loadAboutSettings = () => {
-    const cms = getCmsData();
+  const loadAboutSettings = async () => {
+    const cms = await getCmsData();
     const ab = cms.about || defaultCmsData.about;
     const badgeEl = document.getElementById('settingAboutBadge');
     const titleEl = document.getElementById('settingAboutTitle');
@@ -2279,9 +2201,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (aboutForm) {
-    aboutForm.addEventListener('submit', (e) => {
+    aboutForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const cms = getCmsData();
+      const cms = await getCmsData();
       const bulletsRaw = document.getElementById('settingAboutBullets')?.value?.trim() || '';
       const bulletsArr = bulletsRaw
         ? bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean)
@@ -2301,7 +2223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeDesc: document.getElementById('settingAboutBadgeDesc')?.value?.trim() || ''
       };
 
-      saveCmsData(cms);
+      await saveCmsData(cms);
       showToast("About Company section saved and synchronized successfully.");
     });
   }
@@ -2319,13 +2241,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isDanger: true
       });
       if (confirmed) {
-        localStorage.removeItem(CMS_KEY);
-        localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
-        if (cmsBroadcast) {
-          try { cmsBroadcast.postMessage({ type: 'CMS_UPDATED', data: defaultCmsData }); } catch(e) {}
+        try {
+          await saasDB.saveCmsContent(defaultCmsData);
+          _cmsCache = { ...defaultCmsData };
+          showToast("Reverted to factory default content — all devices updated.");
+          initDashboard();
+        } catch (err) {
+          console.error('Reset error:', err);
+          showToast('Error resetting content. Please try again.');
         }
-        showToast("Reverted to factory default content.");
-        initDashboard();
       }
     });
   }
@@ -2334,7 +2258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtersContainer = document.getElementById('adminGalleryFilters');
     if (!filtersContainer) return;
 
-    const cms = getCmsData();
+    const cms = await getCmsData();
     const divisions = cms.divisions || defaultCmsData.divisions;
 
     const divisionFilters = divisions.map(d => {
@@ -2419,7 +2343,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   // Dashboard Initialization
   // =========================================================================
-  const initDashboard = () => {
+  const initDashboard = async () => {
     renderInquiries();
     loadContactSettings();
     renderDivisions();
@@ -2460,3 +2384,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Run on startup
   checkAuth();
 });
+
+
+
+
+

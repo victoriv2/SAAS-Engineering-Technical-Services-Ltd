@@ -106,6 +106,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Delegated handler for modal grid cards & action buttons
+  const navDivModalGrid = document.getElementById('navDivisionsModalGrid');
+  if (navDivModalGrid) {
+    navDivModalGrid.addEventListener('click', (e) => {
+      const exploreBtn = e.target.closest('.nav-modal-explore-btn');
+      if (exploreBtn) {
+        closeNavModal();
+        return;
+      }
+      const inquireBtn = e.target.closest('.nav-modal-inquire-btn');
+      if (inquireBtn) {
+        closeNavModal();
+        const divName = inquireBtn.getAttribute('data-division-name');
+        const serviceDivisionInput = document.getElementById('serviceDivision');
+        const selectedDivisionText = document.getElementById('selectedDivisionText');
+        if (serviceDivisionInput && divName) serviceDivisionInput.value = divName;
+        if (selectedDivisionText && divName) {
+          selectedDivisionText.textContent = divName;
+          selectedDivisionText.classList.remove('placeholder');
+        }
+        return;
+      }
+      const card = e.target.closest('.nav-division-card');
+      if (card) {
+        const targetId = card.getAttribute('data-target-id');
+        closeNavModal();
+        if (targetId) {
+          const targetEl = document.getElementById(targetId);
+          if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    });
+  }
+
   // Header Scroll State
   const siteHeader = document.getElementById('siteHeader');
   window.addEventListener('scroll', () => {
@@ -331,10 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       submitBtn.disabled = true;
       submitBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
-          <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)"></circle>
-          <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff"></path>
-        </svg> Processing Request...
+        <svg class="btn-spinner" viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="rgba(255, 255, 255, 0.28)" stroke-width="2.8" fill="none"></circle>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" fill="none"></path>
+        </svg>
+        <span style="margin-left: 0.45rem;">Processing Request...</span>
       `;
 
       // Capture inquiry details for Admin Portal

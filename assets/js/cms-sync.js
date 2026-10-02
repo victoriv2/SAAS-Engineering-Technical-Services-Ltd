@@ -31,6 +31,51 @@
       .replace(/'/g, '&#039;');
   }
 
+  const defaultDivisions = [
+    {
+      id: "welding_fabrication",
+      badge: "Division 01",
+      title: "Welding & Fabrication, Industrial Services & Training",
+      desc: "Our workshop and field teams carry out precision structural steel fabrication, specialized pipe spool manufacturing, and industrial machining.",
+      img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/automated_track_torch_plate_cutting_machine.jpeg"
+    },
+    {
+      id: "pipeline_offshore",
+      badge: "Division 02",
+      title: "Oil & Gas Services, Surface Pipeline Activities & Offshore Support",
+      desc: "We execute surface and cross-country pipeline construction, including route clearing, trenching, pipe stringing, field alignment, and certified orbital/stick welding.",
+      img: "assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_construction_laying.jpg"
+    },
+    {
+      id: "dredging_valves",
+      badge: "Division 03",
+      title: "Dredging Services & Technical Parts (Valves, Impellers, Dredging Pumps)",
+      desc: "Supplying heavy-duty marine dredging equipment and critical flow control components, slurry pump assemblies, and industrial valves.",
+      img: "assets/images/3_Dredging_Services_and_Technical_Parts/diesel_engine_dredge_pump_skid_assembly.jpeg"
+    },
+    {
+      id: "logistics_heavy_equipment",
+      badge: "Division 04",
+      title: "Logistics, Haulage, Heavy Equipment Leasing & Caterpillar Parts",
+      desc: "Our heavy equipment division provides equipment rental, site logistics, and specialized transport across rugged project terrains.",
+      img: "assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg"
+    },
+    {
+      id: "manpower_instrumentation",
+      badge: "Division 05",
+      title: "Manpower Supply, Instrumentation & Control Engineering",
+      desc: "Delivering qualified technical staffing and advanced industrial control engineering, instrumentation design, and calibration.",
+      img: "assets/images/6_Manpower_Supply_Instrumentation_and_Control/instrumentation_calibration_test_bench.jpeg"
+    },
+    {
+      id: "general_contracts_procurement",
+      badge: "Division 06",
+      title: "General Contracts, Procurement & Industrial Safety Gadgets (PPE)",
+      desc: "Managing end-to-end industrial supply chain operations, technical materials procurement, and certified Personal Protective Equipment (PPE).",
+      img: "assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg"
+    }
+  ];
+
   function applyCmsData(customData) {
     let cmsData = customData;
     if (!cmsData) {
@@ -41,11 +86,14 @@
         }
       } catch (e) {
         console.warn('SAAS CMS: Failed to read local CMS data', e);
-        return;
       }
     }
 
-    if (!cmsData) return;
+    if (!cmsData) {
+      cmsData = { divisions: defaultDivisions };
+    } else if (!Array.isArray(cmsData.divisions) || cmsData.divisions.length === 0) {
+      cmsData.divisions = defaultDivisions;
+    }
 
     // Auto-purge only legacy test 7 entries (preserve legitimate Division 07+)
     if (Array.isArray(cmsData.divisions)) {

@@ -636,27 +636,18 @@
                 <img src="${displayCardImg}" alt="${escapeHtml(titleText)}" class="nav-division-thumb-img" onerror="this.src='logo/logo.png'" style="${hasNoImg ? 'object-fit: contain; padding: 0.5rem; background: #0a192f;' : ''}">
               </div>
               <div class="nav-division-card-content">
-                <h4>${escapeHtml(titleText)}</h4>
-                <p>${escapeHtml(descText)}</p>
-                <div class="nav-division-card-actions">
-                  <a href="#${targetId}" class="btn btn-primary btn-xs nav-modal-explore-btn">
-                    <span>Explore</span>
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42 5.43 5.43H5v2z"/></svg>
-                  </a>
-                  <a href="#contact" class="btn btn-secondary btn-xs nav-modal-inquire-btn" data-division-name="${escapeHtml(titleText)}">
-                    <span>Inquire</span>
-                  </a>
-                </div>
+                <h4>
+                  <span>${escapeHtml(titleText)}</span>
+                  <svg class="nav-division-card-arrow" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                </h4>
               </div>
             </div>
           `;
         }).join('');
 
-        // Attach event listeners to card and action buttons
+        // Attach click listener to navigate to target division
         navDivModalGrid.querySelectorAll('.nav-division-card').forEach(card => {
-          card.addEventListener('click', (e) => {
-            // Ignore if clicking inquire button directly
-            if (e.target.closest('.nav-modal-inquire-btn')) return;
+          card.addEventListener('click', () => {
             const targetId = card.getAttribute('data-target-id');
             const navDivModal = document.getElementById('navDivisionsModal');
             if (navDivModal) navDivModal.classList.remove('active');
@@ -667,29 +658,6 @@
                 targetEl.scrollIntoView({ behavior: 'smooth' });
               }
             }
-          });
-        });
-
-        navDivModalGrid.querySelectorAll('.nav-modal-explore-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const navDivModal = document.getElementById('navDivisionsModal');
-            if (navDivModal) navDivModal.classList.remove('active');
-            document.body.style.overflow = '';
-          });
-        });
-
-        navDivModalGrid.querySelectorAll('.nav-modal-inquire-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const divName = btn.getAttribute('data-division-name');
-            const navDivModal = document.getElementById('navDivisionsModal');
-            if (navDivModal) navDivModal.classList.remove('active');
-            document.body.style.overflow = '';
-            const serviceDivisionInput = document.getElementById('serviceDivision');
-            const selectedDivisionText = document.getElementById('selectedDivisionText');
-            if (serviceDivisionInput && divName) serviceDivisionInput.value = divName;
-            if (selectedDivisionText && divName) selectedDivisionText.textContent = divName;
           });
         });
       }

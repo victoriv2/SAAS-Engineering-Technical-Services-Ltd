@@ -106,28 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Delegated handler for modal grid cards & action buttons
+  // Delegated handler for modal grid cards
   const navDivModalGrid = document.getElementById('navDivisionsModalGrid');
   if (navDivModalGrid) {
     navDivModalGrid.addEventListener('click', (e) => {
-      const exploreBtn = e.target.closest('.nav-modal-explore-btn');
-      if (exploreBtn) {
-        closeNavModal();
-        return;
-      }
-      const inquireBtn = e.target.closest('.nav-modal-inquire-btn');
-      if (inquireBtn) {
-        closeNavModal();
-        const divName = inquireBtn.getAttribute('data-division-name');
-        const serviceDivisionInput = document.getElementById('serviceDivision');
-        const selectedDivisionText = document.getElementById('selectedDivisionText');
-        if (serviceDivisionInput && divName) serviceDivisionInput.value = divName;
-        if (selectedDivisionText && divName) {
-          selectedDivisionText.textContent = divName;
-          selectedDivisionText.classList.remove('placeholder');
-        }
-        return;
-      }
       const card = e.target.closest('.nav-division-card');
       if (card) {
         const targetId = card.getAttribute('data-target-id');

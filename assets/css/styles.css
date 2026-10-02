@@ -379,7 +379,7 @@ h4 { font-size: 1.2rem; }
     position: absolute;
     top: 100%;
     left: 50%;
-    transform: translateX(-50%) translateY(8px);
+    transform: translateX(-50%);
     width: 320px;
     box-shadow: 0 12px 28px -4px rgba(13, 40, 71, 0.16), 0 0 0 1px rgba(13, 40, 71, 0.08);
     opacity: 0;
@@ -390,7 +390,7 @@ h4 { font-size: 1.2rem; }
   .nav-item-dropdown:focus-within .nav-dropdown-menu {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%);
   }
 }
 
@@ -1430,7 +1430,7 @@ textarea.form-control {
 }
 
 .division-option-card:hover .option-thumb-img {
-  transform: scale(1.05);
+  transform: none;
 }
 
 .division-option-card:hover {
@@ -2522,5 +2522,26 @@ textarea.form-control {
     justify-content: center;
   }
 }
+
+/* Universal guard: prevent buttons, tabs, links, and cards from translating upward on hover */
+button:hover,
+.btn:hover,
+.btn-primary:hover,
+.btn-accent:hover,
+.btn-secondary:hover,
+.btn-outline:hover,
+.btn-xs:hover,
+.btn-sm:hover,
+.nav-link:hover,
+.social-link:hover,
+.filter-btn:hover,
+.division-picker-trigger:hover,
+.division-option-card:hover,
+.nav-division-card:hover,
+.modal-close:hover,
+.division-modal-close:hover {
+  transform: none !important;
+}
+
 
 

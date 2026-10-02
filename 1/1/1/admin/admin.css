@@ -460,8 +460,8 @@ svg {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .pane-header {
@@ -670,12 +670,11 @@ svg {
 }
 
 .status-badge-pill:hover {
-  transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
 .status-badge-pill:active {
-  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .status-badge-pill .status-pill-dot {
@@ -745,7 +744,6 @@ svg {
 .status-option-card:hover {
   border-color: var(--primary-light);
   background: var(--gray-50);
-  transform: translateY(-1px);
 }
 
 .status-option-card:focus {
@@ -1014,7 +1012,6 @@ svg {
 
 .division-preset-thumb:hover {
   border-color: var(--primary);
-  transform: translateY(-1px);
 }
 
 .division-preset-thumb.active {
@@ -1861,7 +1858,6 @@ svg {
   opacity: 1;
   background: var(--accent) !important;
   color: var(--dark) !important;
-  transform: scale(1.18);
   outline: none;
 }
 
@@ -1870,7 +1866,21 @@ svg {
   opacity: 1;
   background: var(--danger) !important;
   color: var(--white) !important;
-  transform: scale(1.18);
   outline: none;
+}
+
+/* Universal guard: prevent any button or interactive element from translating upward on hover */
+button:hover,
+.btn:hover,
+.nav-tab-btn:hover,
+.status-badge-pill:hover,
+.status-option-card:hover,
+.division-preset-thumb:hover,
+.modular-cat-card:hover,
+.modular-cat-edit-btn:hover,
+.modular-cat-remove-btn:hover,
+.filter-btn:hover,
+.modal-close-btn:hover {
+  transform: none !important;
 }
 

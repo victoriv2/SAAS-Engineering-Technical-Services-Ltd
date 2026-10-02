@@ -629,6 +629,20 @@
     // 4. Project Gallery Synchronization (Real-time Add, Edit, and Removal Sync)
     // =========================================================================
     if (Array.isArray(cmsData.gallery)) {
+      // Ensure custom added gallery items continue from the end rather than being prepended to the beginning
+      const pinachoIdx = cmsData.gallery.findIndex(g => 
+        (g.title && g.title.toLowerCase().includes('pinacho')) || 
+        (g.img && g.img.includes('pinacho'))
+      );
+      if (pinachoIdx > 0) {
+        const prependedItems = cmsData.gallery.splice(0, pinachoIdx);
+        cmsData.gallery.push(...prependedItems);
+        try {
+          localStorage.setItem(CMS_KEY, JSON.stringify(cmsData));
+          localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+        } catch (e) {}
+      }
+
       const publicGalleryGrid = document.getElementById('galleryGrid');
       if (publicGalleryGrid) {
         if (cmsData.gallery.length === 0) {

@@ -231,6 +231,17 @@ document.addEventListener('DOMContentLoaded', () => {
           parsed.gallery = cleaned.length > 0 ? cleaned : defaultCmsData.gallery;
           needsSave = true;
         }
+
+        // Ensure newly added items continue from the end rather than being prepended at the beginning
+        const pinachoIdx = parsed.gallery.findIndex(g => 
+          (g.title && g.title.toLowerCase().includes('pinacho')) || 
+          (g.img && g.img.includes('pinacho'))
+        );
+        if (pinachoIdx > 0) {
+          const prependedItems = parsed.gallery.splice(0, pinachoIdx);
+          parsed.gallery.push(...prependedItems);
+          needsSave = true;
+        }
       }
 
       // Purge only legacy test 7 entries (preserve legitimate Division 07+)
@@ -1677,7 +1688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cms.gallery[editIdx] = galleryItem;
         showToast("Photo updated successfully.");
       } else {
-        cms.gallery.unshift(galleryItem);
+        cms.gallery.push(galleryItem);
         showToast("Photo added to project gallery successfully.");
       }
 

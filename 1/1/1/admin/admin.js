@@ -984,7 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = maxWidth;
           } else {
             width = Math.round((width * maxHeight) / height);
-            height = maxWidth;
+            height = maxHeight;
           }
         }
 
@@ -1362,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = maxWidth;
           } else {
             width = Math.round((width * maxHeight) / height);
-            height = maxWidth;
+            height = maxHeight;
           }
         }
 
@@ -1801,7 +1801,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = maxWidth;
           } else {
             width = Math.round((width * maxHeight) / height);
-            height = maxWidth;
+            height = maxHeight;
           }
         }
 

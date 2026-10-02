@@ -375,6 +375,15 @@ document.addEventListener('DOMContentLoaded', () => {
     quoteForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
+      // Anti-Bot Honeypot Guard: If trap input is filled, silently discard without hitting Supabase
+      const botTrap = document.getElementById('botHoneyCheck');
+      if (botTrap && botTrap.value) {
+        quoteForm.reset();
+        formToast.style.display = 'flex';
+        setTimeout(() => { formToast.style.display = 'none'; }, 5000);
+        return;
+      }
+
       // Check if division is selected
       if (!hiddenDivisionInput || !hiddenDivisionInput.value) {
         if (divisionTrigger) {
@@ -382,6 +391,20 @@ document.addEventListener('DOMContentLoaded', () => {
           divisionTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         openDivisionModal();
+        return;
+      }
+
+      // Supabase Free Tier Rate Limit Guard: 20-second client submission cooldown
+      const LAST_SUBMIT_KEY = 'saas_last_inquiry_ts';
+      const lastSubmit = Number(sessionStorage.getItem(LAST_SUBMIT_KEY) || 0);
+      const now = Date.now();
+      if (now - lastSubmit < 20000) {
+        const waitSec = Math.ceil((20000 - (now - lastSubmit)) / 1000);
+        if (typeof window.customAlert === 'function') {
+          window.customAlert(`Please wait ${waitSec} seconds before submitting another inquiry. This prevents duplicate entries.`, 'Submission Cooldown', 'warning');
+        } else {
+          alert(`Please wait ${waitSec} seconds before submitting another inquiry.`);
+        }
         return;
       }
       
@@ -397,19 +420,22 @@ document.addEventListener('DOMContentLoaded', () => {
         <span style="margin-left: 0.45rem;">Processing Request...</span>
       `;
 
-      // Capture inquiry details for Admin Portal
+      // Capture inquiry details with strict character size caps to protect Supabase database storage
       const divisionName = selectedDivisionText ? selectedDivisionText.textContent : (hiddenDivisionInput ? hiddenDivisionInput.value : 'General Engineering');
 
       const newInquiry = {
         id: 'inq-' + Date.now(),
-        name: document.getElementById('fullName') ? document.getElementById('fullName').value.trim() : 'Anonymous',
-        organization: document.getElementById('companyName') ? document.getElementById('companyName').value.trim() : 'Individual',
-        email: document.getElementById('emailAddress') ? document.getElementById('emailAddress').value.trim() : '',
-        phone: document.getElementById('phoneNumber') ? document.getElementById('phoneNumber').value.trim() : '',
-        division: divisionName,
-        scope: document.getElementById('projectScope') ? document.getElementById('projectScope').value.trim() : '',
+        name: (document.getElementById('fullName')?.value || '').trim().slice(0, 100) || 'Anonymous',
+        organization: (document.getElementById('companyName')?.value || '').trim().slice(0, 150) || 'Individual',
+        email: (document.getElementById('emailAddress')?.value || '').trim().slice(0, 120),
+        phone: (document.getElementById('phoneNumber')?.value || '').trim().slice(0, 40),
+        division: String(divisionName).slice(0, 120),
+        scope: (document.getElementById('projectScope')?.value || '').trim().slice(0, 2000),
         status: 'new'
       };
+
+      // Record timestamp to enforce cooldown
+      sessionStorage.setItem(LAST_SUBMIT_KEY, String(Date.now()));
 
       // Save to Supabase — visible across all devices instantly
       saasDB.insertInquiry(newInquiry).catch(err => {

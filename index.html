@@ -578,25 +578,30 @@
             </div>
 
             <form id="quoteForm">
+              <!-- Honeypot anti-bot trap to protect Supabase database against automated spam -->
+              <div style="display:none !important; position:absolute; left:-9999px;" aria-hidden="true">
+                <input type="text" name="bot_honey_check" id="botHoneyCheck" tabindex="-1" autocomplete="off">
+              </div>
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="fullName" class="form-label">Full Name</label>
-                  <input type="text" id="fullName" class="form-control" placeholder="Engr. John Doe" required>
+                  <input type="text" id="fullName" class="form-control" placeholder="Engr. John Doe" maxlength="100" required>
                 </div>
                 <div class="form-group">
                   <label for="companyName" class="form-label">Company Name</label>
-                  <input type="text" id="companyName" class="form-control" placeholder="Company Ltd" required>
+                  <input type="text" id="companyName" class="form-control" placeholder="Company Ltd" maxlength="150" required>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="emailAddress" class="form-label">Email Address</label>
-                  <input type="email" id="emailAddress" class="form-control" placeholder="johndoe@company.com" required>
+                  <input type="email" id="emailAddress" class="form-control" placeholder="johndoe@company.com" maxlength="120" required>
                 </div>
                 <div class="form-group">
                   <label for="phoneNumber" class="form-label">Phone Number</label>
-                  <input type="tel" id="phoneNumber" class="form-control" placeholder="09020379011" required>
+                  <input type="tel" id="phoneNumber" class="form-control" placeholder="09020379011" maxlength="40" required>
                 </div>
               </div>
 
@@ -622,7 +627,7 @@
 
               <div class="form-group">
                 <label for="projectScope" class="form-label">Project Scope & Technical Details</label>
-                <textarea id="projectScope" class="form-control" placeholder="Provide details regarding your technical requirements, specifications, quantities, or site location..." required></textarea>
+                <textarea id="projectScope" class="form-control" placeholder="Provide details regarding your technical requirements, specifications, quantities, or site location..." maxlength="2000" required></textarea>
               </div>
 
               <button type="submit" class="btn btn-accent" style="width: 100%;">

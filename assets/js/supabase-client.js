@@ -112,8 +112,8 @@ const saasDB = (() => {
     return await res.json();
   }
 
-  async function getInquiries() {
-    const res = await fetch(`${rest('inquiries')}?select=*&order=created_at.desc`, { headers });
+  async function getInquiries(limit = 100) {
+    const res = await fetch(`${rest('inquiries')}?select=*&order=created_at.desc&limit=${limit}`, { headers });
     if (!res.ok) throw new Error(`Inquiries fetch failed: ${res.status}`);
     return await res.json();
   }

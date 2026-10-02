@@ -457,26 +457,62 @@
   }
 
   // =========================================================================
-  // Initialise: fetch from Supabase then subscribe to realtime changes
+  // Initialise: fetch from Supabase with smart client caching & realtime preview
   // =========================================================================
   async function init() {
-    try {
-      const row = await saasDB.getCmsContent();
-      if (row) applyCmsData(row);
-    } catch (err) {
-      console.warn('SAAS CMS: Could not load content from Supabase.', err);
+    const CMS_CACHE_KEY = 'saas_cms_cached_data';
+    const CMS_CACHE_TS_KEY = 'saas_cms_cached_ts';
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute cache TTL for anonymous visitors
+
+    const isAdminPreview = (typeof sessionStorage !== 'undefined') && (sessionStorage.getItem('saas_admin_auth') === 'true');
+
+    // 1. Check local cache first for anonymous visitors (saves 80-90% egress on repeat views/reloads)
+    let appliedFromCache = false;
+    if (!isAdminPreview) {
+      try {
+        const raw = localStorage.getItem(CMS_CACHE_KEY);
+        const ts = Number(localStorage.getItem(CMS_CACHE_TS_KEY) || 0);
+        if (raw && (Date.now() - ts < CACHE_TTL_MS)) {
+          const cached = JSON.parse(raw);
+          if (cached) {
+            applyCmsData(cached);
+            appliedFromCache = true;
+          }
+        }
+      } catch (_) {}
     }
 
-    // Supabase Free Tier Protection:
+    // 2. Fetch fresh content if no cache, expired, or admin previewing
+    if (!appliedFromCache || isAdminPreview) {
+      try {
+        const row = await saasDB.getCmsContent();
+        if (row) {
+          applyCmsData(row);
+          try {
+            localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(row));
+            localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
+          } catch (_) {}
+        }
+      } catch (err) {
+        console.warn('SAAS CMS: Could not load content from Supabase.', err);
+      }
+    }
+
+    // 3. Supabase Free Tier Protection:
     // Only subscribe to live Realtime WebSocket if an admin is testing/previewing the site.
     // Anonymous public visitors load the latest data on page load, preserving the 200 concurrent connection limit.
     try {
-      const isAdminPreview = (typeof sessionStorage !== 'undefined') && (sessionStorage.getItem('saas_admin_auth') === 'true');
       if (isAdminPreview) {
         saasDB.subscribeToChanges('cms_content', async () => {
           try {
             const row = await saasDB.getCmsContent();
-            if (row) applyCmsData(row);
+            if (row) {
+              applyCmsData(row);
+              try {
+                localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(row));
+                localStorage.setItem(CMS_CACHE_TS_KEY, String(Date.now()));
+              } catch (_) {}
+            }
           } catch (_) {}
         });
       }

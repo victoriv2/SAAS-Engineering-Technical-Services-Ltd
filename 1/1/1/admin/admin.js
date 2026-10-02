@@ -305,6 +305,24 @@ function startAdminApp() {
 
   const saveCmsData = async (data) => {
     try {
+      // Supabase Free Tier Egress Guard:
+      // Measure payload size before uploading. If payload exceeds 450 KB, warn the admin.
+      const payloadString = JSON.stringify(data);
+      const payloadBytes = new Blob([payloadString]).size;
+      const payloadKb = Math.round(payloadBytes / 1024);
+
+      if (payloadKb > 450 && typeof showCustomDialog === 'function') {
+        const proceed = await showCustomDialog({
+          title: 'Large Media Payload Warning',
+          subtitle: 'Supabase Free Tier Egress Alert',
+          message: `Current CMS payload size is ${payloadKb} KB (recommended safe limit is 450 KB). This occurs when multiple high-resolution photos are uploaded as Base64. Every public visitor will download this payload, consuming your 5 GB monthly egress quota.\n\nTip: For best efficiency, keep gallery photos under 20 or paste external image links.\n\nDo you want to proceed and publish?`,
+          type: 'warning',
+          confirmText: 'Publish Anyway',
+          cancelText: 'Cancel & Review'
+        });
+        if (!proceed) return false;
+      }
+
       const db = getDb();
       if (db && typeof db.saveCmsContent === 'function') {
         await db.saveCmsContent(data);
@@ -314,9 +332,11 @@ function startAdminApp() {
       if (typeof renderStorageMetrics === 'function') {
         renderStorageMetrics(true);
       }
+      return true;
     } catch (err) {
       console.error('saveCmsData error:', err);
       showToast('Error saving changes. Please try again.');
+      return false;
     }
   };
 
@@ -1428,7 +1448,7 @@ function startAdminApp() {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const maxDim = 1000;
+        const maxDim = 850;
         let width = img.width;
         let height = img.height;
 
@@ -1448,12 +1468,12 @@ function startAdminApp() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        let quality = 0.75;
+        let quality = 0.70;
         let dataUrl = canvas.toDataURL('image/jpeg', quality);
         let approxKb = Math.round((dataUrl.length * 0.75) / 1024);
 
-        if (approxKb > 150) {
-          quality = 0.65;
+        if (approxKb > 95) {
+          quality = 0.58;
           dataUrl = canvas.toDataURL('image/jpeg', quality);
           approxKb = Math.round((dataUrl.length * 0.75) / 1024);
         }

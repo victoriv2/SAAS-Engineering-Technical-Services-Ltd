@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const AUTH_KEY = 'saas_admin_auth';
   const INQUIRIES_KEY = 'saas_inquiries';
   const CMS_KEY = 'saas_cms_data';
+  const ACTIVE_TAB_KEY = 'saas_admin_active_tab';
+  const INQUIRY_SORT_KEY = 'saas_admin_inquiry_sort';
+  const INQUIRY_STATUS_KEY = 'saas_admin_inquiry_status';
+  const GALLERY_FILTER_KEY = 'saas_admin_gallery_filter';
 
   // Default CMS Data
   const defaultCmsData = {
@@ -552,6 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (loginWrapper) loginWrapper.style.display = 'none';
       if (adminApp) adminApp.classList.add('active');
       initDashboard();
+      restoreActiveTab();
     } else {
       if (loginWrapper) loginWrapper.style.display = 'flex';
       if (adminApp) adminApp.classList.remove('active');
@@ -581,20 +586,48 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       sessionStorage.removeItem(AUTH_KEY);
+      sessionStorage.removeItem(ACTIVE_TAB_KEY);
+      localStorage.removeItem(ACTIVE_TAB_KEY);
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) {
+        window.location.hash = '';
+      }
       checkAuth();
     });
   }
 
   // =========================================================================
-  // Navigation Tabs Logic
+  // Navigation Tabs Logic (Persistent Across Page Refresh & URL Hash Sync)
   // =========================================================================
   const tabButtons = document.querySelectorAll('.nav-tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
 
-  const switchTab = (tabId) => {
+  function resolveTabIdFromHash() {
+    const rawHash = (window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
+    if (!rawHash) return null;
+    const candidateTab = rawHash.startsWith('tab-') ? rawHash : 'tab-' + rawHash;
+    const el = document.getElementById(candidateTab);
+    if (el && el.classList.contains('tab-pane')) {
+      return candidateTab;
+    }
+    const directEl = document.getElementById(rawHash);
+    if (directEl && directEl.classList.contains('tab-pane')) {
+      return rawHash;
+    }
+    return null;
+  }
+
+  function switchTab(tabId, updateUrl = true) {
+    if (!tabId) return;
+    const targetPane = document.getElementById(tabId);
+    if (!targetPane || !targetPane.classList.contains('tab-pane')) return;
+
+    let activeBtn = null;
     tabButtons.forEach(btn => {
       if (btn.getAttribute('data-tab') === tabId) {
         btn.classList.add('active');
+        activeBtn = btn;
       } else {
         btn.classList.remove('active');
       }
@@ -608,14 +641,88 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Invoke tab specific loaders
     if (tabId === 'tab-gallery') {
       renderAdminGalleryFilters();
       renderGallery();
-    }
-    if (tabId === 'tab-about') {
+    } else if (tabId === 'tab-about') {
       loadAboutSettings();
+    } else if (tabId === 'tab-contact') {
+      loadContactSettings();
+    } else if (tabId === 'tab-hero') {
+      loadHeroSettings();
+    } else if (tabId === 'tab-divisions') {
+      renderDivisions();
+    } else if (tabId === 'tab-inquiries') {
+      renderInquiries();
     }
-  };
+
+    // Scroll active button into view on mobile horizontal sidebar
+    if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+      try {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) {}
+    }
+
+    // Persist active tab across browser reloads
+    try {
+      sessionStorage.setItem(ACTIVE_TAB_KEY, tabId);
+      localStorage.setItem(ACTIVE_TAB_KEY, tabId);
+    } catch (e) {}
+
+    // Synchronize URL hash so direct links and browser refresh stay on this tab
+    if (updateUrl) {
+      const cleanHash = tabId.replace(/^tab-/, '');
+      const targetHash = '#' + cleanHash;
+      if (window.location.hash !== targetHash && window.location.hash !== '#' + tabId) {
+        try {
+          history.replaceState(null, '', targetHash);
+        } catch (e) {
+          try {
+            window.location.hash = targetHash;
+          } catch (err) {}
+        }
+      }
+    }
+  }
+
+  function restoreActiveTab() {
+    // 1. URL Hash has first priority (allows direct bookmarks, back/forward, refresh)
+    let targetTab = resolveTabIdFromHash();
+
+    // 2. Check storage if URL has no hash
+    if (!targetTab) {
+      try {
+        const stored = sessionStorage.getItem(ACTIVE_TAB_KEY) || localStorage.getItem(ACTIVE_TAB_KEY);
+        if (stored) {
+          const el = document.getElementById(stored);
+          if (el && el.classList.contains('tab-pane')) {
+            targetTab = stored;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 3. Fallback to overview tab
+    if (!targetTab) {
+      targetTab = 'tab-overview';
+    }
+
+    switchTab(targetTab, true);
+  }
+
+  // Listen to browser navigation (back/forward or hash change)
+  window.addEventListener('hashchange', () => {
+    const isAuth = sessionStorage.getItem(AUTH_KEY);
+    if (isAuth === 'true') {
+      const tabFromHash = resolveTabIdFromHash();
+      if (tabFromHash) {
+        switchTab(tabFromHash, false);
+      } else if (!window.location.hash || window.location.hash === '#') {
+        switchTab('tab-overview', false);
+      }
+    }
+  });
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -623,6 +730,14 @@ document.addEventListener('DOMContentLoaded', () => {
       switchTab(tabId);
     });
   });
+
+  const adminBrand = document.querySelector('.admin-brand');
+  if (adminBrand) {
+    adminBrand.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchTab('tab-overview');
+    });
+  }
 
   const viewAllInquiriesBtn = document.getElementById('viewAllInquiriesBtn');
   if (viewAllInquiriesBtn) {
@@ -658,10 +773,33 @@ document.addEventListener('DOMContentLoaded', () => {
   let inquirySortCriteria = 'newest';
   let inquiryStatusFilter = 'all';
 
+  try {
+    const savedSort = sessionStorage.getItem(INQUIRY_SORT_KEY);
+    if (savedSort) inquirySortCriteria = savedSort;
+    const savedStatus = sessionStorage.getItem(INQUIRY_STATUS_KEY);
+    if (savedStatus) inquiryStatusFilter = savedStatus;
+  } catch (e) {}
+
   const renderInquiries = (searchFilter = null, sortBy = null, statusFilter = null) => {
     if (searchFilter !== null) inquirySearchQuery = searchFilter;
-    if (sortBy !== null) inquirySortCriteria = sortBy;
-    if (statusFilter !== null) inquiryStatusFilter = statusFilter;
+    if (sortBy !== null) {
+      inquirySortCriteria = sortBy;
+      try { sessionStorage.setItem(INQUIRY_SORT_KEY, sortBy); } catch (e) {}
+    }
+    if (statusFilter !== null) {
+      inquiryStatusFilter = statusFilter;
+      try { sessionStorage.setItem(INQUIRY_STATUS_KEY, statusFilter); } catch (e) {}
+    }
+
+    // Keep dropdown selects synchronized with active sort and status
+    const sortSelectEl = document.getElementById('inquirySortSelect');
+    if (sortSelectEl && sortSelectEl.value !== inquirySortCriteria) {
+      sortSelectEl.value = inquirySortCriteria;
+    }
+    const statusSelectEl = document.getElementById('inquiryStatusFilterSelect');
+    if (statusSelectEl && statusSelectEl.value !== inquiryStatusFilter) {
+      statusSelectEl.value = inquiryStatusFilter;
+    }
 
     const list = getInquiries();
     const overviewTbody = document.getElementById('overviewInquiriesTableBody');
@@ -1457,6 +1595,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelGalleryModalBtn = document.getElementById('cancelGalleryModalBtn');
 
   let currentAdminGalleryFilter = 'all';
+  try {
+    const savedGalFilter = sessionStorage.getItem(GALLERY_FILTER_KEY);
+    if (savedGalFilter) currentAdminGalleryFilter = savedGalFilter;
+  } catch (e) {}
 
   const renderGallery = () => {
     const cms = getCmsData();
@@ -2248,6 +2390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentAdminGalleryFilter = btn.getAttribute('data-filter') || 'all';
+        try { sessionStorage.setItem(GALLERY_FILTER_KEY, currentAdminGalleryFilter); } catch (e) {}
         renderGallery();
       });
     });

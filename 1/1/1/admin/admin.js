@@ -1976,55 +1976,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
-  // Backup, Import & Reset Logic
+  // Reset to Factory Defaults Logic
   // =========================================================================
-  const exportJsonBtn = document.getElementById('exportDataJsonBtn');
-  const importJsonBtn = document.getElementById('importDataJsonBtn');
-  const importFileInput = document.getElementById('importFileInput');
   const resetDefaultsBtn = document.getElementById('resetDefaultsBtn');
-
-  if (exportJsonBtn) {
-    exportJsonBtn.addEventListener('click', () => {
-      const fullBackup = {
-        cms: getCmsData(),
-        inquiries: getInquiries(),
-        exportedAt: new Date().toISOString()
-      };
-      downloadFile(JSON.stringify(fullBackup, null, 2), `saas-engineering-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
-      showToast("Complete backup downloaded.");
-    });
-  }
-
-  if (importJsonBtn && importFileInput) {
-    importJsonBtn.addEventListener('click', () => importFileInput.click());
-
-    importFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const parsed = JSON.parse(event.target.result);
-          if (parsed.cms) {
-            localStorage.setItem(CMS_KEY, JSON.stringify(parsed.cms));
-            localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
-            if (cmsBroadcast) {
-              try { cmsBroadcast.postMessage({ type: 'CMS_UPDATED', data: parsed.cms }); } catch(e) {}
-            }
-          }
-          if (parsed.inquiries) {
-            localStorage.setItem(INQUIRIES_KEY, JSON.stringify(parsed.inquiries));
-          }
-          showToast("Data backup successfully restored.");
-          initDashboard();
-        } catch (err) {
-          window.customAlert("The selected file is not a valid SAAS Engineering backup file. Please check the JSON format and try again.", "Invalid Backup File", "danger");
-        }
-      };
-      reader.readAsText(file);
-    });
-  }
 
   if (resetDefaultsBtn) {
     resetDefaultsBtn.addEventListener('click', async () => {

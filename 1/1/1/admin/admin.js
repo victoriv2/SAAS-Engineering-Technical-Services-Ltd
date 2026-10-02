@@ -148,55 +148,55 @@ function startAdminApp() {
         title: "Pinacho CNC Lathe",
         category: "fabrication",
         subtitle: "Precision Machining",
-        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/pinacho_cnc_lathe_machining_equipment.jpeg"
+        img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/pinacho_cnc_lathe_machining_equipment.jpeg"
       },
       {
         title: "Slurry Pump Impellers",
         category: "dredging",
         subtitle: "Dredging Components",
-        img: "../../../../assets/images/3_Dredging_Services_and_Technical_Parts/dredge_slurry_pump_cast_impellers.jpeg"
+        img: "assets/images/3_Dredging_Services_and_Technical_Parts/dredge_slurry_pump_cast_impellers.jpeg"
       },
       {
         title: "Pipe Profile Bevel Cutter",
         category: "pipeline",
         subtitle: "Pipeline Tooling",
-        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/pipe_profile_cutter_beveling_tool.jpeg"
+        img: "assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/pipe_profile_cutter_beveling_tool.jpeg"
       },
       {
         title: "Pressure Testing Rig",
         category: "fabrication",
         subtitle: "Inspection & Calibration",
-        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/valve_pressure_testing_inspection_rig.jpeg"
+        img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/valve_pressure_testing_inspection_rig.jpeg"
       },
       {
         title: "Caterpillar Pipelayer",
         category: "equipment",
         subtitle: "Heavy Equipment Fleet",
-        img: "../../../../assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg"
+        img: "assets/images/4_Logistics_Haulage_and_Heavy_Equipment/caterpillar_sideboom_pipelayer_heavy_equipment.jpeg"
       },
       {
         title: "Volute Pump Casings",
         category: "dredging",
         subtitle: "Dredging Castings",
-        img: "../../../../assets/images/3_Dredging_Services_and_Technical_Parts/dredge_pump_volute_casings_machined.jpeg"
+        img: "assets/images/3_Dredging_Services_and_Technical_Parts/dredge_pump_volute_casings_machined.jpeg"
       },
       {
         title: "Pipeline Field Welding",
         category: "pipeline",
         subtitle: "Certified Welder Crew",
-        img: "../../../../assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_field_welding_operation.jpeg"
+        img: "assets/images/2_Oil_and_Gas_Surface_Pipeline_Offshore_Services/surface_pipeline_field_welding_operation.jpeg"
       },
       {
         title: "Pipefitting Training Rig",
         category: "fabrication",
         subtitle: "Technical Training Services",
-        img: "../../../../assets/images/1_Welding_Fabrication_Industrial_Services_Training/welding_and_pipefitting_training_board.jpeg"
+        img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/welding_and_pipefitting_training_board.jpeg"
       },
       {
         title: "Industrial Safety Helmets",
         category: "instrumentation",
         subtitle: "PPE & Procurement",
-        img: "../../../../assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg"
+        img: "assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg"
       }
     ]
   };
@@ -561,6 +561,7 @@ function startAdminApp() {
   };
 
   // Dismiss error alert on typing
+  const passwordInputEl = document.getElementById('adminPassword');
   if (passwordInputEl) {
     passwordInputEl.addEventListener('input', () => {
       const alertEl = document.getElementById('loginAlert');
@@ -2437,31 +2438,76 @@ function startAdminApp() {
   // =========================================================================
   // Reset to Factory Defaults Logic
   // =========================================================================
-  const resetDefaultsBtn = document.getElementById('resetDefaultsBtn');
+  window.resetToFactoryDefaults = async function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
 
-  if (resetDefaultsBtn) {
-    resetDefaultsBtn.addEventListener('click', async () => {
-      const confirmed = await window.customConfirm("Reset all website content, contact information, divisions, and gallery back to factory defaults? Any custom edits will be reverted.", {
-        title: "Reset to Factory Defaults",
-        confirmText: "Reset to Defaults",
-        isDanger: true
-      });
-      if (confirmed) {
-        try {
-          const db = getDb();
-          if (db && typeof db.saveCmsContent === 'function') {
-            await db.saveCmsContent(defaultCmsData);
-          }
-          _cmsCache = { ...defaultCmsData };
-          showToast("Reverted to factory default content — all devices updated.");
-          initDashboard();
-        } catch (err) {
-          console.error('Reset error:', err);
-          showToast('Error resetting content. Please try again.');
-        }
-      }
+    const confirmed = await window.customConfirm("Reset all website content, contact information, operational divisions, hero section, about narrative, and project gallery back to factory defaults? Any custom edits will be replaced with original corporate defaults.", {
+      title: "Reset to Factory Defaults",
+      subtitle: "System Restore",
+      confirmText: "Reset to Defaults",
+      cancelText: "Cancel",
+      isDanger: true
     });
+
+    if (!confirmed) return false;
+
+    const btn = document.getElementById('resetDefaultsBtn');
+    let originalHtml = '';
+    if (btn) {
+      originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align: middle; margin-right: 0.35rem; display: inline-block;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Restoring Defaults...`;
+    }
+
+    try {
+      // 1. Deep clone factory defaults to eliminate any reference leak
+      const freshDefaults = JSON.parse(JSON.stringify(defaultCmsData));
+
+      // 2. Persist to Supabase
+      const db = getDb();
+      if (db && typeof db.saveCmsContent === 'function') {
+        await db.saveCmsContent(freshDefaults);
+      }
+
+      // 3. Update local cache
+      _cmsCache = JSON.parse(JSON.stringify(freshDefaults));
+
+      // 4. Re-render all dashboard views with restored data
+      if (typeof initDashboard === 'function') {
+        await initDashboard();
+      }
+
+      showToast("Factory defaults restored successfully — all devices updated.");
+
+      // 5. Navigate to overview tab so user immediately sees the active restored data
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('tab-overview');
+      }
+    } catch (err) {
+      console.error('Reset error:', err);
+      showToast('Error resetting content. Please try again.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    }
+    return false;
+  };
+
+  const resetDefaultsBtn = document.getElementById('resetDefaultsBtn');
+  if (resetDefaultsBtn) {
+    resetDefaultsBtn.addEventListener('click', (e) => window.resetToFactoryDefaults(e));
   }
+
+  // Delegated document click listener guard
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('#resetDefaultsBtn');
+    if (target && typeof window.resetToFactoryDefaults === 'function') {
+      window.resetToFactoryDefaults(e);
+    }
+  });
 
   async function renderAdminGalleryFilters() {
     const filtersContainer = document.getElementById('adminGalleryFilters');

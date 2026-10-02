@@ -176,33 +176,37 @@ input[type="password"]::-ms-clear {
 .password-toggle-btn {
   position: absolute;
   right: 0.65rem;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0 !important;
+  bottom: 0 !important;
+  margin: auto 0 !important;
+  transform: none !important;
   background: transparent;
   border: none;
   width: 34px;
   height: 34px;
   padding: 0;
-  margin: 0;
   cursor: pointer;
   color: var(--gray-500);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
   z-index: 5;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.password-toggle-btn:hover {
-  color: var(--primary);
-  background-color: var(--gray-100);
-}
-
+.password-toggle-btn:hover,
+.password-toggle-btn:focus,
+.password-toggle-btn:focus-visible,
 .password-toggle-btn:active {
-  transform: translateY(-50%) scale(0.92);
+  color: var(--primary) !important;
+  background-color: var(--gray-100) !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  margin: auto 0 !important;
+  transform: none !important;
 }
 
 .password-toggle-btn:focus-visible {
@@ -1598,7 +1602,7 @@ input[type="password"]::-ms-clear {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  z-index: 10000;
+  z-index: 50000 !important;
   display: none;
   align-items: center;
   justify-content: center;

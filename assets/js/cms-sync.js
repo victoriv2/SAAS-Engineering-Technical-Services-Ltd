@@ -50,12 +50,51 @@
     // Auto-purge only legacy test 7 entries (preserve legitimate Division 07+)
     if (Array.isArray(cmsData.divisions)) {
       const origCount = cmsData.divisions.length;
+      let needsSave = false;
+
       cmsData.divisions = cmsData.divisions.filter(d => {
         const t = (d.title || '').trim().toLowerCase();
         const id = (d.id || '').trim().toLowerCase();
         return !(t === 'test 7' || id === 'test_7' || id === 'div_test_7');
       });
-      if (cmsData.divisions.length !== origCount) {
+
+      // Normalize any 'erererer' placeholder to 'test' so both admin and public view stay 100% identical
+      cmsData.divisions.forEach(d => {
+        if ((d.title || '').toLowerCase() === 'erererer') {
+          d.title = 'test';
+          needsSave = true;
+        }
+        if ((d.sub || '').toLowerCase() === 'erererer') {
+          d.sub = 'test';
+          needsSave = true;
+        }
+      });
+
+      // Ensure Division 06 (General Contracts & Procurement) is present in divisions
+      const hasProcurement = cmsData.divisions.some(d => d.id === 'general_contracts_procurement');
+      if (!hasProcurement) {
+        const manpowerIdx = cmsData.divisions.findIndex(d => d.id === 'manpower_instrumentation');
+        const insertIdx = manpowerIdx !== -1 ? manpowerIdx + 1 : 5;
+        cmsData.divisions.splice(insertIdx, 0, {
+          id: "general_contracts_procurement",
+          badge: "Division 06",
+          title: "General Contracts, Procurement & Industrial Safety Gadgets (PPE)",
+          sub: "General Contracts & Procurement",
+          desc: "Managing end-to-end industrial supply chain operations, technical materials procurement, and general contracting services. We supply certified Personal Protective Equipment (hard hats, face shields, hearing protection, fall protection harnesses, flame-retardant coveralls), safety instrumentation, office equipment, and engineering consumables.",
+          img: "assets/images/7_General_Contracts_Procurement_and_Safety_Gadgets/safety_helmet_hard_hat_ppe.jpg",
+          bullets: [
+            "Certified Personal Protective Equipment (PPE)",
+            "Fall Protection Harnesses & Safety Gear",
+            "Industrial Procurement & Supply Chain",
+            "Technical Parts & Hardware Supply",
+            "General Merchandise & Contracting",
+            "Warehouse Logistics & Fast Delivery"
+          ]
+        });
+        needsSave = true;
+      }
+
+      if (cmsData.divisions.length !== origCount || needsSave) {
         if (!cmsData.hero) cmsData.hero = {};
         cmsData.hero.stat1 = String(cmsData.divisions.length);
         try {
@@ -641,7 +680,7 @@
           }
           return {
             id: d.id,
-            name: d.title || 'Custom Division'
+            name: d.title || d.sub || 'Custom Division'
           };
         })
       ];

@@ -231,6 +231,31 @@ document.addEventListener('DOMContentLoaded', () => {
           const id = (d.id || '').trim().toLowerCase();
           return !(t === 'test 7' || id === 'test_7' || id === 'div_test_7');
         });
+
+        // Normalize any 'erererer' placeholder to 'test' to keep admin and user side 100% matched
+        cleanedDivs.forEach(d => {
+          if ((d.title || '').toLowerCase() === 'erererer') {
+            d.title = 'test';
+            needsSave = true;
+          }
+          if ((d.sub || '').toLowerCase() === 'erererer') {
+            d.sub = 'test';
+            needsSave = true;
+          }
+        });
+
+        // Ensure Division 06 (General Contracts & Procurement) is present in divisions
+        const hasProcurement = cleanedDivs.some(d => d.id === 'general_contracts_procurement');
+        if (!hasProcurement) {
+          const defProcurement = defaultCmsData.divisions.find(d => d.id === 'general_contracts_procurement');
+          if (defProcurement) {
+            const manpowerIdx = cleanedDivs.findIndex(d => d.id === 'manpower_instrumentation');
+            const insertIdx = manpowerIdx !== -1 ? manpowerIdx + 1 : 5;
+            cleanedDivs.splice(insertIdx, 0, { ...defProcurement });
+            needsSave = true;
+          }
+        }
+
         if (cleanedDivs.length !== parsed.divisions.length) {
           parsed.divisions = cleanedDivs;
           needsSave = true;
@@ -1458,7 +1483,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return {
         id: d.id,
         rawId: d.id,
-        name: d.sub || d.title || 'Custom Division',
+        name: d.title || d.sub || 'Custom Division',
         sub: d.desc || 'Operational Sector'
       };
     });
@@ -1753,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return {
         id: d.id,
         rawId: d.id,
-        name: d.sub || d.title || 'Custom Division'
+        name: d.title || d.sub || 'Custom Division'
       };
     });
 

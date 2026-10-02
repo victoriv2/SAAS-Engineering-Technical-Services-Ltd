@@ -164,23 +164,36 @@ svg {
   pointer-events: none;
 }
 
+/* Disable Microsoft Edge / IE native password reveal button so it doesn't collide with custom toggle */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
 .password-toggle-btn {
   position: absolute;
-  right: 0.75rem;
+  right: 0.65rem;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  padding: 0.35rem;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   margin: 0;
   cursor: pointer;
-  color: var(--gray-400);
+  color: var(--gray-500);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  transition: color 0.15s ease, background-color 0.15s ease;
-  z-index: 2;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+  z-index: 5;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .password-toggle-btn:hover {
@@ -188,9 +201,19 @@ svg {
   background-color: var(--gray-100);
 }
 
+.password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
 .password-toggle-btn:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
+}
+
+.password-toggle-btn svg {
+  display: block;
+  pointer-events: none;
+  flex-shrink: 0;
 }
 
 .form-control {

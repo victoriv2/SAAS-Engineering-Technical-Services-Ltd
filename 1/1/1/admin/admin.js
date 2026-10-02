@@ -521,25 +521,44 @@ function startAdminApp() {
   };
 
   // Password visibility toggle (Eye SVG)
-  const togglePassBtn = document.getElementById('togglePasswordVisibilityBtn');
-  const passwordInputEl = document.getElementById('adminPassword');
-  if (togglePassBtn && passwordInputEl) {
-    togglePassBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const isPassword = passwordInputEl.type === 'password';
-      passwordInputEl.type = isPassword ? 'text' : 'password';
-      const eyeOpen = togglePassBtn.querySelector('.eye-open-icon');
-      const eyeOff = togglePassBtn.querySelector('.eye-off-icon');
-      if (eyeOpen && eyeOff) {
-        eyeOpen.style.display = isPassword ? 'none' : 'block';
-        eyeOff.style.display = isPassword ? 'block' : 'none';
+  let _lastToggleTs = 0;
+  window.toggleAdminPasswordVisibility = function(e) {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const now = Date.now();
+    if (now - _lastToggleTs < 150) {
+      return false; // Prevent duplicate execution in same tick
+    }
+    _lastToggleTs = now;
+
+    const passInput = document.getElementById('adminPassword');
+    const toggleBtn = document.getElementById('togglePasswordVisibilityBtn');
+    if (!passInput) return false;
+
+    const isCurrentlyPassword = passInput.type === 'password';
+    passInput.type = isCurrentlyPassword ? 'text' : 'password';
+
+    if (toggleBtn) {
+      const eyeOpen = toggleBtn.querySelector('.eye-open-icon');
+      const eyeOff = toggleBtn.querySelector('.eye-off-icon');
+      if (eyeOpen) eyeOpen.style.display = isCurrentlyPassword ? 'none' : 'block';
+      if (eyeOff) eyeOff.style.display = isCurrentlyPassword ? 'block' : 'none';
+      toggleBtn.setAttribute('aria-label', isCurrentlyPassword ? 'Hide password' : 'Show password');
+      toggleBtn.setAttribute('title', isCurrentlyPassword ? 'Hide password' : 'Show password');
+    }
+
+    // Preserve focus and place cursor at end of input
+    try {
+      passInput.focus();
+      const len = passInput.value ? passInput.value.length : 0;
+      if (typeof passInput.setSelectionRange === 'function') {
+        passInput.setSelectionRange(len, len);
       }
-      togglePassBtn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
-      togglePassBtn.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
-      passwordInputEl.focus();
-    });
-  }
+    } catch (err) {}
+    return false;
+  };
 
   // Dismiss error alert on typing
   if (passwordInputEl) {

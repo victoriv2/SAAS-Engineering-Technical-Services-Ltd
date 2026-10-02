@@ -552,94 +552,93 @@ function startAdminApp() {
     });
   }
 
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      const passwordEl = document.getElementById('adminPassword');
-      const passwordInput = passwordEl ? passwordEl.value.trim() : '';
-      const loginAlert = document.getElementById('loginAlert');
-      const loginAlertText = document.getElementById('loginAlertText');
-      const submitBtn = document.getElementById('adminLoginSubmitBtn') || loginForm.querySelector('button[type="submit"]');
+  window.checkAuth = checkAuth;
 
-      if (!passwordInput) {
+  // Master Login Handler (callable directly via onclick, onsubmit, and onkeydown)
+  window.handleAdminLogin = async function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+
+    const passwordEl = document.getElementById('adminPassword');
+    const passwordInput = passwordEl ? passwordEl.value.trim() : '';
+    const loginAlert = document.getElementById('loginAlert');
+    const loginAlertText = document.getElementById('loginAlertText');
+    const submitBtn = document.getElementById('adminLoginSubmitBtn');
+
+    if (!passwordInput) {
+      if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
+      if (loginAlert) {
+        loginAlert.classList.add('show');
+        loginAlert.style.setProperty('display', 'flex', 'important');
+      }
+      if (passwordEl) passwordEl.focus();
+      return false;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying...';
+    }
+
+    try {
+      let isValid = false;
+
+      // 1. Direct master password check
+      if (passwordInput === 'admin123') {
+        isValid = true;
+      } else {
+        // 2. Check via Supabase client
+        const db = getDb();
+        if (db && typeof db.verifyAdminPassword === 'function') {
+          isValid = await db.verifyAdminPassword(passwordInput);
+        }
+      }
+
+      if (isValid) {
+        sessionStorage.setItem(AUTH_KEY, 'true');
+        if (loginAlert) {
+          loginAlert.classList.remove('show');
+          loginAlert.style.setProperty('display', 'none', 'important');
+        }
+        await checkAuth();
+      } else {
         if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
         if (loginAlert) {
           loginAlert.classList.add('show');
           loginAlert.style.setProperty('display', 'flex', 'important');
         }
-        if (passwordEl) passwordEl.focus();
-        return false;
+        if (passwordEl) {
+          passwordEl.select();
+          passwordEl.focus();
+        }
       }
-
+    } catch (err) {
+      console.error('Auth error:', err);
+      if (passwordInput === 'admin123') {
+        sessionStorage.setItem(AUTH_KEY, 'true');
+        if (loginAlert) {
+          loginAlert.classList.remove('show');
+          loginAlert.style.setProperty('display', 'none', 'important');
+        }
+        await checkAuth();
+      } else {
+        if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
+        if (loginAlert) {
+          loginAlert.classList.add('show');
+          loginAlert.style.setProperty('display', 'flex', 'important');
+        }
+      }
+    } finally {
       if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Verifying...';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `Access Admin Workspace <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`;
       }
+    }
+    return false;
+  };
 
-      try {
-        let isValid = false;
-
-        // 1. Direct master password check
-        if (passwordInput === 'admin123') {
-          isValid = true;
-        } else {
-          // 2. Check via Supabase client
-          const db = getDb();
-          if (db && typeof db.verifyAdminPassword === 'function') {
-            isValid = await db.verifyAdminPassword(passwordInput);
-          }
-        }
-
-        if (isValid) {
-          sessionStorage.setItem(AUTH_KEY, 'true');
-          if (loginAlert) {
-            loginAlert.classList.remove('show');
-            loginAlert.style.setProperty('display', 'none', 'important');
-          }
-          await checkAuth();
-        } else {
-          if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
-          if (loginAlert) {
-            loginAlert.classList.add('show');
-            loginAlert.style.setProperty('display', 'flex', 'important');
-          }
-          if (passwordEl) {
-            passwordEl.select();
-            passwordEl.focus();
-          }
-        }
-      } catch (err) {
-        console.error('Auth error:', err);
-        if (passwordInput === 'admin123') {
-          sessionStorage.setItem(AUTH_KEY, 'true');
-          if (loginAlert) {
-            loginAlert.classList.remove('show');
-            loginAlert.style.setProperty('display', 'none', 'important');
-          }
-          await checkAuth();
-        } else {
-          if (loginAlertText) loginAlertText.textContent = 'Wrong password. Please try again.';
-          if (loginAlert) {
-            loginAlert.classList.add('show');
-            loginAlert.style.setProperty('display', 'flex', 'important');
-          }
-        }
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `Access Admin Workspace <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`;
-        }
-      }
-      return false;
-    });
-  }
-
-  // Also bind direct click on submit button for instant response
-  const adminLoginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
-  if (adminLoginSubmitBtn && loginForm) {
-    adminLoginSubmitBtn.addEventListener('click', (e) => {
-      loginForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-    });
+  if (loginForm) {
+    loginForm.addEventListener('submit', window.handleAdminLogin);
   }
 
   if (logoutBtn) {
@@ -767,6 +766,7 @@ function startAdminApp() {
 
     switchTab(targetTab, true);
   }
+  window.restoreActiveTab = restoreActiveTab;
 
   // Listen to browser navigation (back/forward or hash change)
   window.addEventListener('hashchange', () => {
@@ -2496,6 +2496,7 @@ function startAdminApp() {
     loadHeroSettings();
     loadAboutSettings();
   };
+  window.initDashboard = initDashboard;
 
   // Utilities
   function escapeHtml(str) {

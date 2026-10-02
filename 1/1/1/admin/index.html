@@ -8,7 +8,46 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=2.8.4">
+  <link rel="stylesheet" href="admin.css?v=2.8.5">
+  <script>
+    // Early resilient login handler available instantly on page load
+    window.handleAdminLogin = function(e) {
+      if (e) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+      }
+      var passEl = document.getElementById('adminPassword');
+      var pass = (passEl ? passEl.value : '').trim();
+      var alertEl = document.getElementById('loginAlert');
+      var alertText = document.getElementById('loginAlertText');
+
+      if (pass === 'admin123') {
+        sessionStorage.setItem('saas_admin_auth', 'true');
+        var wrap = document.getElementById('loginWrapper');
+        var app = document.getElementById('adminApp');
+        if (wrap) wrap.style.setProperty('display', 'none', 'important');
+        if (app) {
+          app.classList.add('active');
+          app.style.setProperty('display', 'flex', 'important');
+        }
+        window.scrollTo(0, 0);
+        if (typeof window.initDashboard === 'function') window.initDashboard();
+        if (typeof window.restoreActiveTab === 'function') window.restoreActiveTab();
+        return false;
+      } else {
+        if (alertText) alertText.textContent = 'Wrong password. Please try again.';
+        if (alertEl) {
+          alertEl.classList.add('show');
+          alertEl.style.setProperty('display', 'flex', 'important');
+        }
+        if (passEl) {
+          passEl.select();
+          passEl.focus();
+        }
+        return false;
+      }
+    };
+  </script>
 </head>
 <body>
 
@@ -29,12 +68,12 @@
           <span id="loginAlertText">Wrong password. Please try again.</span>
         </div>
 
-        <form id="adminLoginForm" onsubmit="return false;">
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event); return false;">
           <div class="form-group">
             <label class="form-label" for="adminUsername">Username</label>
             <div class="input-with-icon">
               <svg class="input-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-              <input type="text" id="adminUsername" class="form-control" placeholder="Enter username" autocomplete="username">
+              <input type="text" id="adminUsername" class="form-control" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('adminPassword').focus();}">
             </div>
           </div>
 
@@ -42,7 +81,7 @@
             <label class="form-label" for="adminPassword">Password</label>
             <div class="input-with-icon">
               <svg class="input-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-              <input type="password" id="adminPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password" style="padding-right: 2.75rem;">
+              <input type="password" id="adminPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password" style="padding-right: 2.75rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();handleAdminLogin(event);}">
               <button type="button" class="password-toggle-btn" id="togglePasswordVisibilityBtn" aria-label="Show password" title="Show/Hide password">
                 <!-- Eye Open (when password is hidden) -->
                 <svg class="eye-open-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -56,7 +95,7 @@
             </div>
           </div>
 
-          <button type="submit" id="adminLoginSubmitBtn" class="btn btn-accent btn-block" style="padding: 0.85rem; margin-top: 0.5rem;">
+          <button type="button" id="adminLoginSubmitBtn" onclick="handleAdminLogin(event)" class="btn btn-accent btn-block" style="padding: 0.85rem; margin-top: 0.5rem;">
             Access Admin Workspace
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
           </button>

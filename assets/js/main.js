@@ -437,10 +437,42 @@ document.addEventListener('DOMContentLoaded', () => {
       // Record timestamp to enforce cooldown
       sessionStorage.setItem(LAST_SUBMIT_KEY, String(Date.now()));
 
-      // Save to Supabase — visible across all devices instantly
+      // 1. Save to Supabase — visible across all devices in Admin Panel instantly
       saasDB.insertInquiry(newInquiry).catch(err => {
         console.error('Could not save inquiry to Supabase:', err);
       });
+
+      // 2. Dispatch automated email notification to the company mailbox
+      try {
+        const companyEmail = (window.__saasCmsData?.contact?.email || 'contact@saas-engineering-technical-services.com').trim();
+        const emailPayload = {
+          _subject: `New Technical Quote Inquiry: ${newInquiry.name} (${newInquiry.division})`,
+          _replyto: newInquiry.email,
+          _template: 'table',
+          _captcha: 'false',
+          'Inquiry Reference': newInquiry.id,
+          'Client Name': newInquiry.name,
+          'Company / Organization': newInquiry.organization || 'Individual',
+          'Email Address': newInquiry.email,
+          'Phone Number': newInquiry.phone || 'Not provided',
+          'Service Division': newInquiry.division,
+          'Project Scope & Specifications': newInquiry.scope || 'No details provided',
+          'Submitted Date': new Date().toLocaleString()
+        };
+
+        fetch(`https://formsubmit.co/ajax/${encodeURIComponent(companyEmail)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(emailPayload)
+        }).catch(err => {
+          console.warn('Email dispatch background notification notice:', err);
+        });
+      } catch (err) {
+        console.warn('Email dispatch error:', err);
+      }
 
       // Reset form and show success
       setTimeout(() => {

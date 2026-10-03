@@ -450,6 +450,20 @@
             </div>
           </div>
 
+          <!-- Dual Routing Notification Banner -->
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #2563eb; color: #fff;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </span>
+              <div>
+                <strong style="color: #1e3a8a; font-size: 0.9rem; display: block;">Dual-Routing Active: Admin Portal & Company Email</strong>
+                <span style="color: #1d4ed8; font-size: 0.8rem;">Every quote submitted on the website is saved to this database CRM and automatically forwarded to <strong id="inquiryRoutingEmailLabel">contact@saas-engineering-technical-services.com</strong>.</span>
+              </div>
+            </div>
+            <a href="javascript:void(0)" onclick="if(typeof switchTab==='function')switchTab('tab-contact');" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">Change Notification Email</a>
+          </div>
+
           <div class="admin-card">
             <div class="card-header">
               <h3>Client Consultations Inbox</h3>
@@ -541,8 +555,9 @@
 
                 <div class="form-grid">
                   <div class="form-group">
-                    <label class="form-label" for="settingEmail">Official Inquiries Email</label>
+                    <label class="form-label" for="settingEmail">Official Inquiries & Notification Email</label>
                     <input type="email" id="settingEmail" class="form-control no-icon" value="contact@saas-engineering-technical-services.com" required>
+                    <small style="color: var(--gray-500); display: block; margin-top: 0.25rem;">New quote consultations submitted on the public website are automatically dispatched to this email address and saved in your Admin CRM.</small>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="settingHours">Operational Hours</label>

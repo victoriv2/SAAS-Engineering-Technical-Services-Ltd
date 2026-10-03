@@ -1357,17 +1357,23 @@ function startAdminApp() {
     document.getElementById('settingLinkedin').value = c.linkedin || '';
     document.getElementById('settingTwitter').value = c.twitter || '';
     document.getElementById('settingInstagram').value = c.instagram || '';
+
+    const routingLabel = document.getElementById('inquiryRoutingEmailLabel');
+    if (routingLabel && c.email) {
+      routingLabel.textContent = c.email;
+    }
   };
 
   if (contactForm) {
     contactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const cms = await getCmsData();
+      const updatedEmail = document.getElementById('settingEmail').value.trim();
       cms.contact = {
         address: document.getElementById('settingAddress').value.trim(),
         phonePrimary: document.getElementById('settingPhonePrimary').value.trim(),
         phoneAlt: document.getElementById('settingPhoneAlt').value.trim(),
-        email: document.getElementById('settingEmail').value.trim(),
+        email: updatedEmail,
         hours: document.getElementById('settingHours').value.trim(),
         whatsapp: document.getElementById('settingWhatsapp').value.trim(),
         facebook: document.getElementById('settingFacebook').value.trim(),
@@ -1375,7 +1381,13 @@ function startAdminApp() {
         twitter: document.getElementById('settingTwitter').value.trim(),
         instagram: document.getElementById('settingInstagram').value.trim()
       };
-      await saveCmsData(cms);
+      const saved = await saveCmsData(cms);
+      if (saved) {
+        const routingLabel = document.getElementById('inquiryRoutingEmailLabel');
+        if (routingLabel && updatedEmail) {
+          routingLabel.textContent = updatedEmail;
+        }
+      }
     });
   }
 

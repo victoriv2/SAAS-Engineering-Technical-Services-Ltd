@@ -72,6 +72,7 @@
   // =========================================================================
   function applyCmsData(cmsData) {
     if (!cmsData) return;
+    try { window.__saasCmsData = cmsData; } catch (_) {}
 
     // =========================================================================
     // 1. Contact Information & Social Media

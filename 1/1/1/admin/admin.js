@@ -48,6 +48,9 @@ function startAdminApp() {
         "Fast Field Mobilization"
       ],
       img: "assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg",
+      images: [
+        "assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg"
+      ],
       badgeTitle: "Modern Facility",
       badgeDesc: "Fully equipped machine shop with CNC lathes, milling tools, and automated cutting rigs."
     },
@@ -2250,130 +2253,131 @@ function startAdminApp() {
   }
 
   // =========================================================================
-  // About Company & Facility Settings
+  // About Company & Facility Settings (Up to 3 Photos)
   // =========================================================================
   const aboutForm = document.getElementById('aboutSettingsForm');
-  const aboutFileInput = document.getElementById('aboutFileInput');
-  const aboutDropzone = document.getElementById('aboutDropzone');
-  const aboutPreviewCard = document.getElementById('aboutPreviewCard');
-  const aboutPreviewImg = document.getElementById('aboutPreviewImg');
-  const aboutPreviewFilename = document.getElementById('aboutPreviewFilename');
-  const changeAboutPhotoBtn = document.getElementById('changeAboutPhotoBtn');
-  const removeAboutPhotoBtn = document.getElementById('removeAboutPhotoBtn');
-  const toggleAboutUrlBtn = document.getElementById('toggleAboutUrlBtn');
-  const aboutUrlInputContainer = document.getElementById('aboutUrlInputContainer');
-  const aboutManualUrlInput = document.getElementById('aboutManualUrlInput');
-  const aboutImgInput = document.getElementById('settingAboutImg');
 
-  const processAndPreviewAboutImage = (file) => {
-    optimizeImageForCloud(file, ({ dataUrl, displayName }) => {
-      if (aboutImgInput) aboutImgInput.value = dataUrl;
-      if (aboutPreviewImg) {
-        aboutPreviewImg.src = dataUrl;
-        aboutPreviewImg.onerror = function() {
-          this.src = '../../../../logo/logo.png';
-        };
-      }
-      if (aboutPreviewFilename) aboutPreviewFilename.textContent = displayName;
-      if (aboutDropzone) aboutDropzone.style.display = 'none';
-      if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
-    });
-  };
-
-  const resetAboutUploadState = (currentImg = '') => {
-    if (aboutFileInput) aboutFileInput.value = '';
-    if (aboutManualUrlInput) aboutManualUrlInput.value = '';
-    if (aboutUrlInputContainer) aboutUrlInputContainer.style.display = 'none';
-    if (toggleAboutUrlBtn) toggleAboutUrlBtn.textContent = 'Or paste image URL instead';
-
-    if (currentImg && currentImg !== 'none') {
-      if (aboutImgInput) aboutImgInput.value = currentImg;
-      if (aboutPreviewImg) {
-        aboutPreviewImg.src = toAdminAssetPath(currentImg);
-        aboutPreviewImg.onerror = function() {
-          this.src = '../../../../logo/logo.png';
-        };
-      }
-      if (aboutPreviewFilename) aboutPreviewFilename.textContent = 'Current Facility Photo';
-      if (aboutDropzone) aboutDropzone.style.display = 'none';
-      if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
+  const updateFacilityPhotosCountBadge = () => {
+    const badge = document.getElementById('facilityPhotosCountBadge');
+    if (!badge) return;
+    let count = 0;
+    for (let i = 1; i <= 3; i++) {
+      const val = document.getElementById(`settingAboutImg${i}`)?.value?.trim();
+      if (val && val !== 'none') count++;
+    }
+    badge.textContent = `${count} / 3 Photos Added`;
+    if (count > 0) {
+      badge.className = 'badge badge-primary';
     } else {
-      if (aboutImgInput) aboutImgInput.value = 'none';
-      if (aboutPreviewImg) aboutPreviewImg.src = '';
-      if (aboutPreviewCard) aboutPreviewCard.classList.remove('show');
-      if (aboutDropzone) aboutDropzone.style.display = 'flex';
+      badge.className = 'badge badge-secondary';
     }
   };
 
-  if (aboutDropzone && aboutFileInput) {
-    aboutDropzone.addEventListener('click', () => aboutFileInput.click());
-    aboutDropzone.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        aboutFileInput.click();
+  const setupFacilitySlot = (slotNum) => {
+    const fileInput = document.getElementById(`aboutFileInput${slotNum}`);
+    const dropzone = document.getElementById(`aboutDropzone${slotNum}`);
+    const previewCard = document.getElementById(`aboutPreviewCard${slotNum}`);
+    const previewImg = document.getElementById(`aboutPreviewImg${slotNum}`);
+    const previewFilename = document.getElementById(`aboutPreviewFilename${slotNum}`);
+    const changeBtn = document.getElementById(`changeAboutPhotoBtn${slotNum}`);
+    const removeBtn = document.getElementById(`removeAboutPhotoBtn${slotNum}`);
+    const toggleUrlBtn = document.getElementById(`toggleAboutUrlBtn${slotNum}`);
+    const urlContainer = document.getElementById(`aboutUrlInputContainer${slotNum}`);
+    const urlInput = document.getElementById(`aboutManualUrlInput${slotNum}`);
+    const hiddenImgInput = document.getElementById(`settingAboutImg${slotNum}`);
+
+    const setSlotImage = (dataUrl, filename = '') => {
+      if (hiddenImgInput) hiddenImgInput.value = dataUrl;
+      if (previewImg) {
+        previewImg.src = toAdminAssetPath(dataUrl);
+        previewImg.onerror = function() { this.src = '../../../../logo/logo.png'; };
       }
-    });
+      if (previewFilename) previewFilename.textContent = filename || (dataUrl.startsWith('data:') ? `photo_${slotNum}.jpg` : dataUrl.slice(0, 24) + '...');
+      if (dropzone) dropzone.style.display = 'none';
+      if (previewCard) previewCard.classList.add('show');
+      updateFacilityPhotosCountBadge();
+    };
 
-    aboutDropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      aboutDropzone.classList.add('dragover');
-    });
+    const clearSlotImage = () => {
+      if (hiddenImgInput) hiddenImgInput.value = 'none';
+      if (previewImg) previewImg.src = '';
+      if (fileInput) fileInput.value = '';
+      if (urlInput) urlInput.value = '';
+      if (urlContainer) urlContainer.style.display = 'none';
+      if (toggleUrlBtn) toggleUrlBtn.textContent = 'Or paste image URL';
+      if (previewCard) previewCard.classList.remove('show');
+      if (dropzone) dropzone.style.display = 'flex';
+      updateFacilityPhotosCountBadge();
+    };
 
-    aboutDropzone.addEventListener('dragleave', () => {
-      aboutDropzone.classList.remove('dragover');
-    });
-
-    aboutDropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      aboutDropzone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        processAndPreviewAboutImage(e.dataTransfer.files[0]);
-      }
-    });
-  }
-
-  if (aboutFileInput) {
-    aboutFileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files.length > 0) {
-        processAndPreviewAboutImage(e.target.files[0]);
-      }
-    });
-  }
-
-  if (changeAboutPhotoBtn && aboutFileInput) {
-    changeAboutPhotoBtn.addEventListener('click', () => aboutFileInput.click());
-  }
-
-  if (removeAboutPhotoBtn) {
-    removeAboutPhotoBtn.addEventListener('click', () => {
-      resetAboutUploadState('none');
-      showToast("Facility photo removed. Click 'Save About Section' to update.");
-    });
-  }
-
-  if (toggleAboutUrlBtn && aboutUrlInputContainer && aboutManualUrlInput) {
-    toggleAboutUrlBtn.addEventListener('click', () => {
-      const isVisible = aboutUrlInputContainer.style.display === 'block';
-      aboutUrlInputContainer.style.display = isVisible ? 'none' : 'block';
-      toggleAboutUrlBtn.textContent = isVisible ? 'Or paste image URL instead' : 'Hide image URL input';
-    });
-
-    aboutManualUrlInput.addEventListener('input', (e) => {
-      const url = e.target.value.trim();
-      if (url) {
-        if (aboutImgInput) aboutImgInput.value = url;
-        if (aboutPreviewImg) {
-          aboutPreviewImg.src = toAdminAssetPath(url);
-          aboutPreviewImg.onerror = function() {
-            this.src = '../../../../logo/logo.png';
-          };
+    if (dropzone && fileInput) {
+      dropzone.addEventListener('click', () => fileInput.click());
+      dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
         }
-        if (aboutPreviewFilename) aboutPreviewFilename.textContent = url.slice(0, 30) + '...';
-        if (aboutDropzone) aboutDropzone.style.display = 'none';
-        if (aboutPreviewCard) aboutPreviewCard.classList.add('show');
-      }
-    });
-  }
+      });
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+      dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          optimizeImageForCloud(e.dataTransfer.files[0], ({ dataUrl, displayName }) => {
+            setSlotImage(dataUrl, displayName);
+          });
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          optimizeImageForCloud(e.target.files[0], ({ dataUrl, displayName }) => {
+            setSlotImage(dataUrl, displayName);
+          });
+        }
+      });
+    }
+
+    if (changeBtn && fileInput) {
+      changeBtn.addEventListener('click', () => fileInput.click());
+    }
+
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        clearSlotImage();
+        showToast(`Showcase photo ${slotNum} removed. Click 'Save About Section' to update.`);
+      });
+    }
+
+    if (toggleUrlBtn && urlContainer && urlInput) {
+      toggleUrlBtn.addEventListener('click', () => {
+        const isVisible = urlContainer.style.display === 'block';
+        urlContainer.style.display = isVisible ? 'none' : 'block';
+        toggleUrlBtn.textContent = isVisible ? 'Or paste image URL' : 'Hide image URL input';
+      });
+
+      urlInput.addEventListener('input', (e) => {
+        const url = e.target.value.trim();
+        if (url) {
+          setSlotImage(url, url.slice(0, 24) + '...');
+        }
+      });
+    }
+
+    return { setSlotImage, clearSlotImage };
+  };
+
+  const facilitySlots = {
+    1: setupFacilitySlot(1),
+    2: setupFacilitySlot(2),
+    3: setupFacilitySlot(3)
+  };
 
   const loadAboutSettings = async () => {
     const cms = await getCmsData();
@@ -2394,8 +2398,23 @@ function startAdminApp() {
     if (badgeTitleEl) badgeTitleEl.value = ab.badgeTitle || 'Modern Facility';
     if (badgeDescEl) badgeDescEl.value = ab.badgeDesc || '';
 
-    const currentImg = (ab.img && ab.img !== 'none') ? ab.img : 'none';
-    resetAboutUploadState(currentImg);
+    // Load facility photos into up to 3 slots
+    let images = [];
+    if (Array.isArray(ab.images) && ab.images.length > 0) {
+      images = ab.images.filter(x => x && x !== 'none');
+    } else if (ab.img && ab.img !== 'none') {
+      images = [ab.img];
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      const slotImg = images[i - 1];
+      if (slotImg && slotImg !== 'none') {
+        facilitySlots[i].setSlotImage(slotImg, `Showcase Photo ${i}`);
+      } else {
+        facilitySlots[i].clearSlotImage();
+      }
+    }
+    updateFacilityPhotosCountBadge();
   };
 
   if (aboutForm) {
@@ -2407,8 +2426,19 @@ function startAdminApp() {
         ? bulletsRaw.split('\n').map(b => b.trim()).filter(Boolean)
         : defaultCmsData.about.bullets;
 
-      const rawImgVal = document.getElementById('settingAboutImg')?.value?.trim() || '';
-      const imgVal = rawImgVal === 'none' ? 'none' : (rawImgVal || 'none');
+      const images = [];
+      for (let i = 1; i <= 3; i++) {
+        const val = document.getElementById(`settingAboutImg${i}`)?.value?.trim();
+        if (val && val !== 'none') {
+          images.push(val);
+        }
+      }
+
+      const primaryImg = images.length > 0 ? images[0] : 'none';
+
+      // Keep hidden settingAboutImg in sync for backward compatibility
+      const legacyHiddenInput = document.getElementById('settingAboutImg');
+      if (legacyHiddenInput) legacyHiddenInput.value = primaryImg;
 
       cms.about = {
         badge: document.getElementById('settingAboutBadge')?.value?.trim() || 'About Our Company',
@@ -2416,13 +2446,14 @@ function startAdminApp() {
         p1: document.getElementById('settingAboutP1')?.value?.trim() || '',
         p2: document.getElementById('settingAboutP2')?.value?.trim() || '',
         bullets: bulletsArr,
-        img: imgVal,
+        img: primaryImg,
+        images: images.slice(0, 3),
         badgeTitle: document.getElementById('settingAboutBadgeTitle')?.value?.trim() || 'Modern Facility',
         badgeDesc: document.getElementById('settingAboutBadgeDesc')?.value?.trim() || ''
       };
 
       await saveCmsData(cms);
-      showToast("About Company section saved and synchronized successfully.");
+      showToast("About Company & Facility Photos saved and synchronized successfully.");
     });
   }
 
@@ -2619,7 +2650,13 @@ function startAdminApp() {
       else linkedCount++;
     };
 
-    if (cms.about && cms.about.img) checkImg(cms.about.img);
+    if (cms.about) {
+      if (Array.isArray(cms.about.images)) {
+        cms.about.images.forEach(img => checkImg(img));
+      } else if (cms.about.img) {
+        checkImg(cms.about.img);
+      }
+    }
     if (Array.isArray(cms.divisions)) cms.divisions.forEach(d => checkImg(d.img));
     if (Array.isArray(cms.gallery)) cms.gallery.forEach(g => checkImg(g.img));
 

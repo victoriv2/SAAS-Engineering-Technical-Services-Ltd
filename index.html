@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="assets/css/styles.css?v=2.7.9">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2.8.0">
 
   <!-- Supabase Client (must load before cms-sync.js and main.js) -->
   <script src="assets/js/supabase-client.js"></script>
@@ -148,8 +148,28 @@
     <section class="section section-bg-light" id="about">
       <div class="container">
         <div class="about-grid">
-          <div class="about-image-wrapper">
-            <img src="assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg" alt="SAAS Engineering Fabrication Machine Shop Facility" class="about-main-img" id="aboutMainImg">
+          <div class="about-image-wrapper" id="aboutSliderWrapper">
+            <div class="about-slider-container" id="aboutSliderContainer">
+              <div class="about-slide active" data-index="0">
+                <img src="assets/images/1_Welding_Fabrication_Industrial_Services_Training/industrial_fabrication_machine_shop_facility.jpeg" alt="SAAS Engineering Fabrication Machine Shop Facility" class="about-main-img" id="aboutMainImg">
+              </div>
+            </div>
+
+            <!-- Showcase Slider Controls (active when multiple photos exist) -->
+            <button type="button" class="about-slider-btn prev" id="aboutSlidePrev" aria-label="Previous Photo" style="display: none;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <button type="button" class="about-slider-btn next" id="aboutSlideNext" aria-label="Next Photo" style="display: none;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            </button>
+
+            <div class="about-slider-counter" id="aboutSliderCounter" style="display: none;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              <span id="aboutSlideCountText">1 / 1</span>
+            </div>
+
+            <div class="about-slider-dots" id="aboutSliderDots" style="display: none;"></div>
+
             <div class="about-badge-card" id="aboutBadgeCard">
               <h4 id="aboutBadgeTitle">Modern Facility</h4>
               <p id="aboutBadgeDesc">Fully equipped machine shop with CNC lathes, milling tools, and automated cutting rigs.</p>
@@ -981,6 +1001,6 @@
 
   <!-- Scripts -->
   <script src="assets/js/main.js?v=2.7.8"></script>
-  <script src="assets/js/cms-sync.js?v=2.7.9"></script>
+  <script src="assets/js/cms-sync.js?v=2.8.0"></script>
 </body>
 </html>

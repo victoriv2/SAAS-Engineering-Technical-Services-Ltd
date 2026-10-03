@@ -445,30 +445,30 @@ document.addEventListener('DOMContentLoaded', () => {
       // 2. Dispatch automated email notification to the company mailbox
       try {
         const companyEmail = (window.__saasCmsData?.contact?.email || 'contact@saas-engineering-technical-services.com').trim();
-        const emailPayload = {
-          _subject: `New Technical Quote Inquiry: ${newInquiry.name} (${newInquiry.division})`,
-          _replyto: newInquiry.email,
-          _template: 'table',
-          _captcha: 'false',
-          'Inquiry Reference': newInquiry.id,
-          'Client Name': newInquiry.name,
-          'Company / Organization': newInquiry.organization || 'Individual',
-          'Email Address': newInquiry.email,
-          'Phone Number': newInquiry.phone || 'Not provided',
-          'Service Division': newInquiry.division,
-          'Project Scope & Specifications': newInquiry.scope || 'No details provided',
-          'Submitted Date': new Date().toLocaleString()
-        };
+        const fd = new FormData();
+        fd.append('_subject', `New Technical Quote Inquiry: ${newInquiry.name} (${newInquiry.division})`);
+        fd.append('_replyto', newInquiry.email || '');
+        fd.append('_template', 'table');
+        fd.append('_captcha', 'false');
+        fd.append('Inquiry Reference', newInquiry.id);
+        fd.append('Client Name', newInquiry.name);
+        fd.append('Company / Organization', newInquiry.organization || 'Individual');
+        fd.append('Email Address', newInquiry.email || 'Not provided');
+        fd.append('Phone Number', newInquiry.phone || 'Not provided');
+        fd.append('Service Division', newInquiry.division);
+        fd.append('Project Scope & Specifications', newInquiry.scope || 'No details provided');
+        fd.append('Submitted Date', new Date().toLocaleString());
 
         fetch(`https://formsubmit.co/ajax/${encodeURIComponent(companyEmail)}`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify(emailPayload)
+          body: fd
+        }).then(res => res.json()).then(data => {
+          console.log('[Email Dispatch] Delivery status:', data);
         }).catch(err => {
-          console.warn('Email dispatch background notification notice:', err);
+          console.warn('[Email Dispatch] Background notice:', err);
         });
       } catch (err) {
         console.warn('Email dispatch error:', err);

@@ -19,7 +19,7 @@ function startAdminApp() {
       address: "No 4, Salvation Avenue Off Rumuocholu, Avhua Pipeline, Eneka, Port Harcourt, Rivers State, Nigeria",
       phonePrimary: "09020379011",
       phoneAlt: "+234 902 037 9011",
-      email: "contact@saasengineeringtechnicalservicesltd.com",
+      email: "contact@saas-engineering-technical-services.com",
       hours: "Monday - Friday: 8:00 AM - 6:00 PM | Saturday: 9:00 AM - 3:00 PM",
       whatsapp: "2349020379011",
       facebook: "https://facebook.com",

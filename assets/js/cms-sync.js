@@ -28,46 +28,9 @@
       .replace(/'/g, '&#039;');
   }
 
-  let _aboutSliderTimer = null;
-  let _currentAboutSlide = 0;
-
-  function goToAboutSlide(index, total) {
-    if (total <= 1) return;
-    _currentAboutSlide = (index + total) % total;
-
-    const slides = document.querySelectorAll('#aboutSliderContainer .about-slide');
-    slides.forEach((slide, idx) => {
-      if (idx === _currentAboutSlide) {
-        slide.classList.add('active');
-      } else {
-        slide.classList.remove('active');
-      }
-    });
-
-    const dots = document.querySelectorAll('#aboutSliderDots .about-dot');
-    dots.forEach((dot, idx) => {
-      if (idx === _currentAboutSlide) {
-        dot.classList.add('active');
-      } else {
-        dot.classList.remove('active');
-      }
-    });
-
-    const counterText = document.getElementById('aboutSlideCountText');
-    if (counterText) {
-      counterText.textContent = `${_currentAboutSlide + 1} / ${total}`;
-    }
-  }
-
   function renderAboutFacilityShowcase(rawImages) {
-    const sliderContainer = document.getElementById('aboutSliderContainer');
-    const prevBtn = document.getElementById('aboutSlidePrev');
-    const nextBtn = document.getElementById('aboutSlideNext');
-    const dotsContainer = document.getElementById('aboutSliderDots');
-    const counterBadge = document.getElementById('aboutSliderCounter');
-    const counterText = document.getElementById('aboutSlideCountText');
+    const listContainer = document.getElementById('aboutImagesList');
     const mainImgEl = document.getElementById('aboutMainImg');
-    const wrapper = document.getElementById('aboutSliderWrapper');
 
     let images = Array.isArray(rawImages) ? rawImages.filter(x => x && x !== 'none') : [];
     if (images.length === 0) {
@@ -79,11 +42,20 @@
       return (img.startsWith('data:') || img.startsWith('http')) ? img : img.replace(/^(\.\.\/)+/, '');
     });
 
-    if (sliderContainer) {
-      sliderContainer.innerHTML = normalizedImages.map((src, idx) => {
+    if (listContainer) {
+      if (normalizedImages.length > 1) {
+        listContainer.classList.add('multi-photos');
+      } else {
+        listContainer.classList.remove('multi-photos');
+      }
+
+      listContainer.innerHTML = normalizedImages.map((src, idx) => {
         const isLogo = src.includes('logo.png');
+        const numStr = String(idx + 1).padStart(2, '0');
+        const tagHtml = normalizedImages.length > 1 ? `<span class="about-photo-number-tag">${numStr}</span>` : '';
         return `
-          <div class="about-slide ${idx === 0 ? 'active' : ''}" data-index="${idx}">
+          <div class="about-photo-card">
+            ${tagHtml}
             <img src="${src}" alt="SAAS Engineering Facility Photo ${idx + 1}" class="about-main-img"
                  style="${isLogo ? 'object-fit: contain; padding: 3rem; background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);' : ''}"
                  onerror="this.src='logo/logo.png'">
@@ -92,98 +64,6 @@
       }).join('');
     } else if (mainImgEl) {
       mainImgEl.src = normalizedImages[0];
-    }
-
-    _currentAboutSlide = 0;
-
-    if (normalizedImages.length > 1) {
-      if (prevBtn) prevBtn.style.display = 'flex';
-      if (nextBtn) nextBtn.style.display = 'flex';
-      if (counterBadge) counterBadge.style.display = 'inline-flex';
-      if (counterText) counterText.textContent = `1 / ${normalizedImages.length}`;
-
-      if (dotsContainer) {
-        dotsContainer.style.display = 'flex';
-        dotsContainer.innerHTML = normalizedImages.map((_, idx) => `
-          <button type="button" class="about-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}" aria-label="Show facility photo ${idx + 1}"></button>
-        `).join('');
-
-        dotsContainer.querySelectorAll('.about-dot').forEach(dot => {
-          dot.onclick = (e) => {
-            e.stopPropagation();
-            const idx = parseInt(dot.getAttribute('data-index'), 10);
-            goToAboutSlide(idx, normalizedImages.length);
-          };
-        });
-      }
-
-      if (prevBtn) {
-        prevBtn.onclick = (e) => {
-          e.stopPropagation();
-          goToAboutSlide(_currentAboutSlide - 1, normalizedImages.length);
-        };
-      }
-      if (nextBtn) {
-        nextBtn.onclick = (e) => {
-          e.stopPropagation();
-          goToAboutSlide(_currentAboutSlide + 1, normalizedImages.length);
-        };
-      }
-
-      // Auto-advance slides every 5 seconds
-      if (_aboutSliderTimer) clearInterval(_aboutSliderTimer);
-      _aboutSliderTimer = setInterval(() => {
-        goToAboutSlide(_currentAboutSlide + 1, normalizedImages.length);
-      }, 5000);
-
-      // Pause on hover
-      if (wrapper && !wrapper._hasSliderHoverListener) {
-        wrapper._hasSliderHoverListener = true;
-        wrapper.addEventListener('mouseenter', () => {
-          if (_aboutSliderTimer) clearInterval(_aboutSliderTimer);
-        });
-        wrapper.addEventListener('mouseleave', () => {
-          if (_aboutSliderTimer) clearInterval(_aboutSliderTimer);
-          _aboutSliderTimer = setInterval(() => {
-            goToAboutSlide(_currentAboutSlide + 1, normalizedImages.length);
-          }, 5000);
-        });
-      }
-
-      // Touch swipe support on mobile
-      if (wrapper && !wrapper._hasSliderTouchListener) {
-        wrapper._hasSliderTouchListener = true;
-        let touchStartX = 0;
-        let touchEndX = 0;
-        wrapper.addEventListener('touchstart', (e) => {
-          if (e.changedTouches && e.changedTouches.length > 0) {
-            touchStartX = e.changedTouches[0].screenX;
-          }
-        }, { passive: true });
-
-        wrapper.addEventListener('touchend', (e) => {
-          if (e.changedTouches && e.changedTouches.length > 0) {
-            touchEndX = e.changedTouches[0].screenX;
-            const diff = touchEndX - touchStartX;
-            if (Math.abs(diff) > 40) {
-              if (diff < 0) {
-                goToAboutSlide(_currentAboutSlide + 1, normalizedImages.length);
-              } else {
-                goToAboutSlide(_currentAboutSlide - 1, normalizedImages.length);
-              }
-            }
-          }
-        }, { passive: true });
-      }
-    } else {
-      if (prevBtn) prevBtn.style.display = 'none';
-      if (nextBtn) nextBtn.style.display = 'none';
-      if (counterBadge) counterBadge.style.display = 'none';
-      if (dotsContainer) dotsContainer.style.display = 'none';
-      if (_aboutSliderTimer) {
-        clearInterval(_aboutSliderTimer);
-        _aboutSliderTimer = null;
-      }
     }
   }
 

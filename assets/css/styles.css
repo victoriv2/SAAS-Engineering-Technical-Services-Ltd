@@ -738,130 +738,51 @@ h4 { font-size: 1.2rem; }
   position: relative;
 }
 
-.about-slider-container {
+.about-images-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.about-photo-card {
   position: relative;
   width: 100%;
-  height: 480px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   background: var(--navy-900);
 }
 
-.about-slide {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.45s ease-in-out, visibility 0.45s ease-in-out;
-}
-
-.about-slide.active {
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-}
-
-.about-slide img,
+.about-photo-card img,
 .about-main-img {
   border-radius: var(--radius-lg);
   width: 100%;
-  height: 100%;
+  height: 480px;
   object-fit: cover;
   display: block;
 }
 
-.about-slider-btn {
+/* Individual photos height when 2 or 3 photos are displayed */
+.about-images-list.multi-photos .about-photo-card img {
+  height: 280px;
+}
+
+.about-photo-number-tag {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(10, 25, 47, 0.75);
-  backdrop-filter: blur(4px);
-  color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
-.about-slider-btn:hover {
-  background: var(--accent);
-  color: var(--navy-900);
-  border-color: var(--accent);
-  transform: translateY(-50%) scale(1.08);
-}
-
-.about-slider-btn.prev {
+  top: 12px;
   left: 12px;
-}
-
-.about-slider-btn.next {
-  right: 12px;
-}
-
-.about-slider-counter {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  background: rgba(10, 25, 47, 0.8);
-  backdrop-filter: blur(6px);
-  color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.65rem;
+  background: rgba(10, 25, 47, 0.85);
+  backdrop-filter: blur(4px);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.6rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   z-index: 10;
-  letter-spacing: 0.04em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.about-slider-counter svg {
-  fill: var(--accent);
-}
-
-.about-slider-dots {
-  position: absolute;
-  bottom: 16px;
-  left: 18px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 10;
-}
-
-.about-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  padding: 0;
-}
-
-.about-dot:hover {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.about-dot.active {
-  width: 22px;
-  border-radius: 9999px;
-  background: var(--accent);
-  box-shadow: 0 0 8px rgba(217, 119, 6, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .about-badge-card {
@@ -871,9 +792,10 @@ h4 { font-size: 1.2rem; }
   background: var(--white);
   padding: 1.5rem;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl);
   border-left: 5px solid var(--accent);
-  max-width: 250px;
+  max-width: 260px;
+  z-index: 25 !important;
 }
 
 .about-badge-card h4 {
@@ -2036,25 +1958,19 @@ textarea.form-control {
   }
   
   .about-badge-card {
-    position: static;
+    position: static !important;
     margin-top: 1rem;
     max-width: 100%;
+    z-index: 5 !important;
   }
   
-  .about-main-img,
-  .about-slider-container {
-    height: 360px;
+  .about-photo-card img,
+  .about-main-img {
+    height: 320px;
   }
-  
-  .about-slider-btn {
-    width: 34px;
-    height: 34px;
-  }
-  .about-slider-btn.prev {
-    left: 8px;
-  }
-  .about-slider-btn.next {
-    right: 8px;
+
+  .about-images-list.multi-photos .about-photo-card img {
+    height: 240px;
   }
   
   .division-card, .division-card.reverse {

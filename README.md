@@ -21,8 +21,8 @@ Official public corporate website for **SAAS Engineering Technical Services Ltd*
 
 - **Headquarters:** No 4, Salvation Avenue Off Rumuocholu, Avhua Pipeline, Eneka, Port Harcourt, Rivers State, Nigeria
 - **Direct Telephone:** 09020379011 / +234 902 037 9011
-- **Email:** contact@saasengineeringtechnicalservicesltd.com
-- **Domain:** saasengineeringtechnicalservicesltd.com
+- **Email:** contact@saas-engineering-technical-services.com
+- **Domain:** saas-engineering-technical-services.com
 
 ## Architecture & Technology Stack
 
